@@ -223,7 +223,10 @@ async def check_expirations(context: ContextTypes.DEFAULT_TYPE):
                 for uname in panel_usernames:
                     try:
                         uinfo, _m = await panel_api.get_user(uname)
-                        logger.info(f"Got user info for {uname}: expire={uinfo.get('expire') if isinstance(uinfo, dict) else 'N/A'}")
+                        if isinstance(uinfo, dict):
+                            logger.info(f"Got user {uname}: expire={uinfo.get('expire', 'N/A')}, data_limit={uinfo.get('data_limit', 0)}, used={uinfo.get('used_traffic', 0)}")
+                        else:
+                            logger.info(f"Got user info for {uname}: not a dict, type={type(uinfo)}")
                         if isinstance(uinfo, dict):
                             # Normalize to expected keys
                             m_user = {
