@@ -320,19 +320,36 @@ async def admin_settings_save_payment_text(update: Update, context: ContextTypes
 
 async def admin_run_alerts_now(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     query = update.callback_query
-    await _ans(query, "در حال اجرای هشدارها...", show_alert=True)
+    await query.answer("در حال اجرای هشدارها...")
+    
+    # Edit message to show progress
+    try:
+        await query.message.edit_text("⏳ در حال بررسی سرویس‌ها و ارسال هشدارها...\n\nلطفاً صبر کنید، این کار ممکن است چند لحظه طول بکشد.")
+    except Exception:
+        pass
+    
     try:
         from ..jobs import check_expirations
         await check_expirations(context)
-        await _ans(query, "انجام شد: اجرای هشدارها تکمیل شد.", show_alert=True)
-    except Exception as e:
+        # Send success message
         try:
-            await _ans(query, f"خطا در اجرای هشدارها: {e}", show_alert=True)
+            await context.bot.send_message(
+                chat_id=query.from_user.id, 
+                text="✅ اجرای هشدارها با موفقیت تکمیل شد.\n\nهشدارهای لازم به کاربران ارسال شد."
+            )
         except Exception:
-            try:
-                await context.bot.send_message(chat_id=query.from_user.id, text=f"خطا در اجرای هشدارها: {e}")
-            except Exception:
-                pass
+            pass
+    except Exception as e:
+        logger.error(f"Error in manual alerts execution: {e}")
+        try:
+            await context.bot.send_message(
+                chat_id=query.from_user.id, 
+                text=f"❌ خطا در اجرای هشدارها:\n\n`{str(e)}`",
+                parse_mode=ParseMode.MARKDOWN
+            )
+        except Exception:
+            pass
+    
     return await admin_settings_manage(update, context)
 
 
