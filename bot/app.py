@@ -654,6 +654,8 @@ def build_application() -> Application:
     application.add_handler(CallbackQueryHandler(admin_wallets_menu, pattern='^admin_wallets_menu$'), group=3)
     application.add_handler(CallbackQueryHandler(admin_settings_manage, pattern='^admin_settings_manage$'), group=3)
     application.add_handler(CallbackQueryHandler(admin_admins_menu, pattern='^admin_admins_menu$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_plan_manage, pattern='^admin_plan_manage$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_panels_menu, pattern='^admin_panels_menu$'), group=3)
     # Admin menu buttons (orders, users, payments)
     application.add_handler(CallbackQueryHandler(admin_orders_manage, pattern='^admin_orders_manage$'), group=3)
     application.add_handler(CallbackQueryHandler(lambda u, c: admin_orders_menu(u, c, int(u.callback_query.data.split('_')[-1])), pattern=r'^admin_orders_page_\d+$'), group=3)
