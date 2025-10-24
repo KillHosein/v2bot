@@ -104,6 +104,7 @@ async def admin_settings_manage(update: Update, context: ContextTypes.DEFAULT_TY
         [InlineKeyboardButton(("هدیه ثبت‌نام: غیرفعال" if sb_enabled else "هدیه ثبت‌نام: فعال"), callback_data=f"toggle_signup_bonus_{0 if sb_enabled else 1}"), InlineKeyboardButton("مبلغ هدیه", callback_data="set_signup_bonus_amount")],
         # Group 4: Alerts & Notifications
         [InlineKeyboardButton("🔔 اجرای دستی هشدارها (تست)", callback_data="admin_run_alerts_now")],
+        [InlineKeyboardButton("🧹 پاک‌سازی وضعیت هشدارهای امروز", callback_data="admin_clear_daily_reminders")],
         [InlineKeyboardButton(("نمایش حجم: مخفی" if user_show_quota else "نمایش حجم: نمایش"), callback_data=f"toggle_user_quota_{0 if user_show_quota else 1}")],
         [InlineKeyboardButton(("هشدار حجم: غیرفعال" if ta_enabled else "هشدار حجم: فعال"), callback_data=f"toggle_talert_{0 if ta_enabled else 1}"), InlineKeyboardButton("مقدار هشدار (GB)", callback_data="set_talert_gb_start")],
         [InlineKeyboardButton(("هشدار زمانی: غیرفعال" if time_alert_on else "هشدار زمانی: فعال"), callback_data=f"toggle_time_alert_{0 if time_alert_on else 1}"), InlineKeyboardButton("روزهای هشدار زمان", callback_data="set_time_alert_days_start")],
