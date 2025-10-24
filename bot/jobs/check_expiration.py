@@ -76,7 +76,9 @@ async def check_expirations(context: ContextTypes.DEFAULT_TYPE):
 
             async def _process_user_record(username: str, m_user: dict):
                 if username not in orders_map:
+                    logger.info(f"Username {username} not in orders_map (has {len(orders_map)} usernames)")
                     return
+                logger.info(f"Processing user {username} with {len(orders_map[username])} orders")
                 user_orders = orders_map[username]
                 # Deletion policy: if expired > 2 days -> delete; if plan is trial -> delete immediately after expiry
                 try:
