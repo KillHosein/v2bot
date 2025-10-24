@@ -2760,8 +2760,7 @@ async def admin_orders_manage(update: Update, context: ContextTypes.DEFAULT_TYPE
 async def admin_orders_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Show orders management menu"""
     query = update.callback_query
-    if not query.answered:
-        await query.answer()
+    await query.answer()
     
     # Get order statistics
     total_orders = query_db("SELECT COUNT(*) as c FROM orders", one=True)['c']
@@ -2807,6 +2806,8 @@ async def admin_user_management(update: Update, context: ContextTypes.DEFAULT_TY
     """Show user management menu"""
     query = update.callback_query
     await query.answer()
+    # Import from admin_users module
+    from .admin_users import admin_users_menu
     return await admin_users_menu(update, context)
 
 
