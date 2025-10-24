@@ -362,6 +362,23 @@ async def admin_toggle_user_quota(update: Update, context: ContextTypes.DEFAULT_
     return await admin_settings_manage(update, context)
 
 
+async def admin_clear_daily_reminders(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    query = update.callback_query
+    await query.answer()
+    try:
+        execute_db("UPDATE orders SET last_reminder_date = NULL, last_traffic_alert_date = NULL WHERE status='approved'")
+        try:
+            await _ans(query, "✅ وضعیت هشدارهای امروز برای همه سفارش‌های تاییدشده پاک شد.", show_alert=True)
+        except Exception:
+            pass
+    except Exception as e:
+        try:
+            await _ans(query, f"❌ خطا در پاک‌سازی: {e}", show_alert=True)
+        except Exception:
+            pass
+    return await admin_settings_manage(update, context)
+
+
 async def admin_toggle_talert(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     query = update.callback_query
     await query.answer()
