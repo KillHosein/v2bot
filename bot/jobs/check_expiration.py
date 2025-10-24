@@ -25,13 +25,16 @@ async def check_expirations(context: ContextTypes.DEFAULT_TYPE):
     active_orders = query_db(
         "SELECT id, user_id, marzban_username, panel_id, plan_id, last_reminder_date, last_traffic_alert_date FROM orders "
         "WHERE status = 'approved' AND marzban_username IS NOT NULL AND panel_id IS NOT NULL"
-    )
+    ) or []
 
     orders_map = {}
     for order in active_orders:
-        if order['marzban_username'] not in orders_map:
-            orders_map[order['marzban_username']] = []
-        orders_map[order['marzban_username']].append(order)
+        username = order.get('marzban_username')
+        if not username:
+            continue
+        if username not in orders_map:
+            orders_map[username] = []
+        orders_map[username].append(order)
 
     # Deactivate expired resellers daily
     try:
@@ -125,8 +128,8 @@ async def check_expirations(context: ContextTypes.DEFAULT_TYPE):
                         except Exception as e:
                             logger.error(f"Deletion attempt failed for {username}: {e}")
                 for order in user_orders:
-                    if order['last_reminder_date'] == today_str:
-                        pass
+                    if order.get('last_reminder_date') == today_str:
+                        continue
                     details_str = ""
                     # Time-based check (configurable)
                     if m_user.get('expire') and time_alert_on:
@@ -143,22 +146,27 @@ async def check_expirations(context: ContextTypes.DEFAULT_TYPE):
                             details_str = f"حجم باقی‌مانده سرویس شما کمتر از **{alert_gb} گیگابایت** شده است."
                     if details_str:
                         try:
+                            order_id = order.get('id')
+                            user_id = order.get('user_id')
+                            if not order_id or not user_id:
+                                logger.warning(f"Order missing id or user_id: {order}")
+                                continue
                             from telegram import InlineKeyboardButton, InlineKeyboardMarkup
                             final_msg = reminder_msg_template.format(details=details_str)
                             kb = [
-                                [InlineKeyboardButton("📦 مشاهده سرویس", callback_data=f"view_service_{order['id']}")],
-                                [InlineKeyboardButton("🔁 تمدید سریع", callback_data=f"renew_service_{order['id']}")],
-                                [InlineKeyboardButton("🔗 دریافت لینک مجدد", callback_data=f"refresh_service_link_{order['id']}")],
-                                [InlineKeyboardButton("🔐 تغییر کلید اتصال", callback_data=f"revoke_key_{order['id']}")],
-                                [InlineKeyboardButton("🕘 یادآوری فردا", callback_data=f"alert_snooze_{order['id']}")],
+                                [InlineKeyboardButton("📦 مشاهده سرویس", callback_data=f"view_service_{order_id}")],
+                                [InlineKeyboardButton("🔁 تمدید سریع", callback_data=f"renew_service_{order_id}")],
+                                [InlineKeyboardButton("🔗 دریافت لینک مجدد", callback_data=f"refresh_service_link_{order_id}")],
+                                [InlineKeyboardButton("🔐 تغییر کلید اتصال", callback_data=f"revoke_key_{order_id}")],
+                                [InlineKeyboardButton("🕘 یادآوری فردا", callback_data=f"alert_snooze_{order_id}")],
                             ]
-                            await context.bot.send_message(order['user_id'], final_msg, parse_mode=ParseMode.MARKDOWN, reply_markup=InlineKeyboardMarkup(kb))
-                            execute_db("UPDATE orders SET last_reminder_date = ? WHERE id = ?", (today_str, order['id']))
-                            logger.info(f"Sent reminder to user {order['user_id']} for service {username}")
+                            await context.bot.send_message(user_id, final_msg, parse_mode=ParseMode.MARKDOWN, reply_markup=InlineKeyboardMarkup(kb))
+                            execute_db("UPDATE orders SET last_reminder_date = ? WHERE id = ?", (today_str, order_id))
+                            logger.info(f"Sent reminder to user {user_id} for service {username}")
                         except (Forbidden, BadRequest):
-                            logger.warning(f"Could not send reminder to blocked user {order['user_id']}")
+                            logger.warning(f"Could not send reminder to blocked user {order.get('user_id', 'unknown')}")
                         except Exception as e:
-                            logger.error(f"Error sending reminder to {order['user_id']}: {e}")
+                            logger.error(f"Error sending reminder to {order.get('user_id', 'unknown')}: {e}")
                         import asyncio as _asyncio
                         await _asyncio.sleep(0.5)
                     else:
@@ -174,20 +182,25 @@ async def check_expirations(context: ContextTypes.DEFAULT_TYPE):
                                 should_alert = True
                             if should_alert and order.get('last_traffic_alert_date') != today_str:
                                 try:
+                                    order_id = order.get('id')
+                                    user_id = order.get('user_id')
+                                    if not order_id or not user_id:
+                                        logger.warning(f"Order missing id or user_id: {order}")
+                                        continue
                                     from telegram import InlineKeyboardButton, InlineKeyboardMarkup
                                     final_msg = reminder_msg_template.format(details=msg_text)
                                     kb = [
-                                        [InlineKeyboardButton("📦 مشاهده سرویس", callback_data=f"view_service_{order['id']}")],
-                                        [InlineKeyboardButton("🔁 تمدید سریع", callback_data=f"renew_service_{order['id']}")],
-                                        [InlineKeyboardButton("🔗 دریافت لینک مجدد", callback_data=f"refresh_service_link_{order['id']}")],
-                                        [InlineKeyboardButton("🔐 تغییر کلید اتصال", callback_data=f"revoke_key_{order['id']}")],
-                                        [InlineKeyboardButton("🕘 یادآوری فردا", callback_data=f"alert_snooze_{order['id']}")],
+                                        [InlineKeyboardButton("📦 مشاهده سرویس", callback_data=f"view_service_{order_id}")],
+                                        [InlineKeyboardButton("🔁 تمدید سریع", callback_data=f"renew_service_{order_id}")],
+                                        [InlineKeyboardButton("🔗 دریافت لینک مجدد", callback_data=f"refresh_service_link_{order_id}")],
+                                        [InlineKeyboardButton("🔐 تغییر کلید اتصال", callback_data=f"revoke_key_{order_id}")],
+                                        [InlineKeyboardButton("🕘 یادآوری فردا", callback_data=f"alert_snooze_{order_id}")],
                                     ]
-                                    await context.bot.send_message(order['user_id'], final_msg, parse_mode=ParseMode.MARKDOWN, reply_markup=InlineKeyboardMarkup(kb))
-                                    execute_db("UPDATE orders SET last_traffic_alert_date = ? WHERE id = ?", (today_str, order['id']))
-                                    logger.info(f"Sent traffic alert to user {order['user_id']} for service {username}")
+                                    await context.bot.send_message(user_id, final_msg, parse_mode=ParseMode.MARKDOWN, reply_markup=InlineKeyboardMarkup(kb))
+                                    execute_db("UPDATE orders SET last_traffic_alert_date = ? WHERE id = ?", (today_str, order_id))
+                                    logger.info(f"Sent traffic alert to user {user_id} for service {username}")
                                 except Exception as e:
-                                    logger.error(f"Error sending traffic alert to {order['user_id']}: {e}")
+                                    logger.error(f"Error sending traffic alert to {order.get('user_id', 'unknown')}: {e}")
 
             if not all_users:
                 # Fallback path for panels that don't support get_all_users (e.g., 3x-UI)
