@@ -175,15 +175,15 @@ async def show_plan_confirmation(update: Update, context: ContextTypes.DEFAULT_T
         price_line = f"**قیمت:** {plan['price']:,} تومان"
 
     desired = (context.user_data.get('desired_username') or '').strip()
-    chosen_line = f"\n**نام کاربری انتخابی:** `{desired}`" if desired else "\n464 نام کاربری در مرحله ساخت به‌صورت خودکار تعیین می‌شود."
+    chosen_line = f"\n👤 **نام کاربری انتخابی:** `{desired}`" if desired else "\n🤖 نام کاربری در مرحله ساخت به‌صورت خودکار تعیین می‌شود."
     text = (
-        f"شما پلن زیر را انتخاب کرده‌اید:\n\n"
-        f"**نام پلن:** {plan['name']}\n"
-        f"**توضیحات:** {plan['description']}\n"
-        f"**مدت زمان:** {plan['duration_days']} روز\n"
-        f"**حجم:** {traffic_display}\n"
-        f"{price_line}{chosen_line}\n\n"
-        f"آیا تایید می‌کنید؟"
+        f"✨ **پلن انتخابی شما:**\n\n"
+        f"📦 **نام پلن:** {plan['name']}\n"
+        f"📝 **توضیحات:** {plan['description']}\n"
+        f"⏰ **مدت زمان:** {plan['duration_days']} روز\n"
+        f"📊 **حجم:** {traffic_display}\n"
+        f"💰 {price_line}{chosen_line}\n\n"
+        f"✅ آیا این پلن را تأیید می‌کنید؟"
     )
     keyboard = [
         [InlineKeyboardButton("✅ تایید و انتخاب روش پرداخت", callback_data="confirm_purchase")],
@@ -459,19 +459,23 @@ async def show_payment_method_selection(update: Update, context: ContextTypes.DE
         if renewal_text:
             text = renewal_text
         else:
-            text = "روش پرداخت خود را انتخاب کنید:"
+            text = (
+                "💳 **انتخاب روش پرداخت**\n\n"
+                "لطفاً یکی از روش‌های پرداخت زیر را انتخاب کنید:\n\n"
+                "✨ روش‌های پرداخت موجود:"
+            )
         kb = []
         # Wallet option always shown; validation happens on click
-        kb.append([InlineKeyboardButton("💳 پرداخت با کیف پول", callback_data='pay_method_wallet')])
+        kb.append([InlineKeyboardButton("💰 پرداخت با کیف پول", callback_data='pay_method_wallet')])
         if pay_card:
-            kb.append([InlineKeyboardButton("🏦 کارت به کارت", callback_data='pay_method_card')])
+            kb.append([InlineKeyboardButton("💳 کارت به کارت", callback_data='pay_method_card')])
         if pay_crypto:
-            kb.append([InlineKeyboardButton("💰 رمزارز (Crypto)", callback_data='pay_method_crypto')])
+            kb.append([InlineKeyboardButton("₿ رمزارز (Crypto)", callback_data='pay_method_crypto')])
         if pay_gateway:
-            kb.append([InlineKeyboardButton("🧰 درگاه پرداخت", callback_data='pay_method_gateway')])
+            kb.append([InlineKeyboardButton("🌐 درگاه پرداخت آنلاین", callback_data='pay_method_gateway')])
         kb.append([InlineKeyboardButton("🔙 بازگشت", callback_data='buy_config_main')])
         kb.append([InlineKeyboardButton("🏠 منوی اصلی", callback_data='start_main')])
-        extra = f"\n\n\U0001F4B0 موجودی کیف پول شما: {balance:,} تومان"
+        extra = f"\n\n💎 **موجودی کیف پول شما:** {balance:,} تومان"
 
     if query:
         await _safe_edit(query.message, text + extra, reply_markup=InlineKeyboardMarkup(kb), parse_mode=ParseMode.MARKDOWN)
