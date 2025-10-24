@@ -89,7 +89,7 @@ from .handlers.admin import (
     admin_xui_choose_inbound,
     admin_reseller_menu, admin_toggle_reseller, admin_reseller_requests, admin_reseller_set_value_start, admin_reseller_set_value_save, admin_reseller_approve, admin_reseller_reject, admin_reseller_delete_start, admin_reseller_delete_receive,
     admin_toggle_signup_bonus, admin_set_signup_bonus_amount_start, admin_set_signup_bonus_amount_save,
-    admin_orders_menu,
+    admin_orders_menu, admin_orders_manage, admin_user_management, admin_payments_menu,
 )
 from .handlers.user import (
     get_free_config_handler, my_services_handler, show_specific_service_details, wallet_menu,
@@ -636,6 +636,10 @@ def build_application() -> Application:
     application.add_handler(CallbackQueryHandler(admin_wallets_menu, pattern='^admin_wallets_menu$'), group=3)
     application.add_handler(CallbackQueryHandler(admin_settings_manage, pattern='^admin_settings_manage$'), group=3)
     application.add_handler(CallbackQueryHandler(admin_admins_menu, pattern='^admin_admins_menu$'), group=3)
+    # Admin menu buttons (orders, users, payments)
+    application.add_handler(CallbackQueryHandler(admin_orders_manage, pattern='^admin_orders_manage$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_user_management, pattern='^admin_user_management$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_payments_menu, pattern='^admin_payments_menu$'), group=3)
     # Reseller approvals (global)
     application.add_handler(CallbackQueryHandler(admin_reseller_approve, pattern=r'^reseller_approve_\d+$'), group=3)
     application.add_handler(CallbackQueryHandler(admin_reseller_reject, pattern=r'^reseller_reject_\d+$'), group=3)

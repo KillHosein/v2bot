@@ -131,7 +131,30 @@ async def receive_renewal_payment(update: Update, context: ContextTypes.DEFAULT_
         if ok:
             if discount_code:
                 execute_db("UPDATE discount_codes SET times_used = times_used + 1 WHERE code = ?", (discount_code,))
-            await update.message.reply_text("✅ تمدید سرویس با موفقیت انجام شد.")
+            
+            # Beautiful success message
+            success_message = (
+                "🎉 <b>تمدید سرویس با موفقیت انجام شد!</b>\n\n"
+                f"✅ سرویس شما با موفقیت تمدید شد\n"
+                f"📦 <b>پلن:</b> {plan.get('name', 'نامشخص') if plan else 'نامشخص'}\n"
+                f"⏰ <b>مدت:</b> {plan.get('duration_days', 0) if plan else 0} روز\n"
+                f"📊 <b>حجم:</b> {plan.get('traffic_gb', 0) if plan else 0} GB\n"
+                f"💰 <b>مبلغ پرداختی:</b> {final_price:,} تومان\n\n"
+                "🔔 سرویس شما اکنون فعال است و می‌توانید از آن استفاده کنید.\n\n"
+                "💡 برای مشاهده جزئیات سرویس، از منوی «سرویس‌های من» استفاده کنید."
+            )
+            
+            keyboard = [
+                [InlineKeyboardButton("📱 سرویس‌های من", callback_data='my_services')],
+                [InlineKeyboardButton("🏠 منوی اصلی", callback_data='start_main')]
+            ]
+            
+            await update.message.reply_text(
+                success_message,
+                parse_mode=ParseMode.HTML,
+                reply_markup=InlineKeyboardMarkup(keyboard)
+            )
+            
             # Send renewal notification to admin
             try:
                 plan_name = plan.get('name', 'نامشخص') if plan else 'نامشخص'
@@ -139,13 +162,51 @@ async def receive_renewal_payment(update: Update, context: ContextTypes.DEFAULT_
             except Exception:
                 pass
         else:
-            await update.message.reply_text(f"❌ تمدید ناموفق بود: {msg}")
+            # Beautiful error message
+            error_message = (
+                "❌ <b>خطا در تمدید سرویس</b>\n\n"
+                f"متأسفانه تمدید سرویس شما با خطا مواجه شد:\n\n"
+                f"🔴 <b>دلیل خطا:</b> {msg}\n\n"
+                "💡 لطفاً دوباره تلاش کنید یا با پشتیبانی تماس بگیرید."
+            )
+            
+            keyboard = [
+                [InlineKeyboardButton("🔄 تلاش مجدد", callback_data=f'renew_service_{order_id}')],
+                [InlineKeyboardButton("📱 سرویس‌های من", callback_data='my_services')],
+                [InlineKeyboardButton("💬 پشتیبانی", callback_data='support_menu')]
+            ]
+            
+            await update.message.reply_text(
+                error_message,
+                parse_mode=ParseMode.HTML,
+                reply_markup=InlineKeyboardMarkup(keyboard)
+            )
+            
             try:
                 await notify_admins(context.bot, text=(f"[Renew failed] order #{order_id} plan_id={plan_id}\n{msg}"), parse_mode=ParseMode.HTML)
             except Exception:
                 pass
     except Exception as e:
-        await update.message.reply_text(f"❌ خطا در تمدید: {e}")
+        # Beautiful exception message
+        exception_message = (
+            "⚠️ <b>خطای سیستمی</b>\n\n"
+            "متأسفانه در هنگام تمدید سرویس خطای غیرمنتظره‌ای رخ داد.\n\n"
+            "✅ این خطا به تیم پشتیبانی اطلاع داده شد.\n\n"
+            "💡 لطفاً چند دقیقه دیگر مجدداً تلاش کنید."
+        )
+        
+        keyboard = [
+            [InlineKeyboardButton("🔄 تلاش مجدد", callback_data=f'renew_service_{order_id}')],
+            [InlineKeyboardButton("💬 پشتیبانی", callback_data='support_menu')],
+            [InlineKeyboardButton("🏠 منوی اصلی", callback_data='start_main')]
+        ]
+        
+        await update.message.reply_text(
+            exception_message,
+            parse_mode=ParseMode.HTML,
+            reply_markup=InlineKeyboardMarkup(keyboard)
+        )
+        
         try:
             await notify_admins(context.bot, text=(f"[Renew exception] order #{order_id} plan_id={plan_id}\n{e}"))
         except Exception:
