@@ -2676,7 +2676,7 @@ class ThreeXuiAPI(BasePanelAPI):
             logger.error(f"[renew] Client {client_uuid} not found in inbound {inbound_id}")
             return None, "کلاینت یافت نشد"
             
-        logger.info(f"[renew] Found client UUID: {client_uuid} for username: {username}")
+        logger.info(f"[renew] Found client UUID: {client_uuid}")
         
         # RESET mode: set new values instead of adding
         new_total_bytes = int(float(add_gb) * (1024 ** 3)) if add_gb and add_gb > 0 else 0
