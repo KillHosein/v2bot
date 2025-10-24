@@ -636,6 +636,8 @@ def build_application() -> Application:
         await update.callback_query.answer()
     application.add_handler(CallbackQueryHandler(noop_handler, pattern=r'^noop$'), group=3)
     application.add_handler(CallbackQueryHandler(my_services_handler, pattern=r'^my_services(_page_\d+)?$'), group=3)
+    application.add_handler(CallbackQueryHandler(wallet_menu, pattern=r'^wallet_menu$'), group=3)
+    application.add_handler(CallbackQueryHandler(support_menu, pattern=r'^support_menu$'), group=3)
     application.add_handler(CallbackQueryHandler(show_specific_service_details, pattern=r'^view_service_\d+$'), group=3)
     application.add_handler(CallbackQueryHandler(check_service_status, pattern=r'^check_service_status_\d+$'), group=3)
     application.add_handler(CallbackQueryHandler(refresh_service_link, pattern=r'^refresh_service_link_\d+$'), group=3)
@@ -645,6 +647,7 @@ def build_application() -> Application:
     application.add_handler(CallbackQueryHandler(set_cust_username_start, pattern=r'^set_cust_username_start$'), group=3)
     application.add_handler(CallbackQueryHandler(start_command, pattern='^start_main$'), group=3)
     # Ensure Admin Stats button works globally even if conversation state dropped
+    application.add_handler(CallbackQueryHandler(admin_command, pattern='^admin_main$'), group=3)
     application.add_handler(CallbackQueryHandler(admin_stats_menu, pattern='^admin_stats$'), group=3)
     application.add_handler(CallbackQueryHandler(admin_stats_refresh, pattern='^stats_refresh$'), group=3)
     application.add_handler(CallbackQueryHandler(admin_xui_choose_inbound, pattern=r'^xui_inbound_'), group=3)
