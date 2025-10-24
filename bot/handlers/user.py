@@ -13,7 +13,7 @@ from datetime import datetime
 import requests, base64
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.constants import ParseMode
-from telegram.error import TelegramError
+from telegram.error import TelegramError, BadRequest
 from telegram.ext import ContextTypes, ConversationHandler, CallbackQueryHandler, MessageHandler, filters
 
 from ..db import query_db, execute_db
@@ -425,7 +425,25 @@ async def my_services_handler(update: Update, context: ContextTypes.DEFAULT_TYPE
         f"📦 مجموع کل: {len(orders)} عدد\n\n"
         f"💡 برای مشاهده جزئیات هر سرویس، روی آن کلیک کنید."
     )
-    await query.message.edit_text(text, parse_mode=ParseMode.HTML, reply_markup=InlineKeyboardMarkup(keyboard))
+    
+    # Try to edit, if fails (e.g., message has no text), send new message
+    try:
+        await query.message.edit_text(text, parse_mode=ParseMode.HTML, reply_markup=InlineKeyboardMarkup(keyboard))
+    except BadRequest as e:
+        if "no text in the message to edit" in str(e).lower():
+            # Delete old message and send new one
+            try:
+                await query.message.delete()
+            except Exception:
+                pass
+            await context.bot.send_message(
+                chat_id=query.message.chat_id,
+                text=text,
+                parse_mode=ParseMode.HTML,
+                reply_markup=InlineKeyboardMarkup(keyboard)
+            )
+        else:
+            raise
 
 
 async def show_specific_service_details(update: Update, context: ContextTypes.DEFAULT_TYPE):
