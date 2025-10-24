@@ -449,6 +449,14 @@ def build_application() -> Application:
                 CallbackQueryHandler(admin_plan_bind_inbound_choose, pattern=r'^plan_bind_inb_\d+_\d+$'),
             ],
             ADMIN_PLAN_EDIT_AWAIT_VALUE: [MessageHandler(filters.TEXT & ~filters.COMMAND, admin_plan_edit_save)],
+            ADMIN_PLAN_BIND_PANEL: [
+                CallbackQueryHandler(admin_plan_bind_panel_choose, pattern=r'^plan_bind_panel_\d+$'),
+                CallbackQueryHandler(admin_plan_edit_start, pattern=r'^plan_edit_\d+$'),
+            ],
+            ADMIN_PLAN_BIND_INBOUND: [
+                CallbackQueryHandler(admin_plan_bind_inbound_choose, pattern=r'^plan_bind_inb_\d+_\d+$'),
+                CallbackQueryHandler(admin_plan_edit_start, pattern=r'^plan_edit_\d+$'),
+            ],
             ADMIN_STATS_MENU: [
                 CallbackQueryHandler(admin_stats_refresh, pattern='^stats_refresh$'),
                 CallbackQueryHandler(admin_command, pattern='^admin_main$'),
