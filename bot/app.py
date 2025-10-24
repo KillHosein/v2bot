@@ -311,6 +311,7 @@ def build_application() -> Application:
                 CallbackQueryHandler(admin_settings_manage, pattern='^admin_settings_manage$'),
                 CallbackQueryHandler(admin_toggle_bot_active, pattern='^admin_toggle_bot_active$'),
                 CallbackQueryHandler(admin_users_menu, pattern='^admin_users_menu$'),
+                CallbackQueryHandler(admin_user_management, pattern='^admin_user_management$'),
                 CallbackQueryHandler(admin_cron_menu, pattern='^admin_cron_menu$'),
                 CallbackQueryHandler(admin_messages_menu, pattern='^admin_messages_menu$'),
                 CallbackQueryHandler(admin_broadcast_menu, pattern='^admin_broadcast_menu$'),
