@@ -206,7 +206,7 @@ async def admin_plan_bind_start(update: Update, context: ContextTypes.DEFAULT_TY
             await query.message.reply_text("انتخاب پنل ساخت برای این پلن:", reply_markup=InlineKeyboardMarkup(kb))
         except Exception:
             pass
-    return ADMIN_PLAN_EDIT_MENU
+    return ADMIN_PLAN_BIND_PANEL
 
 
 async def admin_plan_bind_panel_choose(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
@@ -278,7 +278,7 @@ async def admin_plan_bind_panel_choose(update: Update, context: ContextTypes.DEF
             await query.message.reply_text("اینباند پیش‌فرض ساخت برای این پلن را انتخاب کنید:", reply_markup=InlineKeyboardMarkup(kb))
         except Exception:
             pass
-    return ADMIN_PLAN_EDIT_MENU
+    return ADMIN_PLAN_BIND_INBOUND
 
 
 async def admin_plan_bind_inbound_choose(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
