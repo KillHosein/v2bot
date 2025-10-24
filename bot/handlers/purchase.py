@@ -595,16 +595,32 @@ async def pay_method_wallet(update: Update, context: ContextTypes.DEFAULT_TYPE) 
                     parse_mode=ParseMode.MARKDOWN
                 )
                 
-                # Notify admins about successful renewal
-                await notify_admins(context.bot,
-                    text=(f"✅ **تمدید خودکار موفق** (سفارش #{order_id})\n\n"
-                          f"👤 **کاربر:** {user.id}\n"
-                          f"📦 **پلن:** {plan['name']}\n"
-                          f"💰 **مبلغ:** {int(final_price):,} تومان\n"
-                          f"💳 **روش:** کیف پول\n"
-                          f"📅 **تاریخ انقضا:** {expiry_str}"),
-                    parse_mode=ParseMode.MARKDOWN,
-                )
+                # Notify admins about successful renewal using proper log function
+                try:
+                    from ..helpers.admin_notifications import send_renewal_log
+                    await send_renewal_log(
+                        context.bot,
+                        order_id=order_id,
+                        user_id=user.id,
+                        plan_name=plan['name'],
+                        final_price=int(final_price),
+                        payment_method="کیف پول"
+                    )
+                except Exception as e:
+                    logger.error(f"Failed to send renewal log: {e}")
+                    # Fallback to simple notification
+                    try:
+                        await notify_admins(context.bot,
+                            text=(f"✅ **تمدید خودکار موفق** (سفارش #{order_id})\n\n"
+                                  f"👤 **کاربر:** {user.id}\n"
+                                  f"📦 **پلن:** {plan['name']}\n"
+                                  f"💰 **مبلغ:** {int(final_price):,} تومان\n"
+                                  f"💳 **روش:** کیف پول\n"
+                                  f"📅 **تاریخ انقضا:** {expiry_str}"),
+                            parse_mode=ParseMode.MARKDOWN,
+                        )
+                    except Exception:
+                        pass
             else:
                 # Refund on failure
                 execute_db("UPDATE user_wallets SET balance = balance + ? WHERE user_id = ?", (int(final_price), user.id))
