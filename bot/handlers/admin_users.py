@@ -220,8 +220,8 @@ async def admin_users_show_services(update: Update, context: ContextTypes.DEFAUL
     logger.info(f"[admin_users_show_services] callback_data={query.data}, parsed uid={uid}, page={page}")
     
     rows = query_db(
-        """SELECT o.id, o.plan_id, o.status, o.marzban_username, o.panel_type, o.timestamp, o.expiry_date,
-           p.name as plan_name, p.price
+        """SELECT o.id, o.plan_id, o.status, o.marzban_username, o.panel_type, o.timestamp,
+           p.name as plan_name, p.price, p.duration_days, p.traffic_gb
            FROM orders o
            LEFT JOIN plans p ON p.id = o.plan_id
            WHERE o.user_id = ?
@@ -256,13 +256,27 @@ async def admin_users_show_services(update: Update, context: ContextTypes.DEFAUL
         pname = r.get('plan_name') or 'نامشخص'
         status_icon = "✅" if r.get('status') == 'approved' else "⏳" if r.get('status') == 'pending' else "❌"
         price = r.get('price') or 0
-        expiry = r.get('expiry_date') or '-'
         created = r.get('timestamp') or '-'
+        duration = r.get('duration_days') or '-'
+        traffic = r.get('traffic_gb') or '-'
+        
+        # Calculate expiry date from timestamp and duration
+        expiry = '-'
+        if created != '-' and duration != '-':
+            try:
+                from datetime import datetime, timedelta
+                created_dt = datetime.strptime(created.split('.')[0], '%Y-%m-%d %H:%M:%S')
+                expiry_dt = created_dt + timedelta(days=int(duration))
+                expiry = expiry_dt.strftime('%Y-%m-%d')
+            except Exception:
+                expiry = f"{duration} روز از ایجاد"
         
         text += (
             f"{status_icon} <b>سرویس #{r['id']}</b>\n"
             f"• پلن: {pname}\n"
             f"• قیمت: {int(price):,} تومان\n"
+            f"• مدت: {duration} روز\n"
+            f"• حجم: {traffic} GB\n"
             f"• وضعیت: {r.get('status')}\n"
             f"• یوزرنیم: <code>{r.get('marzban_username') or '-'}</code>\n"
             f"• پنل: {r.get('panel_type') or '-'}\n"
