@@ -503,7 +503,7 @@ def build_application() -> Application:
                 # Auto-backup controls
                 CallbackQueryHandler(admin_toggle_auto_backup, pattern=r'^toggle_auto_backup_(0|1)$'),
                 CallbackQueryHandler(admin_set_auto_backup_hours_start, pattern='^set_auto_backup_hours_start$'),
-                CallbackQueryHandler(admin_run_alerts_now, pattern='^run_alerts_now$'),
+                CallbackQueryHandler(admin_run_alerts_now, pattern='^admin_run_alerts_now$'),
                 # Test log buttons
                 CallbackQueryHandler(admin_settings_send_test_join_log, pattern='^test_join_log$'),
                 CallbackQueryHandler(admin_settings_send_test_purchase_log, pattern='^test_purchase_log$'),

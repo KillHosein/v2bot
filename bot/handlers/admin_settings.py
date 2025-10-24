@@ -66,7 +66,7 @@ async def admin_settings_manage(update: Update, context: ContextTypes.DEFAULT_TY
 
     text = (
         f"\u2699\uFE0F **تنظیمات کلی ربات**\n\n"
-        f"**وضعیت تست:** {'فعال' if trial_status == '1' else 'غیرفعال'}\n"
+        f"**وضعیت تست:** {'✅ فعال' if trial_status == '1' else '❌ غیرفعال'}\n"
         f"**روز تست:** `{settings.get('free_trial_days', '1')}` | **حجم تست:** `{settings.get('free_trial_gb', '0.2')} GB`\n\n"
         f"**پنل ساخت تست:** `{trial_panel_name}`\n\n"
         f"**درصد کمیسیون معرفی:** `{ref_percent}%`\n\n"
@@ -74,16 +74,17 @@ async def admin_settings_manage(update: Update, context: ContextTypes.DEFAULT_TY
         f"**آخرین نرخ کش‌شده:** `{usd_cached}`\n"
         f"**حالت نرخ دلار:** `{mode_title}`\n\n"
         f"**پرداخت‌ها:**\n"
-        f"- کارت به کارت: {'فعال' if pay_card else 'غیرفعال'}\n"
-        f"- رمزارز: {'فعال' if pay_crypto else 'غیرفعال'}\n"
-        f"- درگاه پرداخت: {'فعال' if pay_gateway else 'غیرفعال'} ({'زرین‌پال' if gateway_type=='zarinpal' else 'آقای پرداخت'})\n"
-        f"\n**موجودی اولیه هدیه:** {'فعال' if sb_enabled else 'غیرفعال'} | مبلغ: `{sb_amount:,}` تومان\n"
-        f"\n**نمایش حجم سرویس برای کاربر:** {'فعال' if user_show_quota else 'غیرفعال'}\n"
-        f"**هشدار حجم (GB باقی‌مانده):** {'فعال' if ta_enabled else 'غیرفعال'} | مقدار: `{ta_value_gb} GB`\n"
-        f"**هشدار زمانی (روز مانده تا پایان):** {'فعال' if time_alert_on else 'غیرفعال'} | مقدار: `{time_alert_days} روز`\n"
-        f"**بکاپ خودکار:** {'فعال' if auto_backup_on else 'غیرفعال'} | هر `{auto_backup_hours}` ساعت\n"
-        f"\n**لاگ ورود (Start):** {'فعال' if join_logs_on else 'غیرفعال'} | چت: `{join_logs_chat}`\n"
-        f"**لاگ خرید:** {'فعال' if purch_logs_on else 'غیرفعال'} | چت: `{purch_logs_chat}`\n"
+        f"- کارت به کارت: {'✅ فعال' if pay_card else '❌ غیرفعال'}\n"
+        f"- رمزارز: {'✅ فعال' if pay_crypto else '❌ غیرفعال'}\n"
+        f"- درگاه پرداخت: {'✅ فعال' if pay_gateway else '❌ غیرفعال'} ({'زرین‌پال' if gateway_type=='zarinpal' else 'آقای پرداخت'})\n"
+        f"\n**موجودی اولیه هدیه:** {'✅ فعال' if sb_enabled else '❌ غیرفعال'} | مبلغ: `{sb_amount:,}` تومان\n"
+        f"\n📊 **تنظیمات اعلان‌ها و هشدارها:**\n"
+        f"**نمایش حجم سرویس برای کاربر:** {'✅ فعال' if user_show_quota else '❌ غیرفعال'}\n"
+        f"**🔔 هشدار حجم (GB باقی‌مانده):** {'✅ فعال' if ta_enabled else '❌ غیرفعال'} | مقدار: `{ta_value_gb} GB`\n"
+        f"**⏰ هشدار زمانی (روز مانده تا پایان):** {'✅ فعال' if time_alert_on else '❌ غیرفعال'} | مقدار: `{time_alert_days} روز`\n"
+        f"**💾 بکاپ خودکار:** {'✅ فعال' if auto_backup_on else '❌ غیرفعال'} | هر `{auto_backup_hours}` ساعت\n"
+        f"\n**لاگ ورود (Start):** {'✅ فعال' if join_logs_on else '❌ غیرفعال'} | چت: `{join_logs_chat}`\n"
+        f"**لاگ خرید:** {'✅ فعال' if purch_logs_on else '❌ غیرفعال'} | چت: `{purch_logs_chat}`\n"
         f"\n**متن زیر کانفیگ:**\n{_md_escape((settings.get('config_footer_text') or '').strip()) or '-'}\n"
         f"برای تغییر:\n`/setms`\n`متن_جدید`\n"
     )
@@ -101,7 +102,8 @@ async def admin_settings_manage(update: Update, context: ContextTypes.DEFAULT_TY
         [InlineKeyboardButton(("کارت: غیرفعال" if pay_card else "کارت: فعال"), callback_data=f"toggle_pay_card_{0 if pay_card else 1}"), InlineKeyboardButton(("رمزارز: غیرفعال" if pay_crypto else "رمزارز: فعال"), callback_data=f"toggle_pay_crypto_{0 if pay_crypto else 1}")],
         [InlineKeyboardButton(("درگاه: غیرفعال" if pay_gateway else "درگاه: فعال"), callback_data=f"toggle_pay_gateway_{0 if pay_gateway else 1}"), InlineKeyboardButton(("زرین‌پال" if gateway_type!='zarinpal' else "آقای پرداخت"), callback_data=f"toggle_gateway_type_{'zarinpal' if gateway_type!='zarinpal' else 'aghapay'}")],
         [InlineKeyboardButton(("هدیه ثبت‌نام: غیرفعال" if sb_enabled else "هدیه ثبت‌نام: فعال"), callback_data=f"toggle_signup_bonus_{0 if sb_enabled else 1}"), InlineKeyboardButton("مبلغ هدیه", callback_data="set_signup_bonus_amount")],
-        # Group 4: Alerts
+        # Group 4: Alerts & Notifications
+        [InlineKeyboardButton("🔔 اجرای دستی هشدارها (تست)", callback_data="admin_run_alerts_now")],
         [InlineKeyboardButton(("نمایش حجم: مخفی" if user_show_quota else "نمایش حجم: نمایش"), callback_data=f"toggle_user_quota_{0 if user_show_quota else 1}")],
         [InlineKeyboardButton(("هشدار حجم: غیرفعال" if ta_enabled else "هشدار حجم: فعال"), callback_data=f"toggle_talert_{0 if ta_enabled else 1}"), InlineKeyboardButton("مقدار هشدار (GB)", callback_data="set_talert_gb_start")],
         [InlineKeyboardButton(("هشدار زمانی: غیرفعال" if time_alert_on else "هشدار زمانی: فعال"), callback_data=f"toggle_time_alert_{0 if time_alert_on else 1}"), InlineKeyboardButton("روزهای هشدار زمان", callback_data="set_time_alert_days_start")],
