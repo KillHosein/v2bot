@@ -55,7 +55,9 @@ from .config import BOT_TOKEN, DAILY_JOB_HOUR
 from .db import query_db
 from .db import db_setup
 from .jobs import check_expirations
+from .jobs.notifications import check_low_traffic_and_expiry
 from .handlers.common import force_join_checker, dynamic_button_handler, start_command
+from .handlers.cancel import cancel_flow, cancel_admin_flow
 from .handlers.admin import (
     send_admin_panel,
     admin_command,
@@ -288,6 +290,8 @@ def build_application() -> Application:
         except Exception:
             hour = DAILY_JOB_HOUR
         application.job_queue.run_daily(check_expirations, time=time(hour=hour, minute=0, second=0), name="daily_expiration_check")
+        # Traffic and expiry notifications - run every 6 hours
+        application.job_queue.run_repeating(check_low_traffic_and_expiry, interval=6*3600, first=300, name="notification_check")
         # Auto-backup scheduling
         try:
             ab_enabled = (query_db("SELECT value FROM settings WHERE key='auto_backup_enabled'", one=True) or {}).get('value') == '1'
@@ -658,6 +662,9 @@ def build_application() -> Application:
     # Fallback: allow username prompt button to work even if state dropped
     application.add_handler(CallbackQueryHandler(set_cust_username_start, pattern=r'^set_cust_username_start$'), group=3)
     application.add_handler(CallbackQueryHandler(start_command, pattern='^start_main$'), group=3)
+    # Cancel flow handlers - work from anywhere
+    application.add_handler(CallbackQueryHandler(cancel_flow, pattern='^cancel_flow$'), group=3)
+    application.add_handler(CallbackQueryHandler(cancel_admin_flow, pattern='^cancel_admin_flow$'), group=3)
     # Ensure Admin Stats button works globally even if conversation state dropped
     application.add_handler(CallbackQueryHandler(admin_command, pattern='^admin_main$'), group=3)
     application.add_handler(CallbackQueryHandler(admin_stats_menu, pattern='^admin_stats$'), group=3)
