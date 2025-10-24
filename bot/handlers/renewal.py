@@ -12,6 +12,7 @@ from ..states import (
 from ..panel import VpnPanelAPI
 from ..helpers.flow import set_flow, clear_flow
 from ..helpers.tg import notify_admins, append_footer_buttons as _footer, safe_edit_text as _safe_edit_text
+from ..helpers.admin_notifications import send_renewal_log
 
 
 async def start_renewal_flow(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
@@ -131,6 +132,12 @@ async def receive_renewal_payment(update: Update, context: ContextTypes.DEFAULT_
             if discount_code:
                 execute_db("UPDATE discount_codes SET times_used = times_used + 1 WHERE code = ?", (discount_code,))
             await update.message.reply_text("✅ تمدید سرویس با موفقیت انجام شد.")
+            # Send renewal notification to admin
+            try:
+                plan_name = plan.get('name', 'نامشخص') if plan else 'نامشخص'
+                await send_renewal_log(context.bot, order_id, user.id, plan_name, final_price, payment_method="رسید")
+            except Exception:
+                pass
         else:
             await update.message.reply_text(f"❌ تمدید ناموفق بود: {msg}")
             try:
