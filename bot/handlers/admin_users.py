@@ -214,6 +214,11 @@ async def admin_users_show_services(update: Update, context: ContextTypes.DEFAUL
     parts = query.data.split('_')
     uid = int(parts[-1]) if parts[-2] != 'page' else int(parts[-3])
     page = int(parts[-1]) if parts[-2] == 'page' else 1
+    
+    # Debug logging
+    from ..config import logger
+    logger.info(f"[admin_users_show_services] callback_data={query.data}, parsed uid={uid}, page={page}")
+    
     rows = query_db(
         """SELECT o.id, o.plan_id, o.status, o.marzban_username, o.panel_type, o.timestamp, o.expiry_date,
            p.name as plan_name, p.price
@@ -223,6 +228,8 @@ async def admin_users_show_services(update: Update, context: ContextTypes.DEFAUL
            ORDER BY o.id DESC""",
         (uid,)
     ) or []
+    
+    logger.info(f"[admin_users_show_services] Found {len(rows)} orders for user {uid}")
     if not rows:
         # Store user_id for re-displaying user details on back
         context.user_data['viewing_user_id'] = uid
