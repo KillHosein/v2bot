@@ -119,6 +119,15 @@ async def admin_users_view_by_id_start(update: Update, context: ContextTypes.DEF
     return ADMIN_USERS_MENU
 
 
+async def admin_users_view_by_id_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Handle admin_user_view_{uid} callback"""
+    query = update.callback_query
+    await query.answer()
+    uid = int(query.data.split('_')[-1])
+    # Create fake update for compatibility
+    fake_update = type('obj', (object,), {'message': query.message, 'effective_user': query.from_user})
+    return await admin_users_view_by_id_show(fake_update, context, uid)
+
 async def admin_users_view_by_id_show(update: Update, context: ContextTypes.DEFAULT_TYPE, uid: int) -> int:
     u = query_db("SELECT user_id, first_name, COALESCE(banned,0) AS banned, join_date FROM users WHERE user_id = ?", (uid,), one=True)
     if not u:
@@ -215,7 +224,21 @@ async def admin_users_show_services(update: Update, context: ContextTypes.DEFAUL
         (uid,)
     ) or []
     if not rows:
-        await _safe_edit_text(query.message, f"📦 <b>سرویس‌های کاربر {uid}</b>\n\nسرویسی یافت نشد.", parse_mode=ParseMode.HTML, reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("بازگشت", callback_data=f"admin_user_view_prompt")]]))
+        # Store user_id for re-displaying user details on back
+        context.user_data['viewing_user_id'] = uid
+        kb = [
+            [InlineKeyboardButton("🔄 تلاش مجدد", callback_data=f"admin_user_services_{uid}")],
+            [InlineKeyboardButton("🔙 بازگشت به کاربر", callback_data=f"admin_user_view_{uid}")],
+            [InlineKeyboardButton("🏠 منوی ادمین", callback_data="admin_main")]
+        ]
+        await _safe_edit_text(
+            query.message,
+            f"📦 <b>سرویس‌های کاربر {uid}</b>\n\n"
+            f"❌ هیچ سرویسی برای این کاربر یافت نشد.\n\n"
+            f"💡 ممکن است کاربر هنوز سفارشی نداشته باشد.",
+            parse_mode=ParseMode.HTML,
+            reply_markup=InlineKeyboardMarkup(kb)
+        )
         return ADMIN_USERS_MENU
     
     page_rows, total = _paginate(rows, page, 5)
@@ -258,7 +281,7 @@ async def admin_users_show_services(update: Update, context: ContextTypes.DEFAUL
             nav.append(InlineKeyboardButton("▶️ بعدی", callback_data=f"admin_user_services_{uid}_page_{page+1}"))
         kb.append(nav)
     
-    kb.append([InlineKeyboardButton("🔙 بازگشت", callback_data=f"admin_user_view_prompt")])
+    kb.append([InlineKeyboardButton("🔙 بازگشت به کاربر", callback_data=f"admin_user_view_{uid}")])
     await _safe_edit_text(query.message, text, parse_mode=ParseMode.HTML, reply_markup=InlineKeyboardMarkup(kb))
     return ADMIN_USERS_MENU
 
@@ -286,7 +309,7 @@ async def admin_users_show_tickets(update: Update, context: ContextTypes.DEFAULT
     kb = []
     if nav:
         kb.append(nav)
-    kb.append([InlineKeyboardButton("بازگشت", callback_data=f"admin_user_view_prompt")])
+    kb.append([InlineKeyboardButton("🔙 بازگشت به کاربر", callback_data=f"admin_user_view_{uid}")])
     await _safe_edit_text(query.message, text, reply_markup=InlineKeyboardMarkup(kb))
     return ADMIN_USERS_MENU
 
@@ -316,7 +339,7 @@ async def admin_users_show_wallet(update: Update, context: ContextTypes.DEFAULT_
     kb = []
     if nav:
         kb.append(nav)
-    kb.append([InlineKeyboardButton("بازگشت", callback_data=f"admin_user_view_prompt")])
+    kb.append([InlineKeyboardButton("🔙 بازگشت به کاربر", callback_data=f"admin_user_view_{uid}")])
     await _safe_edit_text(query.message, text, reply_markup=InlineKeyboardMarkup(kb))
     return ADMIN_USERS_MENU
 
@@ -345,6 +368,6 @@ async def admin_users_show_refs(update: Update, context: ContextTypes.DEFAULT_TY
     kb = []
     if nav:
         kb.append(nav)
-    kb.append([InlineKeyboardButton("بازگشت", callback_data=f"admin_user_view_prompt")])
+    kb.append([InlineKeyboardButton("🔙 بازگشت به کاربر", callback_data=f"admin_user_view_{uid}")])
     await _safe_edit_text(query.message, text, reply_markup=InlineKeyboardMarkup(kb))
     return ADMIN_USERS_MENU
