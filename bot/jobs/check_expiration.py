@@ -219,9 +219,11 @@ async def check_expirations(context: ContextTypes.DEFAULT_TYPE):
                     except Exception:
                         continue
                 # Query each username individually
+                logger.info(f"Querying {len(panel_usernames)} usernames individually from panel {panel_data['id']}")
                 for uname in panel_usernames:
                     try:
                         uinfo, _m = await panel_api.get_user(uname)
+                        logger.info(f"Got user info for {uname}: expire={uinfo.get('expire') if isinstance(uinfo, dict) else 'N/A'}")
                         if isinstance(uinfo, dict):
                             # Normalize to expected keys
                             m_user = {
@@ -231,6 +233,8 @@ async def check_expirations(context: ContextTypes.DEFAULT_TYPE):
                                 'used_traffic': uinfo.get('used_traffic') or 0,
                             }
                             await _process_user_record(uname, m_user)
+                        else:
+                            logger.warning(f"User info for {uname} is not a dict: {type(uinfo)}")
                     except Exception as e:
                         logger.warning(f"Per-user fetch failed for {uname} on panel {panel_data['id']}: {e}")
                 continue
