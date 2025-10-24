@@ -595,6 +595,25 @@ async def pay_method_wallet(update: Update, context: ContextTypes.DEFAULT_TYPE) 
                     parse_mode=ParseMode.MARKDOWN
                 )
                 
+                # Send additional confirmation message to user
+                try:
+                    confirmation_text = (
+                        f"✅ <b>تأیید تمدید</b>\n\n"
+                        f"سرویس شما با موفقیت تمدید شد!\n\n"
+                        f"🔢 شماره سفارش: #{order_id}\n"
+                        f"📦 پلن: {plan['name']}\n"
+                        f"💰 مبلغ کسر شده: {int(final_price):,} تومان\n"
+                        f"💳 موجودی باقیمانده: {new_bal:,} تومان\n\n"
+                        f"🎉 از خرید شما متشکریم!"
+                    )
+                    await context.bot.send_message(
+                        chat_id=user.id,
+                        text=confirmation_text,
+                        parse_mode=ParseMode.HTML
+                    )
+                except Exception as e:
+                    logger.error(f"Failed to send renewal confirmation: {e}")
+                
                 # Notify admins about successful renewal using proper log function
                 try:
                     from ..helpers.admin_notifications import send_renewal_log

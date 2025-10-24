@@ -13,6 +13,7 @@ from ..panel import VpnPanelAPI
 from ..helpers.flow import set_flow, clear_flow
 from ..helpers.tg import notify_admins, append_footer_buttons as _footer, safe_edit_text as _safe_edit_text
 from ..helpers.admin_notifications import send_renewal_log
+from ..config import logger
 
 
 async def start_renewal_flow(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
@@ -154,6 +155,26 @@ async def receive_renewal_payment(update: Update, context: ContextTypes.DEFAULT_
                 parse_mode=ParseMode.HTML,
                 reply_markup=InlineKeyboardMarkup(keyboard)
             )
+            
+            # Send additional confirmation message to user
+            try:
+                confirmation_text = (
+                    f"✅ <b>تأیید تمدید سرویس</b>\n\n"
+                    f"تمدید سرویس شما با موفقیت انجام شد.\n\n"
+                    f"🔢 شماره سفارش: #{order_id}\n"
+                    f"📦 پلن: {plan.get('name', 'نامشخص') if plan else 'نامشخص'}\n"
+                    f"⏰ مدت: {plan.get('duration_days', 0) if plan else 0} روز\n"
+                    f"📊 حجم: {plan.get('traffic_gb', 0) if plan else 0} GB\n"
+                    f"💰 مبلغ: {final_price:,} تومان\n\n"
+                    f"🎉 از اعتماد شما سپاسگزاریم!"
+                )
+                await context.bot.send_message(
+                    chat_id=user.id,
+                    text=confirmation_text,
+                    parse_mode=ParseMode.HTML
+                )
+            except Exception as e:
+                logger.error(f"Failed to send renewal confirmation: {e}")
             
             # Send renewal notification to admin
             try:
