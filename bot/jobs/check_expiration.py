@@ -147,8 +147,11 @@ async def check_expirations(context: ContextTypes.DEFAULT_TYPE):
                         total = float(m_user.get('data_limit') or 0)
                         used = float(m_user.get('used_traffic') or 0)
                         remain = max(0.0, total - used)
-                        if (remain / (1024**3)) <= alert_gb:
+                        remain_gb = remain / (1024**3)
+                        logger.info(f"Traffic check for {username}: total={total/1024**3:.2f}GB, used={used/1024**3:.2f}GB, remain={remain_gb:.2f}GB, threshold={alert_gb}GB")
+                        if remain_gb <= alert_gb:
                             details_str = f"حجم باقی‌مانده سرویس شما کمتر از **{alert_gb} گیگابایت** شده است."
+                            logger.info(f"Alert triggered for {username}: {remain_gb:.2f}GB <= {alert_gb}GB")
                     if details_str:
                         try:
                             order_id = order.get('id')
