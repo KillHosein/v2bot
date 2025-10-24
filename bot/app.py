@@ -638,6 +638,7 @@ def build_application() -> Application:
     application.add_handler(CallbackQueryHandler(admin_admins_menu, pattern='^admin_admins_menu$'), group=3)
     # Admin menu buttons (orders, users, payments)
     application.add_handler(CallbackQueryHandler(admin_orders_manage, pattern='^admin_orders_manage$'), group=3)
+    application.add_handler(CallbackQueryHandler(lambda u, c: admin_orders_menu(u, c, int(u.callback_query.data.split('_')[-1])), pattern=r'^admin_orders_page_\d+$'), group=3)
     application.add_handler(CallbackQueryHandler(admin_user_management, pattern='^admin_user_management$'), group=3)
     application.add_handler(CallbackQueryHandler(admin_payments_menu, pattern='^admin_payments_menu$'), group=3)
     # Reseller approvals (global)

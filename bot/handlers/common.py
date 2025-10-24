@@ -216,6 +216,19 @@ async def send_dynamic_message(update: Update, context: ContextTypes.DEFAULT_TYP
 
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     logger.debug(f"start_command by user {update.effective_user.id}")
+    
+    # Check if user is banned
+    user_check = query_db("SELECT COALESCE(banned,0) AS banned FROM users WHERE user_id = ?", (update.effective_user.id,), one=True)
+    if user_check and int(user_check.get('banned', 0)) == 1:
+        banned_message = (
+            "⛔ <b>دسترسی مسدود شد</b>\n\n"
+            "متأسفانه دسترسی شما به این ربات مسدود شده است.\n\n"
+            "برای اطلاعات بیشتر با پشتیبانی تماس بگیرید."
+        )
+        if update.message:
+            await update.message.reply_text(banned_message, parse_mode=ParseMode.HTML)
+        return
+    
     # Check if user already exists (to send join log only once)
     user_existed = query_db("SELECT 1 FROM users WHERE user_id = ?", (update.effective_user.id,), one=True)
     await register_new_user(update.effective_user, update, referrer_hint=context.user_data.get('referrer_id'))

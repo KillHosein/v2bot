@@ -101,16 +101,22 @@ async def admin_stats_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -
         one=True,
     ) or {}).get('rev', 0)
 
+    # Payment stats
+    total_payments = (query_db("SELECT COUNT(*) AS c FROM orders WHERE status='approved'", one=True) or {}).get('c', 0)
+    today_payments = (query_db("SELECT COUNT(*) AS c FROM orders WHERE status='approved' AND date(timestamp) = date('now','localtime')", one=True) or {}).get('c', 0)
+    
     text = (
-        "\ud83d\udcca \u0622\u0645\u0627\u0631 \u0631\u0628\u0627\u062a:\n\n"
-        f"\u06a9\u0627\u0631\u0628\u0631\u0627\u0646: {int(total_users)}\n"
-        f"\u062e\u0631\u06cc\u062f\u0627\u0631\u0627\u0646: {int(buyers)}\n"
-        f"\u067e\u0646\u0644\u200c\u0647\u0627\u06cc \u0641\u0639\u0627\u0644: {int(enabled_panels)}\n"
-        f"\u0633\u0631\u0648\u06cc\u0633\u200c\u0647\u0627\u06cc \u0641\u0639\u0627\u0644: {int(total_services)}\n"
-        f"\u0633\u0641\u0627\u0631\u0634\u200c\u0647\u0627\u06cc \u062f\u0631 \u0627\u0646\u062a\u0638\u0627\u0631: {int(pending_orders)}\n\n"
-        f"\u062f\u0631\u0622\u0645\u062f \u0627\u0645\u0631\u0648\u0632: {int(daily_rev):,} \u062a\u0648\u0645\u0627\u0646\n"
-        f"\u062f\u0631\u0622\u0645\u062f 7 \u0631\u0648\u0632 \u0627\u062e\u06cc\u0631: {int(last7_rev):,} \u062a\u0648\u0645\u0627\u0646\n"
-        f"\u062f\u0631\u0622\u0645\u062f \u0627\u06cc\u0646 \u0645\u0627\u0647: {int(monthly_rev):,} \u062a\u0648\u0645\u0627\u0646"
+        "📊 <b>آمار ربات</b>\n\n"
+        f"👥 <b>کاربران:</b> {int(total_users):,}\n"
+        f"🛒 <b>خریداران:</b> {int(buyers):,}\n"
+        f"🌐 <b>پنل‌های فعال:</b> {int(enabled_panels)}\n"
+        f"📱 <b>سرویس‌های فعال:</b> {int(total_services):,}\n"
+        f"⏳ <b>سفارشات در انتظار:</b> {int(pending_orders):,}\n\n"
+        f"💰 <b>درآمد امروز:</b> {int(daily_rev):,} تومان\n"
+        f"📅 <b>درآمد 7 روز اخیر:</b> {int(last7_rev):,} تومان\n"
+        f"📆 <b>درآمد این ماه:</b> {int(monthly_rev):,} تومان\n\n"
+        f"💳 <b>پرداخت‌های امروز:</b> {int(today_payments):,}\n"
+        f"💵 <b>کل پرداخت‌ها:</b> {int(total_payments):,}"
     )
     keyboard = [
         [InlineKeyboardButton("🔄 بروزرسانی", callback_data="stats_refresh")],
@@ -123,7 +129,7 @@ async def admin_stats_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -
         pass
     sent_ok = False
     try:
-        await context.bot.send_message(chat_id=query.message.chat_id, text=text, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode=ParseMode.MARKDOWN)
+        await context.bot.send_message(chat_id=query.message.chat_id, text=text, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode=ParseMode.HTML)
         sent_ok = True
     except Exception:
         sent_ok = False

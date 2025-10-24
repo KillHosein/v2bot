@@ -2757,8 +2757,8 @@ async def admin_orders_manage(update: Update, context: ContextTypes.DEFAULT_TYPE
     await query.answer()
     return await admin_orders_menu(update, context)
 
-async def admin_orders_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Show orders management menu"""
+async def admin_orders_menu(update: Update, context: ContextTypes.DEFAULT_TYPE, page: int = 0) -> int:
+    """Show orders management menu with pagination (15 per page)"""
     query = update.callback_query
     await query.answer()
     
@@ -2768,30 +2768,56 @@ async def admin_orders_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) 
     approved_orders = query_db("SELECT COUNT(*) as c FROM orders WHERE status IN ('approved', 'active')", one=True)['c']
     rejected_orders = query_db("SELECT COUNT(*) as c FROM orders WHERE status='rejected'", one=True)['c']
     
-    # Get recent orders (last 10)
-    recent_orders = query_db(
-        "SELECT id, user_id, plan_id, status, timestamp FROM orders ORDER BY timestamp DESC LIMIT 10"
+    # Pagination
+    per_page = 15
+    offset = page * per_page
+    total_pages = max(1, (total_orders + per_page - 1) // per_page)
+    
+    # Get orders for current page
+    orders = query_db(
+        """SELECT o.id, o.user_id, o.status, o.timestamp, p.name as plan_name, 
+           COALESCE(o.final_price, p.price) as price
+           FROM orders o
+           LEFT JOIN plans p ON p.id = o.plan_id
+           ORDER BY o.timestamp DESC
+           LIMIT ? OFFSET ?""",
+        (per_page, offset)
     )
     
     text = (
         f"📦 <b>مدیریت سفارشات</b>\n\n"
         f"📊 <b>آمار کلی:</b>\n"
-        f"• کل سفارشات: {total_orders}\n"
-        f"• در انتظار تأیید: {pending_orders}\n"
-        f"• تأیید شده: {approved_orders}\n"
-        f"• رد شده: {rejected_orders}\n\n"
+        f"• کل سفارشات: {total_orders:,}\n"
+        f"• در انتظار تأیید: {pending_orders:,}\n"
+        f"• تأیید شده: {approved_orders:,}\n"
+        f"• رد شده: {rejected_orders:,}\n\n"
+        f"📄 <b>صفحه {page + 1} از {total_pages}</b>\n\n"
     )
     
-    if recent_orders:
-        text += "<b>آخرین سفارشات:</b>\n"
-        for order in recent_orders:
+    if orders:
+        text += "<b>سفارشات:</b>\n"
+        for order in orders:
             status_icon = "✅" if order['status'] in ('approved', 'active') else "⏳" if order['status'] == 'pending' else "❌"
-            text += f"{status_icon} #{order['id']} - کاربر {order['user_id']} - {order['status']}\n"
+            plan = order.get('plan_name', 'نامشخص')
+            price = order.get('price', 0)
+            text += f"{status_icon} #{order['id']} | کاربر {order['user_id']} | {plan} | {int(price):,}ت\n"
+    else:
+        text += "سفارشی یافت نشد."
     
-    keyboard = [
-        [InlineKeyboardButton("⏳ سفارشات در انتظار", callback_data='admin_orders_pending')],
-        [InlineKeyboardButton("🔙 بازگشت", callback_data='admin_main')]
-    ]
+    keyboard = []
+    
+    # Pagination buttons
+    if total_pages > 1:
+        nav_row = []
+        if page > 0:
+            nav_row.append(InlineKeyboardButton("◀️ قبلی", callback_data=f'admin_orders_page_{page-1}'))
+        nav_row.append(InlineKeyboardButton(f"📄 {page + 1}/{total_pages}", callback_data='noop'))
+        if page < total_pages - 1:
+            nav_row.append(InlineKeyboardButton("▶️ بعدی", callback_data=f'admin_orders_page_{page+1}'))
+        keyboard.append(nav_row)
+    
+    keyboard.append([InlineKeyboardButton("⏳ سفارشات در انتظار", callback_data='admin_orders_pending')])
+    keyboard.append([InlineKeyboardButton("🔙 بازگشت", callback_data='admin_main')])
     
     await query.message.edit_text(
         text,
