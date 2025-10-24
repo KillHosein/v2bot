@@ -12,6 +12,7 @@ from ..utils import bytes_to_gb
 async def check_expirations(context: ContextTypes.DEFAULT_TYPE):
     logger.info("Running daily expiration check job...")
     st_global = {s['key']: s['value'] for s in (query_db("SELECT key, value FROM settings WHERE key IN ('reminder_job_enabled')") or [])}
+    logger.info(f"Reminder job enabled status: {st_global.get('reminder_job_enabled', '1')}")
     if (st_global.get('reminder_job_enabled') or '1') != '1':
         logger.info("Reminder job disabled by settings. Skipping run.")
         return
@@ -21,11 +22,13 @@ async def check_expirations(context: ContextTypes.DEFAULT_TYPE):
         logger.error("Renewal reminder message template not found in DB. Skipping job.")
         return
     reminder_msg_template = reminder_msg_data['text']
+    logger.info(f"Found reminder template: {len(reminder_msg_template)} chars")
 
     active_orders = query_db(
         "SELECT id, user_id, marzban_username, panel_id, plan_id, last_reminder_date, last_traffic_alert_date FROM orders "
         "WHERE status = 'approved' AND marzban_username IS NOT NULL AND panel_id IS NOT NULL"
     ) or []
+    logger.info(f"Found {len(active_orders)} active orders")
 
     orders_map = {}
     for order in active_orders:
@@ -63,7 +66,9 @@ async def check_expirations(context: ContextTypes.DEFAULT_TYPE):
     except Exception:
         time_alert_days = 3
 
-    all_panels = query_db("SELECT id FROM panels WHERE COALESCE(enabled,1)=1")
+    all_panels = query_db("SELECT id FROM panels WHERE COALESCE(enabled,1)=1") or []
+    logger.info(f"Checking {len(all_panels)} panels for expiration alerts")
+    
     for panel_data in all_panels:
         try:
             panel_api = VpnPanelAPI(panel_id=panel_data['id'])
