@@ -30,11 +30,18 @@ from .handlers.admin_users import (
     admin_users_toggle_ban,
     admin_users_export_csv,
     admin_users_view_by_id_start,
+    admin_users_view_by_id_show,
     admin_users_toggle_ban_inline,
     admin_users_show_services,
     admin_users_show_tickets,
     admin_users_show_wallet,
     admin_users_show_refs,
+)
+from .handlers.admin_service_actions import (
+    admin_service_renew_confirm,
+    admin_service_renew_execute,
+    admin_service_delete_confirm,
+    admin_service_delete_execute,
 )
 from .handlers.admin_cron import (
     admin_cron_menu,
@@ -333,6 +340,11 @@ def build_application() -> Application:
                 CallbackQueryHandler(admin_users_show_tickets, pattern=r'^admin_user_tickets_\d+(_page_\d+)?$'),
                 CallbackQueryHandler(admin_users_show_wallet, pattern=r'^admin_user_wallet_\d+(_page_\d+)?$'),
                 CallbackQueryHandler(admin_users_show_refs, pattern=r'^admin_user_refs_\d+(_page_\d+)?$'),
+                # Admin service actions
+                CallbackQueryHandler(admin_service_renew_confirm, pattern=r'^admin_service_renew_\d+_\d+$'),
+                CallbackQueryHandler(admin_service_renew_execute, pattern=r'^admin_service_renew_yes_\d+_\d+$'),
+                CallbackQueryHandler(admin_service_delete_confirm, pattern=r'^admin_service_delete_\d+_\d+$'),
+                CallbackQueryHandler(admin_service_delete_execute, pattern=r'^admin_service_delete_yes_\d+_\d+$'),
                 CallbackQueryHandler(admin_command, pattern='^admin_main$'),
             ],
             ADMIN_USERS_AWAIT_SEARCH: [MessageHandler(filters.TEXT & ~filters.COMMAND, admin_users_search_apply)],

@@ -205,32 +205,61 @@ async def admin_users_show_services(update: Update, context: ContextTypes.DEFAUL
     parts = query.data.split('_')
     uid = int(parts[-1]) if parts[-2] != 'page' else int(parts[-3])
     page = int(parts[-1]) if parts[-2] == 'page' else 1
-    rows = query_db("SELECT id, plan_id, status, marzban_username, panel_type FROM orders WHERE user_id = ? ORDER BY id DESC", (uid,)) or []
+    rows = query_db(
+        """SELECT o.id, o.plan_id, o.status, o.marzban_username, o.panel_type, o.timestamp, o.expiry_date,
+           p.name as plan_name, p.price
+           FROM orders o
+           LEFT JOIN plans p ON p.id = o.plan_id
+           WHERE o.user_id = ?
+           ORDER BY o.id DESC""",
+        (uid,)
+    ) or []
     if not rows:
-        await _safe_edit_text(query.message, "سرویسی یافت نشد.")
+        await _safe_edit_text(query.message, f"📦 <b>سرویس‌های کاربر {uid}</b>\n\nسرویسی یافت نشد.", parse_mode=ParseMode.HTML, reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("بازگشت", callback_data=f"admin_user_view_prompt")]]))
         return ADMIN_USERS_MENU
-    # fetch plan names
-    plan_map = {}
-    for r in rows:
-        if r.get('plan_id') and r['plan_id'] not in plan_map:
-            p = query_db("SELECT name FROM plans WHERE id = ?", (r['plan_id'],), one=True)
-            plan_map[r['plan_id']] = (p.get('name') if p else '-')
-    page_rows, total = _paginate(rows, page, 10)
-    text = "📦 سرویس‌های کاربر:\n\n"
-    for r in page_rows:
-        pname = plan_map.get(r.get('plan_id')) or '-'
-        text += f"- #{r['id']} | {pname} | {r.get('status')} | {r.get('marzban_username') or '-'} | {r.get('panel_type') or '-'}\n"
-    nav = []
-    total_pages = max(1, (total + 10 - 1) // 10)
-    if page > 1:
-        nav.append(InlineKeyboardButton("⬅️ قبلی", callback_data=f"admin_user_services_{uid}_page_{page-1}"))
-    if page < total_pages:
-        nav.append(InlineKeyboardButton("بعدی ➡️", callback_data=f"admin_user_services_{uid}_page_{page+1}"))
+    
+    page_rows, total = _paginate(rows, page, 5)
+    text = f"📦 <b>سرویس‌های کاربر {uid}</b>\n\n"
+    
     kb = []
-    if nav:
+    for r in page_rows:
+        pname = r.get('plan_name') or 'نامشخص'
+        status_icon = "✅" if r.get('status') == 'approved' else "⏳" if r.get('status') == 'pending' else "❌"
+        price = r.get('price') or 0
+        expiry = r.get('expiry_date') or '-'
+        created = r.get('timestamp') or '-'
+        
+        text += (
+            f"{status_icon} <b>سرویس #{r['id']}</b>\n"
+            f"• پلن: {pname}\n"
+            f"• قیمت: {int(price):,} تومان\n"
+            f"• وضعیت: {r.get('status')}\n"
+            f"• یوزرنیم: <code>{r.get('marzban_username') or '-'}</code>\n"
+            f"• پنل: {r.get('panel_type') or '-'}\n"
+            f"• تاریخ ایجاد: {created}\n"
+            f"• تاریخ انقضا: {expiry}\n\n"
+        )
+        
+        # Add buttons for each service
+        service_row = [
+            InlineKeyboardButton("🔁 تمدید", callback_data=f"admin_service_renew_{r['id']}_{uid}"),
+            InlineKeyboardButton("🗑 حذف", callback_data=f"admin_service_delete_{r['id']}_{uid}")
+        ]
+        kb.append(service_row)
+    
+    # Pagination
+    nav = []
+    total_pages = max(1, (total + 5 - 1) // 5)
+    if total_pages > 1:
+        if page > 1:
+            nav.append(InlineKeyboardButton("◀️ قبلی", callback_data=f"admin_user_services_{uid}_page_{page-1}"))
+        nav.append(InlineKeyboardButton(f"📄 {page}/{total_pages}", callback_data='noop'))
+        if page < total_pages:
+            nav.append(InlineKeyboardButton("▶️ بعدی", callback_data=f"admin_user_services_{uid}_page_{page+1}"))
         kb.append(nav)
-    kb.append([InlineKeyboardButton("بازگشت", callback_data=f"admin_user_view_prompt")])
-    await _safe_edit_text(query.message, text, reply_markup=InlineKeyboardMarkup(kb))
+    
+    kb.append([InlineKeyboardButton("🔙 بازگشت", callback_data=f"admin_user_view_prompt")])
+    await _safe_edit_text(query.message, text, parse_mode=ParseMode.HTML, reply_markup=InlineKeyboardMarkup(kb))
     return ADMIN_USERS_MENU
 
 

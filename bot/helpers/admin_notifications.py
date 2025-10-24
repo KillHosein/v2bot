@@ -44,13 +44,34 @@ async def send_purchase_log(bot: Bot, order_id: int, user_id: int, plan_name: st
         from datetime import datetime
         timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         
+        # Get order details  
+        order_details = query_db(
+            """SELECT o.*, p.duration_days, p.traffic_gb, u.first_name
+               FROM orders o
+               LEFT JOIN plans p ON p.id = o.plan_id
+               LEFT JOIN users u ON u.user_id = o.user_id
+               WHERE o.id = ?""",
+            (order_id,),
+            one=True
+        )
+        
+        duration = order_details.get('duration_days', '-') if order_details else '-'
+        traffic = order_details.get('traffic_gb', '-') if order_details else '-'
+        panel_type = order_details.get('panel_type', 'نامشخص') if order_details else 'نامشخص'
+        marzban_user = order_details.get('marzban_username', '-') if order_details else '-'
+        
         text = (
-            f"🎉 <b>خرید جدید ثبت شد!</b>\n\n"
+            f"🛒 <b>خرید جدید</b>\n\n"
             f"👤 <b>کاربر:</b> {user_display}\n"
+            f"📝 <b>نام:</b> {first_name}\n"
             f"🆔 <b>یوزر آیدی:</b> <code>{user_id}</code>\n"
             f"📦 <b>پلن:</b> {plan_name}\n"
+            f"⏰ <b>مدت:</b> {duration} روز\n"
+            f"📊 <b>حجم:</b> {traffic} GB\n"
             f"💰 <b>مبلغ:</b> {final_price:,} تومان\n"
             f"💳 <b>روش پرداخت:</b> {payment_method}\n"
+            f"🌐 <b>پنل:</b> {panel_type}\n"
+            f"👨‍💻 <b>یوزرنیم سرویس:</b> <code>{marzban_user}</code>\n"
             f"🔢 <b>شماره سفارش:</b> #{order_id}\n"
             f"🕐 <b>زمان:</b> <code>{timestamp}</code>"
         )
@@ -108,13 +129,36 @@ async def send_renewal_log(bot: Bot, order_id: int, user_id: int, plan_name: str
         from datetime import datetime
         timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         
+        # Get order details
+        order_details = query_db(
+            """SELECT o.*, p.duration_days, p.traffic_gb, u.first_name
+               FROM orders o
+               LEFT JOIN plans p ON p.id = o.plan_id
+               LEFT JOIN users u ON u.user_id = o.user_id
+               WHERE o.id = ?""",
+            (order_id,),
+            one=True
+        )
+        
+        duration = order_details.get('duration_days', '-') if order_details else '-'
+        traffic = order_details.get('traffic_gb', '-') if order_details else '-'
+        panel_type = order_details.get('panel_type', 'نامشخص') if order_details else 'نامشخص'
+        marzban_user = order_details.get('marzban_username', '-') if order_details else '-'
+        expiry = order_details.get('expiry_date', '-') if order_details else '-'
+        
         text = (
-            f"🔄 <b>تمدید سرویس انجام شد!</b>\n\n"
+            f"🔄 <b>تمدید سرویس</b>\n\n"
             f"👤 <b>کاربر:</b> {user_display}\n"
+            f"📝 <b>نام:</b> {first_name}\n"
             f"🆔 <b>یوزر آیدی:</b> <code>{user_id}</code>\n"
             f"📦 <b>پلن:</b> {plan_name}\n"
+            f"⏰ <b>مدت اضافه شده:</b> {duration} روز\n"
+            f"📊 <b>حجم اضافه شده:</b> {traffic} GB\n"
             f"💰 <b>مبلغ:</b> {final_price:,} تومان\n"
             f"💳 <b>روش پرداخت:</b> {payment_method}\n"
+            f"🌐 <b>پنل:</b> {panel_type}\n"
+            f"👨‍💻 <b>یوزرنیم سرویس:</b> <code>{marzban_user}</code>\n"
+            f"📅 <b>انقضای جدید:</b> {expiry}\n"
             f"🔢 <b>شماره سفارش:</b> #{order_id}\n"
             f"🕐 <b>زمان:</b> <code>{timestamp}</code>"
         )
