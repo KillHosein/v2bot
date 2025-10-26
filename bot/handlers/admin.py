@@ -3658,8 +3658,26 @@ async def admin_ticket_receive_reply(update: Update, context: ContextTypes.DEFAU
         context.user_data.pop('awaiting_admin', None)
         raise ApplicationHandlerStop
     target_chat_id = int(t['user_id'])
+    
+    # Send ticket header with ticket number
+    ticket_header = (
+        f"📩 <b>پاسخ تیکت #{ticket_id}</b>\n"
+        f"━━━━━━━━━━━━━━━━━━━━━━━━\n"
+    )
+    
+    # Send signature footer
+    ticket_footer = (
+        f"\n━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        f"🙏 <i>با تشکر از صبر و شکیبایی شما</i>\n"
+        f"💬 تیم پشتیبانی"
+    )
+    
     # Try to copy full message; fallback to plain text
     try:
+        # First send the header
+        await context.bot.send_message(chat_id=target_chat_id, text=ticket_header, parse_mode=ParseMode.HTML)
+        
+        # Then send admin's message
         if update.message:
             if update.message.text and update.message.text.startswith('reply:'):
                 # strip reply:tid prefix
@@ -3669,12 +3687,18 @@ async def admin_ticket_receive_reply(update: Update, context: ContextTypes.DEFAU
                 await context.bot.copy_message(chat_id=target_chat_id, from_chat_id=update.message.chat_id, message_id=update.message.message_id)
         else:
             await context.bot.send_message(chat_id=target_chat_id, text=update.effective_message.text or '')
+        
+        # Finally send the footer
+        await context.bot.send_message(chat_id=target_chat_id, text=ticket_footer, parse_mode=ParseMode.HTML)
+        
     except Forbidden:
         await update.message.reply_text("❌ کاربر هنوز استارت نکرده یا پیام‌های ربات را مسدود کرده است. از کاربر بخواهید /start را بزند.")
         raise ApplicationHandlerStop
-    except Exception:
+    except Exception as e:
         try:
-            await context.bot.send_message(chat_id=target_chat_id, text=(update.message.text or ''))
+            # Fallback: send as one message
+            full_message = ticket_header + (update.message.text or '') + ticket_footer
+            await context.bot.send_message(chat_id=target_chat_id, text=full_message, parse_mode=ParseMode.HTML)
         except Forbidden:
             await update.message.reply_text("❌ کاربر هنوز استارت نکرده یا پیام‌های ربات را مسدود کرده است. از کاربر بخواهید /start را بزند.")
             raise ApplicationHandlerStop

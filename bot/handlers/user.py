@@ -1725,9 +1725,31 @@ async def ticket_receive_message(update: Update, context: ContextTypes.DEFAULT_T
     # Save threaded message
     execute_db("INSERT INTO ticket_messages (ticket_id, sender, content_type, text, file_id, created_at) VALUES (?, 'user', ?, ?, ?, ?)",
                (ticket_id, content_type, text, file_id, datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
-    # Forward original message and controls to all admins
+    # Forward original message and controls to all admins with complete info
     admin_kb = [[InlineKeyboardButton("✉️ پاسخ", callback_data=f"ticket_reply_{ticket_id}"), InlineKeyboardButton("🗑 حذف", callback_data=f"ticket_delete_{ticket_id}")],[InlineKeyboardButton("📨 منوی تیکت‌ها", callback_data='admin_tickets_menu')]]
-    summary = f"تیکت #{ticket_id}\nکاربر: `{user_id}`\nزمان: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+    
+    # Get user info
+    user = update.effective_user
+    username = f"@{user.username}" if user.username else "-"
+    full_name = f"{user.first_name or ''} {user.last_name or ''}".strip() or "-"
+    user_mention = f"<a href='tg://user?id={user.id}'>{user.first_name or 'کاربر'}</a>"
+    
+    # Get user stats
+    orders_count = query_db("SELECT COUNT(*) as c FROM orders WHERE user_id = ?", (user_id,), one=True)
+    total_orders = orders_count.get('c') if orders_count else 0
+    
+    summary = (
+        f"🎫 <b>تیکت جدید #{ticket_id}</b>\n\n"
+        f"━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        f"👤 <b>کاربر:</b> {user_mention}\n"
+        f"🆔 <b>شناسه:</b> <code>{user_id}</code>\n"
+        f"📝 <b>نام:</b> {full_name}\n"
+        f"🔖 <b>یوزرنیم:</b> {username}\n"
+        f"📦 <b>تعداد سفارشات:</b> {total_orders}\n"
+        f"🕐 <b>زمان:</b> <code>{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</code>\n"
+        f"━━━━━━━━━━━━━━━━━━━━━━━━"
+    )
+    
     from ..helpers.tg import get_all_admin_ids
     for aid in get_all_admin_ids():
         try:
@@ -1735,7 +1757,7 @@ async def ticket_receive_message(update: Update, context: ContextTypes.DEFAULT_T
         except Exception:
             pass
         try:
-            await context.bot.send_message(chat_id=aid, text=summary, parse_mode=ParseMode.MARKDOWN, reply_markup=InlineKeyboardMarkup(admin_kb))
+            await context.bot.send_message(chat_id=aid, text=summary, parse_mode=ParseMode.HTML, reply_markup=InlineKeyboardMarkup(admin_kb))
         except Exception:
             pass
     await update.message.reply_text(
