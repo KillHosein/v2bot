@@ -725,7 +725,14 @@ async def pay_method_wallet(update: Update, context: ContextTypes.DEFAULT_TYPE) 
         )
         try:
             plan = query_db("SELECT name FROM plans WHERE id = ?", (context.user_data.get('selected_plan_id'),), one=True) or {}
-            await _send_purchase_log(context, user.id, (plan.get('name') or '—'), int(final_price))
+            await _log_purchase(
+                context,
+                user.id,
+                (plan.get('name') or '—'),
+                int(final_price),
+                order_id=order_id,
+                payment_method="کیف پول",
+            )
         except Exception:
             pass
         try:
@@ -761,7 +768,14 @@ async def pay_method_wallet(update: Update, context: ContextTypes.DEFAULT_TYPE) 
     )
     # Send purchase log (chat or admin fallback)
     try:
-        await _send_purchase_log(context, user.id, (plan.get('name') if plan else '—'), int(final_price))
+        await _log_purchase(
+            context,
+            user.id,
+            (plan.get('name') if plan else '—'),
+            int(final_price),
+            order_id=order_id,
+            payment_method="کیف پول",
+        )
     except Exception:
         pass
     # Inform user and return
