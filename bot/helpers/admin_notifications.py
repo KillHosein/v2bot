@@ -21,10 +21,9 @@ async def send_purchase_log(bot: Bot, order_id: int, user_id: int, plan_name: st
     """
     try:
         # Get user info
-        user_info = query_db("SELECT first_name, username FROM users WHERE user_id = ?", (user_id,), one=True)
+        user_info = query_db("SELECT first_name FROM users WHERE user_id = ?", (user_id,), one=True)
         first_name = user_info.get('first_name', 'نامشخص') if user_info else 'نامشخص'
-        user_username = user_info.get('username', '') if user_info else ''
-        user_display = f"@{user_username}" if user_username else first_name
+        user_display = first_name
         
         # Get purchase logs chat
         settings = query_db("SELECT value FROM settings WHERE key IN ('purchase_logs_enabled', 'purchase_logs_chat_id')")
@@ -106,10 +105,9 @@ async def send_renewal_log(bot: Bot, order_id: int, user_id: int, plan_name: str
     """
     try:
         # Get user info
-        user_info = query_db("SELECT first_name, username FROM users WHERE user_id = ?", (user_id,), one=True)
+        user_info = query_db("SELECT first_name FROM users WHERE user_id = ?", (user_id,), one=True)
         first_name = user_info.get('first_name', 'نامشخص') if user_info else 'نامشخص'
-        user_username = user_info.get('username', '') if user_info else ''
-        user_display = f"@{user_username}" if user_username else first_name
+        user_display = first_name
         
         # Get purchase logs chat
         settings = query_db("SELECT value FROM settings WHERE key IN ('purchase_logs_enabled', 'purchase_logs_chat_id')")

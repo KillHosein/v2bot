@@ -103,7 +103,7 @@ async def get_user_management_keyboard(page=0, limit=10):
     offset = page * limit
     users = query_db(
         """
-        SELECT user_id, username, first_name, last_name, created_at 
+        SELECT user_id, first_name 
         FROM users 
         ORDER BY user_id DESC 
         LIMIT ? OFFSET ?
@@ -113,9 +113,8 @@ async def get_user_management_keyboard(page=0, limit=10):
     
     keyboard = []
     for user in users:
-        name = f"{user['first_name'] or ''} {user['last_name'] or ''}".strip() or "بدون نام"
-        username = f"@{user['username']}" if user['username'] else "بدون یوزرنیم"
-        btn_text = f"👤 {name} ({username})"
+        name = user['first_name'] or "بدون نام"
+        btn_text = f"👤 {name} (ID: {user['user_id']})"
         keyboard.append([InlineKeyboardButton(btn_text, callback_data=f"admin_view_user_{user['user_id']}")])
     
     # Add pagination
