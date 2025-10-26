@@ -376,25 +376,23 @@ async def my_services_handler(update: Update, context: ContextTypes.DEFAULT_TYPE
         else:
             status_icon = "❌"
         
-        # Check if volume is exhausted by trying to get user info from panel (with timeout)
+        # Check if volume is exhausted - use cache to avoid multiple panel calls
         volume_indicator = ""
         if status in ('active', 'approved') and order.get('panel_id') and order.get('marzban_username'):
-            try:
-                import asyncio
-                panel_api = VpnPanelAPI(panel_id=order['panel_id'])
-                # Use short timeout to avoid slowing down the list
-                user_info, _ = await asyncio.wait_for(
-                    panel_api.get_user(order['marzban_username']),
-                    timeout=2.0
-                )
+            # Try to get from cache first (same 4-hour TTL)
+            cache_key = f"panel_user_{order['panel_id']}_{order['marzban_username']}"
+            cached_data = panel_cache.get(cache_key, ttl_seconds=14400)
+            
+            if cached_data:
+                # Use cached data
+                user_info = cached_data.get('user_info')
                 if user_info:
                     total_bytes = int(user_info.get('data_limit', 0) or 0)
                     used_bytes = int(user_info.get('used_traffic', 0) or 0)
-                    # If volume is exhausted (used >= total and total > 0)
                     if total_bytes > 0 and used_bytes >= total_bytes:
-                        volume_indicator = " ❌"
-            except Exception:
-                pass  # Silently fail - just don't show indicator
+                        volume_indicator = " 🚫"
+            # Skip panel call in list view - too expensive
+            # Users can view service details to get fresh data
         
         label = f"{status_icon} {service_name}{volume_indicator}"
         keyboard.append([InlineKeyboardButton(label, callback_data=f"view_service_{order['id']}")])    
