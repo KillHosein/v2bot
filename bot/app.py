@@ -256,7 +256,7 @@ from .handlers.admin_stats_broadcast import (
     admin_broadcast_ask_message as admin_broadcast_ask_message,
     admin_broadcast_execute as admin_broadcast_execute,
 )
-from .handlers.admin_system import admin_system_health
+from .handlers.admin_system import admin_system_health, admin_clear_notifications
 
 async def debug_text_logger(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     try:
@@ -337,6 +337,7 @@ def build_application() -> Application:
                 CallbackQueryHandler(admin_tickets_menu, pattern='^admin_tickets_menu$'),
                 CallbackQueryHandler(admin_tutorials_menu, pattern='^admin_tutorials_menu$'),
                 CallbackQueryHandler(admin_system_health, pattern='^admin_system_health$'),
+                CallbackQueryHandler(admin_clear_notifications, pattern='^admin_clear_notifications$'),
                 CallbackQueryHandler(admin_wallet_tx_menu, pattern='^admin_wallet_tx_menu$'),
                 CallbackQueryHandler(admin_orders_menu, pattern='^admin_orders_menu$'),
             ],
@@ -696,6 +697,7 @@ def build_application() -> Application:
     application.add_handler(CallbackQueryHandler(admin_user_management, pattern='^admin_user_management$'), group=3)
     application.add_handler(CallbackQueryHandler(admin_payments_menu, pattern='^admin_payments_menu$'), group=3)
     application.add_handler(CallbackQueryHandler(admin_system_health, pattern='^admin_system_health$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_clear_notifications, pattern='^admin_clear_notifications$'), group=3)
     application.add_handler(CallbackQueryHandler(admin_discount_menu, pattern='^admin_discount_menu$'), group=3)
     application.add_handler(CallbackQueryHandler(admin_messages_menu, pattern='^admin_messages_menu$'), group=3)
     application.add_handler(CallbackQueryHandler(admin_tickets_menu, pattern='^admin_tickets_menu$'), group=3)

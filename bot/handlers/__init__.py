@@ -36,7 +36,8 @@ from .admin_users import (
 )
 
 from .admin_system import (
-    admin_system_health
+    admin_system_health,
+    admin_clear_notifications
 )
 
 # Export all admin handlers
@@ -70,5 +71,6 @@ __all__ = [
     'admin_users_show_tickets',
     'admin_users_show_wallet',
     'admin_users_show_refs',
-    'admin_system_health'
+    'admin_system_health',
+    'admin_clear_notifications'
 ]

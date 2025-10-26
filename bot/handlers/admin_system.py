@@ -8,7 +8,7 @@ from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.constants import ParseMode
 from telegram.ext import ContextTypes
 
-from ..db import query_db
+from ..db import query_db, execute_db
 from ..panel import VpnPanelAPI
 from ..states import ADMIN_MAIN_MENU
 from ..helpers.tg import safe_edit_text as _safe_edit_text
@@ -117,6 +117,7 @@ async def admin_system_health(update: Update, context: ContextTypes.DEFAULT_TYPE
         
         keyboard = [
             [InlineKeyboardButton("🔄 بروزرسانی", callback_data="admin_system_health")],
+            [InlineKeyboardButton("🔔 پاک‌سازی اعلان‌های هشدار", callback_data="admin_clear_notifications")],
             [InlineKeyboardButton("🔙 بازگشت", callback_data="admin_main")]
         ]
         
@@ -169,3 +170,35 @@ def _format_seconds(seconds):
         parts.append(f"{seconds} ثانیه")
     
     return " و ".join(parts) if parts else "چند لحظه"
+
+
+async def admin_clear_notifications(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Clear all notification flags so alerts can be resent"""
+    query = update.callback_query
+    await query.answer()
+    
+    try:
+        # Reset all notification flags
+        execute_db("""
+            UPDATE orders 
+            SET notified_traffic_80 = 0,
+                notified_traffic_95 = 0,
+                notified_expiry_3d = 0,
+                notified_expiry_1d = 0
+            WHERE status = 'approved'
+        """)
+        
+        # Count affected orders
+        affected = query_db("SELECT COUNT(*) as c FROM orders WHERE status = 'approved'", one=True)['c']
+        
+        await query.answer(
+            f"✅ اعلان‌های هشدار برای {affected} سرویس پاک‌سازی شد",
+            show_alert=True
+        )
+        
+        # Return to system health menu
+        return await admin_system_health(update, context)
+        
+    except Exception as e:
+        await query.answer(f"❌ خطا: {str(e)}", show_alert=True)
+        return await admin_system_health(update, context)
