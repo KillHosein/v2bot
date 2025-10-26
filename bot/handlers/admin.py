@@ -415,29 +415,18 @@ async def admin_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
     keyboard = get_main_menu_keyboard()
     
     if update.callback_query:
-        await update.callback_query.answer()
         try:
-            await update.callback_query.message.edit_text(
+            await safe_edit_message(
+                update.callback_query,
                 text,
                 reply_markup=InlineKeyboardMarkup(keyboard),
-                parse_mode=ParseMode.MARKDOWN
+                parse_mode=ParseMode.MARKDOWN,
+                answer_callback=True
             )
-        except BadRequest as e:
-            # Ignore "Message is not modified" errors (benign)
-            if "message is not modified" in str(e).lower():
-                pass
-            else:
-                logger.error(f"Error updating admin message: {e}")
-                await update.callback_query.message.reply_text(
-                    "خطا در به‌روزرسانی پیام. لطفا دوباره امتحان کنید.",
-                    parse_mode=ParseMode.MARKDOWN
-                )
         except Exception as e:
-            logger.error(f"Error updating admin message: {e}")
-            await update.callback_query.message.reply_text(
-                "خطا در به‌روزرسانی پیام. لطفا دوباره امتحان کنید.",
-                parse_mode=ParseMode.MARKDOWN
-            )
+            # Only log non-benign errors
+            if "message is not modified" not in str(e).lower():
+                logger.error(f"Error updating admin message: {e}")
     else:
         await update.message.reply_text(
             text,
@@ -460,8 +449,8 @@ async def admin_toggle_bot_active(update: Update, context: ContextTypes.DEFAULT_
     except Exception as e:
         await answer_safely(query, "خطا در تغییر وضعیت", show_alert=True)
         logger.error(f"Error toggling bot_active: {e}")
-    # Refresh admin panel
-    return await send_admin_panel(update, context)
+    # Refresh admin panel with updated button
+    return await admin_command(update, context)
 
 
 # --- Order Review / Approval ---

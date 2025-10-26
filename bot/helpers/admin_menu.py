@@ -36,7 +36,19 @@ async def get_admin_stats():
 
 def get_main_menu_keyboard():
     """Generate main admin menu keyboard"""
+    # Get bot active status
+    try:
+        active_val = (query_db("SELECT value FROM settings WHERE key='bot_active'", one=True) or {}).get('value') or '1'
+        bot_on = str(active_val) == '1'
+    except Exception:
+        bot_on = True
+    
+    toggle_label = "🟢 ربات روشن (خاموش کردن)" if bot_on else "🔴 ربات خاموش (روشن کردن)"
+    
     return [
+        [
+            InlineKeyboardButton(toggle_label, callback_data="admin_toggle_bot_active")
+        ],
         [
             InlineKeyboardButton("👥 کاربران", callback_data="admin_user_management"),
             InlineKeyboardButton("📦 سفارشات", callback_data="admin_orders_manage")
