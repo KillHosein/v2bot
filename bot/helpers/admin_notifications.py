@@ -36,7 +36,7 @@ async def send_purchase_log(bot: Bot, order_id: int, user_id: int, plan_name: st
             user_mention = first_name
         
         # Get purchase logs chat
-        settings = query_db("SELECT value FROM settings WHERE key IN ('purchase_logs_enabled', 'purchase_logs_chat_id')")
+        settings = query_db("SELECT key, value FROM settings WHERE key IN ('purchase_logs_enabled', 'purchase_logs_chat_id')")
         settings_dict = {s['key']: s['value'] for s in settings} if settings else {}
         
         enabled = settings_dict.get('purchase_logs_enabled', '1') == '1'
@@ -141,7 +141,7 @@ async def send_renewal_log(bot: Bot, order_id: int, user_id: int, plan_name: str
             user_mention = first_name
         
         # Get purchase logs chat
-        settings = query_db("SELECT value FROM settings WHERE key IN ('purchase_logs_enabled', 'purchase_logs_chat_id')")
+        settings = query_db("SELECT key, value FROM settings WHERE key IN ('purchase_logs_enabled', 'purchase_logs_chat_id')")
         settings_dict = {s['key']: s['value'] for s in settings} if settings else {}
         
         enabled = settings_dict.get('purchase_logs_enabled', '1') == '1'
@@ -245,7 +245,7 @@ async def send_join_log(bot: Bot, user_id: int, referrer_id: int = None):
             user_mention = first_name
         
         # Get join logs chat
-        settings = query_db("SELECT value FROM settings WHERE key IN ('join_logs_enabled', 'join_logs_chat_id')")
+        settings = query_db("SELECT key, value FROM settings WHERE key IN ('join_logs_enabled', 'join_logs_chat_id')")
         settings_dict = {s['key']: s['value'] for s in settings} if settings else {}
         
         enabled = settings_dict.get('join_logs_enabled', '1') == '1'
