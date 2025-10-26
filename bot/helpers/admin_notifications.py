@@ -20,10 +20,20 @@ async def send_purchase_log(bot: Bot, order_id: int, user_id: int, plan_name: st
         payment_method: Payment method used
     """
     try:
-        # Get user info
-        user_info = query_db("SELECT first_name FROM users WHERE user_id = ?", (user_id,), one=True)
-        first_name = user_info.get('first_name', 'نامشخص') if user_info else 'نامشخص'
-        user_display = first_name
+        # Get user info from Telegram API
+        try:
+            telegram_user = await bot.get_chat(user_id)
+            first_name = telegram_user.first_name or 'نامشخص'
+            last_name = telegram_user.last_name or ''
+            username = telegram_user.username or None
+            full_name = f"{first_name} {last_name}".strip()
+            user_mention = f"@{username}" if username else full_name
+        except Exception:
+            user_info = query_db("SELECT first_name FROM users WHERE user_id = ?", (user_id,), one=True)
+            first_name = user_info.get('first_name', 'نامشخص') if user_info else 'نامشخص'
+            full_name = first_name
+            username = None
+            user_mention = first_name
         
         # Get purchase logs chat
         settings = query_db("SELECT value FROM settings WHERE key IN ('purchase_logs_enabled', 'purchase_logs_chat_id')")
@@ -61,8 +71,9 @@ async def send_purchase_log(bot: Bot, order_id: int, user_id: int, plan_name: st
         
         text = (
             f"🛒 <b>خرید جدید</b>\n\n"
-            f"👤 <b>کاربر:</b> {user_display}\n"
-            f"📝 <b>نام:</b> {first_name}\n"
+            f"👤 <b>کاربر:</b> {user_mention}\n"
+            f"📝 <b>نام کامل:</b> {full_name}\n"
+            f"🔖 <b>یوزرنیم تلگرام:</b> {'@' + username if username else '-'}\n"
             f"🆔 <b>یوزر آیدی:</b> <code>{user_id}</code>\n"
             f"📦 <b>پلن:</b> {plan_name}\n"
             f"⏰ <b>مدت:</b> {duration} روز\n"
@@ -104,10 +115,20 @@ async def send_renewal_log(bot: Bot, order_id: int, user_id: int, plan_name: str
         payment_method: Payment method used
     """
     try:
-        # Get user info
-        user_info = query_db("SELECT first_name FROM users WHERE user_id = ?", (user_id,), one=True)
-        first_name = user_info.get('first_name', 'نامشخص') if user_info else 'نامشخص'
-        user_display = first_name
+        # Get user info from Telegram API
+        try:
+            telegram_user = await bot.get_chat(user_id)
+            first_name = telegram_user.first_name or 'نامشخص'
+            last_name = telegram_user.last_name or ''
+            username = telegram_user.username or None
+            full_name = f"{first_name} {last_name}".strip()
+            user_mention = f"@{username}" if username else full_name
+        except Exception:
+            user_info = query_db("SELECT first_name FROM users WHERE user_id = ?", (user_id,), one=True)
+            first_name = user_info.get('first_name', 'نامشخص') if user_info else 'نامشخص'
+            full_name = first_name
+            username = None
+            user_mention = first_name
         
         # Get purchase logs chat
         settings = query_db("SELECT value FROM settings WHERE key IN ('purchase_logs_enabled', 'purchase_logs_chat_id')")
@@ -146,8 +167,9 @@ async def send_renewal_log(bot: Bot, order_id: int, user_id: int, plan_name: str
         
         text = (
             f"🔄 <b>تمدید سرویس</b>\n\n"
-            f"👤 <b>کاربر:</b> {user_display}\n"
-            f"📝 <b>نام:</b> {first_name}\n"
+            f"👤 <b>کاربر:</b> {user_mention}\n"
+            f"📝 <b>نام کامل:</b> {full_name}\n"
+            f"🔖 <b>یوزرنیم تلگرام:</b> {'@' + username if username else '-'}\n"
             f"🆔 <b>یوزر آیدی:</b> <code>{user_id}</code>\n"
             f"📦 <b>پلن:</b> {plan_name}\n"
             f"⏰ <b>مدت اضافه شده:</b> {duration} روز\n"
@@ -175,3 +197,78 @@ async def send_renewal_log(bot: Bot, order_id: int, user_id: int, plan_name: str
             )
         except Exception:
             pass
+
+
+async def send_join_log(bot: Bot, user_id: int, referrer_id: int = None):
+    """
+    Send new user join notification to admin
+    
+    Args:
+        bot: Telegram bot instance
+        user_id: User ID who joined
+        referrer_id: User ID of referrer (optional)
+    """
+    try:
+        # Get user info from Telegram API
+        try:
+            telegram_user = await bot.get_chat(user_id)
+            first_name = telegram_user.first_name or 'نامشخص'
+            last_name = telegram_user.last_name or ''
+            username = telegram_user.username or None
+            full_name = f"{first_name} {last_name}".strip()
+            user_mention = f"@{username}" if username else full_name
+        except Exception:
+            user_info = query_db("SELECT first_name FROM users WHERE user_id = ?", (user_id,), one=True)
+            first_name = user_info.get('first_name', 'نامشخص') if user_info else 'نامشخص'
+            full_name = first_name
+            username = None
+            user_mention = first_name
+        
+        # Get join logs chat
+        settings = query_db("SELECT value FROM settings WHERE key IN ('join_logs_enabled', 'join_logs_chat_id')")
+        settings_dict = {s['key']: s['value'] for s in settings} if settings else {}
+        
+        enabled = settings_dict.get('join_logs_enabled', '1') == '1'
+        if not enabled:
+            return
+        
+        # Determine target chat
+        chat_id_raw = settings_dict.get('join_logs_chat_id', '').strip()
+        if chat_id_raw:
+            target_chat = chat_id_raw if chat_id_raw.startswith('@') else (int(chat_id_raw) if chat_id_raw.lstrip('-').isdigit() else ADMIN_ID)
+        else:
+            target_chat = ADMIN_ID
+        
+        from datetime import datetime
+        timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        
+        # Get referrer info if exists
+        referrer_text = ""
+        if referrer_id:
+            try:
+                referrer_user = await bot.get_chat(referrer_id)
+                ref_name = referrer_user.first_name or 'نامشخص'
+                ref_username = referrer_user.username
+                referrer_text = f"\n🔗 <b>معرف:</b> {ref_name} {'@' + ref_username if ref_username else ''} (<code>{referrer_id}</code>)"
+            except Exception:
+                referrer_text = f"\n🔗 <b>معرف:</b> ID: <code>{referrer_id}</code>"
+        
+        # Get total users count
+        total_users = query_db("SELECT COUNT(*) as count FROM users", one=True)
+        user_count = total_users['count'] if total_users else 0
+        
+        text = (
+            f"👋 <b>کاربر جدید</b>\n\n"
+            f"👤 <b>کاربر:</b> {user_mention}\n"
+            f"📝 <b>نام کامل:</b> {full_name}\n"
+            f"🔖 <b>یوزرنیم تلگرام:</b> {'@' + username if username else '-'}\n"
+            f"🆔 <b>یوزر آیدی:</b> <code>{user_id}</code>{referrer_text}\n"
+            f"👥 <b>تعداد کل کاربران:</b> {user_count:,}\n"
+            f"🕐 <b>زمان عضویت:</b> <code>{timestamp}</code>"
+        )
+        
+        await bot.send_message(chat_id=target_chat, text=text, parse_mode=ParseMode.HTML)
+        logger.info(f"Join log sent for user {user_id} to chat {target_chat}")
+        
+    except Exception as e:
+        logger.error(f"Failed to send join log for user {user_id}: {e}", exc_info=True)
