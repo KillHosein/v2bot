@@ -47,9 +47,15 @@ async def check_low_traffic(context):
                 
                 # Get service stats from panel - pass panel_id not the whole dict
                 api = VpnPanelAPI(panel_id=order['panel_id'])
-                user_data = await api.get_user(order['marzban_username'])
+                result = await api.get_user(order['marzban_username'])
                 
-                if not user_data:
+                # Handle both tuple (user_data, message) and dict returns
+                if isinstance(result, tuple):
+                    user_data, _ = result
+                else:
+                    user_data = result
+                
+                if not user_data or not isinstance(user_data, dict):
                     continue
                 
                 # Calculate usage percentage

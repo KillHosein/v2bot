@@ -21,33 +21,18 @@ def _strike_text(text: str) -> str:
         return text
 
 
-async def _send_purchase_log(context: ContextTypes.DEFAULT_TYPE, user_id: int, plan_name: str, amount: int):
+async def _log_purchase(context, user_id: int, plan_name: str, amount: float, order_id: int = 0, payment_method: str = "نامشخص"):
+    # Use new admin_notifications system
     try:
-        st = {r['key']: r['value'] for r in query_db("SELECT key, value FROM settings WHERE key IN ('purchase_logs_enabled','purchase_logs_chat_id')") or []}
-        if (st.get('purchase_logs_enabled') or '0') != '1':
-            return
-        raw = (st.get('purchase_logs_chat_id') or '').strip()
-        target = raw if raw.startswith('@') else (int(raw) if (raw and raw.lstrip('-').isdigit()) else 0)
-        from datetime import datetime as _dt
-        ts = _dt.now().strftime('%Y-%m-%d %H:%M:%S')
-        msg = (
-            f"\U0001F9FE گزارش خرید (خودکار)\n"
-            f"کاربر: `{user_id}`\n"
-            f"پلن: {plan_name}\n"
-            f"مبلغ: {int(amount):,} تومان\n"
-            f"زمان: `{ts}`"
+        from ..helpers.admin_notifications import send_purchase_log
+        await send_purchase_log(
+            bot=context.bot,
+            order_id=order_id,
+            user_id=user_id,
+            plan_name=plan_name,
+            final_price=int(amount),
+            payment_method=payment_method
         )
-        if target:
-            try:
-                await context.bot.send_message(chat_id=target, text=msg, parse_mode=ParseMode.MARKDOWN)
-                return
-            except Exception:
-                pass
-        # Fallback to admins
-        try:
-            await notify_admins(context.bot, text=("[Log delivery fallback]\n" + msg), parse_mode=ParseMode.MARKDOWN)
-        except Exception:
-            pass
     except Exception:
         pass
 
