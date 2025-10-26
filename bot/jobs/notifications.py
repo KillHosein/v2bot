@@ -47,7 +47,7 @@ async def check_low_traffic(context):
                 
                 # Get service stats from panel - pass panel_id not the whole dict
                 api = VpnPanelAPI(panel_id=order['panel_id'])
-                user_data = api.get_user(order['marzban_username'])
+                user_data = await api.get_user(order['marzban_username'])
                 
                 if not user_data:
                     continue
