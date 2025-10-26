@@ -110,7 +110,7 @@ from .handlers.user import (
     support_menu, ticket_create_start, ticket_receive_message, tutorials_menu, tutorial_show,
     referral_menu, wallet_select_amount, wallet_upload_start_card, wallet_upload_start_crypto,
     composite_upload_router, refresh_service_link, revoke_key, view_service_qr, delete_service_start, delete_service_confirm,
-    check_service_status,
+    check_service_status, refresh_service_details,
     reseller_menu, reseller_pay_start,
     reseller_pay_card, reseller_pay_crypto, reseller_pay_gateway, reseller_verify_gateway,
     reseller_upload_start_card, reseller_upload_start_crypto, reseller_upload_router
@@ -663,6 +663,7 @@ def build_application() -> Application:
     application.add_handler(CallbackQueryHandler(support_menu, pattern=r'^support_menu$'), group=3)
     application.add_handler(CallbackQueryHandler(show_specific_service_details, pattern=r'^view_service_\d+$'), group=3)
     application.add_handler(CallbackQueryHandler(check_service_status, pattern=r'^check_service_status_\d+$'), group=3)
+    application.add_handler(CallbackQueryHandler(refresh_service_details, pattern=r'^refresh_service_\d+$'), group=3)
     application.add_handler(CallbackQueryHandler(refresh_service_link, pattern=r'^refresh_service_link_\d+$'), group=3)
     application.add_handler(CallbackQueryHandler(view_service_qr, pattern=r'^view_service_qr_\d+$'), group=3)
     application.add_handler(CallbackQueryHandler(revoke_key, pattern=r'^revoke_key_'), group=3)

@@ -11,9 +11,10 @@ def _with_name_fragment(uri: str, name: str) -> str:
         return uri
 from datetime import datetime
 import requests, base64
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, KeyboardButton
 from telegram.constants import ParseMode
 from telegram.error import TelegramError, BadRequest
+from ..helpers.cache import panel_cache
 from telegram.ext import ContextTypes, ConversationHandler, CallbackQueryHandler, MessageHandler, filters
 
 from ..db import query_db, execute_db
@@ -496,31 +497,51 @@ async def show_specific_service_details(update: Update, context: ContextTypes.DE
         )
         return
     
-    # Add timeout to prevent hanging
+    # Check cache first (4 hours TTL)
+    cache_key = f"panel_user_{panel_id}_{marzban_username}"
+    cached_data = panel_cache.get(cache_key, ttl_seconds=14400)  # 4 hours
+    
+    if cached_data:
+        logger.info(f"[view_service] Using cached data for {marzban_username}")
+        user_info = cached_data.get('user_info')
+        message = cached_data.get('message')
+    else:
+        # Add timeout to prevent hanging
+        try:
+            import asyncio
+            logger.info(f"[view_service] Calling get_user for {marzban_username} (cache miss)")
+            user_info, message = await asyncio.wait_for(
+                panel_api.get_user(marzban_username),
+                timeout=15.0
+            )
+            logger.info(f"[view_service] get_user returned: user_info={'OK' if user_info else 'None'}, message={message}")
+            
+            # Cache the result if successful
+            if user_info:
+                panel_cache.set(cache_key, {'user_info': user_info, 'message': message})
+                logger.info(f"[view_service] Cached data for {marzban_username}")
+        except asyncio.TimeoutError:
+            logger.error(f"[view_service] Timeout getting user {marzban_username} from panel {panel_id}")
+            await query.message.edit_text(
+                "⏱ <b>تایم اوت!</b>\n\nدرخواست به پنل طول کشید.\n\n🔄 لطفاً دوباره تلاش کنید.",
+                reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("📱 سرویس‌های من", callback_data='my_services')]]),
+                parse_mode=ParseMode.HTML
+            )
+            return
+        except Exception as e:
+            logger.error(f"[view_service] Exception getting user {marzban_username}: {type(e).__name__}: {e}", exc_info=True)
+            await query.message.edit_text(
+                f"❌ <b>خطای اتصال</b>\n\n<code>{type(e).__name__}</code>\n{str(e)[:100]}\n\n🔄 لطفاً دوباره تلاش کنید.",
+                reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("📱 سرویس‌های من", callback_data='my_services')]]),
+                parse_mode=ParseMode.HTML
+            )
+            return
+    
+    # Continue with user_info (from cache or fresh)
     try:
-        import asyncio
-        logger.info(f"[view_service] Calling get_user for {marzban_username}")
-        user_info, message = await asyncio.wait_for(
-            panel_api.get_user(marzban_username),
-            timeout=15.0
-        )
-        logger.info(f"[view_service] get_user returned: user_info={'OK' if user_info else 'None'}, message={message}")
-    except asyncio.TimeoutError:
-        logger.error(f"[view_service] Timeout getting user {marzban_username} from panel {panel_id}")
-        await query.message.edit_text(
-            "⏱ <b>تایم اوت!</b>\n\nدرخواست به پنل طول کشید.\n\n🔄 لطفاً دوباره تلاش کنید.",
-            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("📱 سرویس‌های من", callback_data='my_services')]]),
-            parse_mode=ParseMode.HTML
-        )
-        return
-    except Exception as e:
-        logger.error(f"[view_service] Exception getting user {marzban_username}: {type(e).__name__}: {e}", exc_info=True)
-        await query.message.edit_text(
-            f"❌ <b>خطای اتصال</b>\n\n<code>{type(e).__name__}</code>\n{str(e)[:100]}\n\n🔄 لطفاً دوباره تلاش کنید.",
-            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("📱 سرویس‌های من", callback_data='my_services')]]),
-            parse_mode=ParseMode.HTML
-        )
-        return
+        pass  # Keep the structure intact
+    except Exception:
+        pass  # Already handled above
 
     if not user_info:
         await query.message.edit_text(
@@ -623,10 +644,19 @@ async def show_specific_service_details(update: Update, context: ContextTypes.DE
             f"<b>{link_label}</b>\n{link_value}"
         )
 
+    # Add cache info to text if data was cached
+    cache_indicator = ""
+    if cached_data:
+        cache_indicator = "\n\n💾 <i>اطلاعات از حافظه موقت (تا 4 ساعت)</i>"
+        text += cache_indicator
+    
     keyboard = [
         [InlineKeyboardButton("\U0001F504 تمدید این سرویس", callback_data=f"renew_service_{order_id}")],
         [InlineKeyboardButton("\U0001F4CA وضعیت سرویس", callback_data=f"check_service_status_{order_id}")],
-        [InlineKeyboardButton("\U0001F5D1 حذف این سرویس", callback_data=f"delete_service_{order_id}")],
+        [
+            InlineKeyboardButton("🔄 بروزرسانی اطلاعات", callback_data=f"refresh_service_{order_id}"),
+            InlineKeyboardButton("\U0001F5D1 حذف", callback_data=f"delete_service_{order_id}")
+        ],
         [InlineKeyboardButton("\U0001F519 بازگشت", callback_data='my_services')],
     ]
     # Try to send QR image for the first config or sub link
@@ -663,6 +693,34 @@ async def show_specific_service_details(update: Update, context: ContextTypes.DE
             pass
     # Final fallback: send text only
     await query.message.edit_text(text, parse_mode=ParseMode.HTML, reply_markup=InlineKeyboardMarkup(keyboard))
+
+
+async def refresh_service_details(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Refresh service details by clearing cache and refetching"""
+    query = update.callback_query
+    await query.answer("🔄 در حال بروزرسانی...", show_alert=False)
+    
+    try:
+        order_id = int(query.data.split('_')[-1])
+    except Exception:
+        await query.answer("❌ شناسه نامعتبر است", show_alert=True)
+        return
+    
+    order = query_db("SELECT * FROM orders WHERE id = ?", (order_id,), one=True)
+    if not order or order['user_id'] != query.from_user.id:
+        await query.answer("❌ سرویس یافت نشد", show_alert=True)
+        return
+    
+    # Clear cache for this user
+    marzban_username = order.get('marzban_username')
+    panel_id = order.get('panel_id')
+    if marzban_username and panel_id:
+        cache_key = f"panel_user_{panel_id}_{marzban_username}"
+        panel_cache.delete(cache_key)
+        logger.info(f"[refresh_service] Cache cleared for {marzban_username}")
+    
+    # Call show_specific_service_details to fetch fresh data
+    await show_specific_service_details(update, context)
 
 
 async def view_service_qr(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
