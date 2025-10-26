@@ -334,10 +334,12 @@ async def my_services_handler(update: Update, context: ContextTypes.DEFAULT_TYPE
         ]
         text = (
             "📱 <b>سرویس‌های من</b>\n\n"
+            "━━━━━━━━━━━━━━━━━━━━━━━━\n"
             "❌ شما در حال حاضر هیچ سرویسی ندارید.\n\n"
             "💡 <b>برای شروع می‌توانید:</b>\n"
-            "• یک سرویس جدید خریداری کنید\n"
-            "• از کانفیگ تست رایگان استفاده کنید\n"
+            "🛒 یک سرویس جدید خریداری کنید\n"
+            "🎁 از کانفیگ تست رایگان استفاده کنید\n\n"
+            "━━━━━━━━━━━━━━━━━━━━━━━━"
         )
         await query.message.edit_text(
             text,
@@ -418,12 +420,14 @@ async def my_services_handler(update: Update, context: ContextTypes.DEFAULT_TYPE
     
     text = (
         f"📱 <b>سرویس‌های من</b>\n\n"
-        f"📊 <b>خلاصه آمار:</b>\n"
-        f"✅ فعال: {active_count} عدد\n"
-        f"⏳ در انتظار تأیید: {pending_count} عدد\n"
-        f"❌ منقضی شده: {expired_count} عدد\n"
-        f"📦 مجموع کل: {len(orders)} عدد\n\n"
-        f"💡 برای مشاهده جزئیات هر سرویس، روی آن کلیک کنید."
+        f"━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        f"📊 <b>خلاصه آمار شما:</b>\n\n"
+        f"   ✅ فعال: <b>{active_count}</b> سرویس\n"
+        f"   ⏳ در انتظار: <b>{pending_count}</b> سرویس\n"
+        f"   ❌ منقضی: <b>{expired_count}</b> سرویس\n"
+        f"   📦 مجموع: <b>{len(orders)}</b> سرویس\n\n"
+        f"━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        f"💡 <i>برای مشاهده جزئیات، روی هر سرویس کلیک کنید.</i>"
     )
     
     # Try to edit, if fails (e.g., message has no text), send new message
@@ -454,20 +458,24 @@ async def show_specific_service_details(update: Update, context: ContextTypes.DE
     order = query_db("SELECT * FROM orders WHERE id = ?", (order_id,), one=True)
     if not order or order['user_id'] != query.from_user.id:
         await query.message.edit_text(
-            "خطا: این سرویس یافت نشد.",
-            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("\U0001F519 بازگشت", callback_data='start_main')]]),
+            "❌ <b>خطا</b>\n\nاین سرویس یافت نشد یا حذف شده است.",
+            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🏠 منوی اصلی", callback_data='start_main')]]),
+            parse_mode=ParseMode.HTML
         )
         return
 
     if not order.get('panel_id'):
         await query.message.edit_text(
-            "خطا: اطلاعات پنل برای این سرویس یافت نشد. لطفا با پشتیبانی تماس بگیرید.",
-            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("\U0001F519 بازگشت", callback_data='my_services')]]),
+            "❌ <b>خطای پیکربندی</b>\n\n"
+            "اطلاعات پنل برای این سرویس یافت نشد.\n\n"
+            "📞 لطفاً با پشتیبانی تماس بگیرید.",
+            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("📱 سرویس‌های من", callback_data='my_services')]]),
+            parse_mode=ParseMode.HTML
         )
         return
 
     try:
-        await query.message.edit_text("در حال دریافت اطلاعات سرویس شما... لطفا صبر کنید \U0001F552")
+        await query.message.edit_text("⏳ <b>در حال دریافت اطلاعات...</b>\n\nلطفاً چند لحظه صبر کنید.", parse_mode=ParseMode.HTML)
     except TelegramError:
         pass
 
@@ -482,8 +490,9 @@ async def show_specific_service_details(update: Update, context: ContextTypes.DE
     except Exception as e:
         logger.error(f"[view_service] Error creating panel API: {e}", exc_info=True)
         await query.message.edit_text(
-            f"❌ خطا در ساخت اتصال پنل: {str(e)}\n\nلطفاً با پشتیبانی تماس بگیرید.",
-            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("\U0001F519 بازگشت", callback_data='my_services')]]),
+            f"❌ <b>خطای اتصال به پنل</b>\n\n{str(e)}\n\n📞 لطفاً با پشتیبانی تماس بگیرید.",
+            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("📱 سرویس‌های من", callback_data='my_services')]]),
+            parse_mode=ParseMode.HTML
         )
         return
     
@@ -499,22 +508,25 @@ async def show_specific_service_details(update: Update, context: ContextTypes.DE
     except asyncio.TimeoutError:
         logger.error(f"[view_service] Timeout getting user {marzban_username} from panel {panel_id}")
         await query.message.edit_text(
-            "⏱ درخواست به پنل طول کشید. لطفاً دوباره تلاش کنید.",
-            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("\U0001F519 بازگشت", callback_data='my_services')]]),
+            "⏱ <b>تایم اوت!</b>\n\nدرخواست به پنل طول کشید.\n\n🔄 لطفاً دوباره تلاش کنید.",
+            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("📱 سرویس‌های من", callback_data='my_services')]]),
+            parse_mode=ParseMode.HTML
         )
         return
     except Exception as e:
         logger.error(f"[view_service] Exception getting user {marzban_username}: {type(e).__name__}: {e}", exc_info=True)
         await query.message.edit_text(
-            f"❌ خطا در اتصال به پنل: {type(e).__name__}\n\n{str(e)[:100]}\n\nلطفاً دوباره تلاش کنید.",
-            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("\U0001F519 بازگشت", callback_data='my_services')]]),
+            f"❌ <b>خطای اتصال</b>\n\n<code>{type(e).__name__}</code>\n{str(e)[:100]}\n\n🔄 لطفاً دوباره تلاش کنید.",
+            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("📱 سرویس‌های من", callback_data='my_services')]]),
+            parse_mode=ParseMode.HTML
         )
         return
 
     if not user_info:
         await query.message.edit_text(
-            f"خطا در دریافت اطلاعات از پنل: {message}",
-            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("\U0001F519 بازگشت", callback_data='my_services')]]),
+            f"❌ <b>خطا در دریافت اطلاعات</b>\n\n{message}\n\n🔄 لطفاً دوباره تلاش کنید.",
+            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("📱 سرویس‌های من", callback_data='my_services')]]),
+            parse_mode=ParseMode.HTML
         )
         return
 
@@ -592,16 +604,22 @@ async def show_specific_service_details(update: Update, context: ContextTypes.DE
 
     if show_quota:
         text = (
-            f"<b>\U0001F4E6 مشخصات سرویس (<code>{marzban_username}</code>)</b>\n\n"
-            f"<b>\U0001F4CA حجم کل:</b> {data_limit_gb}\n"
-            f"<b>\U0001F4C8 حجم مصرفی:</b> {data_used_gb} گیگابایت\n"
-            f"<b>\U0001F4C5 تاریخ انقضا:</b> {expire_display}\n\n"
+            f"📦 <b>مشخصات سرویس</b>\n"
+            f"<code>{marzban_username}</code>\n\n"
+            f"━━━━━━━━━━━━━━━━━━━━━━━━\n"
+            f"📊 <b>حجم کل:</b> {data_limit_gb}\n"
+            f"📈 <b>حجم مصرفی:</b> {data_used_gb} گیگابایت\n"
+            f"📅 <b>تاریخ انقضا:</b> {expire_display}\n\n"
+            f"━━━━━━━━━━━━━━━━━━━━━━━━\n"
             f"<b>{link_label}</b>\n{link_value}"
         )
     else:
         text = (
-            f"<b>\U0001F4E6 مشخصات سرویس (<code>{marzban_username}</code>)</b>\n\n"
-            f"<b>\U0001F4C5 تاریخ انقضا:</b> {expire_display}\n\n"
+            f"📦 <b>مشخصات سرویس</b>\n"
+            f"<code>{marzban_username}</code>\n\n"
+            f"━━━━━━━━━━━━━━━━━━━━━━━━\n"
+            f"📅 <b>تاریخ انقضا:</b> {expire_display}\n\n"
+            f"━━━━━━━━━━━━━━━━━━━━━━━━\n"
             f"<b>{link_label}</b>\n{link_value}"
         )
 
