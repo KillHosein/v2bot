@@ -369,44 +369,63 @@ async def admin_set_time_alert_days_start(update: Update, context: ContextTypes.
 async def admin_set_talert_value_save(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     txt = (update.message.text or '').strip().replace('%','')
     mode = context.user_data.get('awaiting_admin')
+    
     if mode == 'set_talert_gb':
         try:
             val = float(txt)
         except Exception:
-            await update.message.reply_text("عدد نامعتبر است.")
+            await update.message.reply_text("❌ عدد نامعتبر است. لطفاً دوباره تلاش کنید:")
             return SETTINGS_AWAIT_TRAFFIC_ALERT_VALUE
         execute_db("INSERT OR REPLACE INTO settings (key, value) VALUES ('traffic_alert_value_gb', ?)", (str(val),))
-        await update.message.reply_text("ذخیره شد.")
+        await update.message.reply_text(f"✅ مقدار هشدار حجم به {val} GB تنظیم شد.\n\n🔄 بازگشت به منوی تنظیمات...")
     elif mode == 'set_time_alert_days':
         try:
             ival = int(txt)
         except Exception:
-            await update.message.reply_text("عدد صحیح نامعتبر است.")
+            await update.message.reply_text("❌ عدد صحیح نامعتبر است. لطفاً دوباره تلاش کنید:")
             return SETTINGS_AWAIT_TRAFFIC_ALERT_VALUE
         execute_db("INSERT OR REPLACE INTO settings (key, value) VALUES ('time_alert_days', ?)", (str(ival),))
-        await update.message.reply_text("ذخیره شد.")
+        await update.message.reply_text(f"✅ روزهای هشدار زمان به {ival} روز تنظیم شد.\n\n🔄 بازگشت به منوی تنظیمات...")
     elif mode == 'set_auto_backup_hours':
         try:
             hours = int(txt)
         except Exception:
-            await update.message.reply_text("عدد صحیح نامعتبر است.")
+            await update.message.reply_text("❌ عدد صحیح نامعتبر است. لطفاً دوباره تلاش کنید:")
             return SETTINGS_AWAIT_TRAFFIC_ALERT_VALUE
         execute_db("INSERT OR REPLACE INTO settings (key, value) VALUES ('auto_backup_hours', ?)", (str(hours),))
-        await update.message.reply_text("ذخیره شد. ری‌استارت نیاز نیست؛ زمان‌بندی بعدی با بازه جدید اجرا می‌شود.")
+        await update.message.reply_text(f"✅ بازه بکاپ خودکار به هر {hours} ساعت تنظیم شد.\n\n🔄 بازگشت به منوی تنظیمات...")
+    else:
+        await update.message.reply_text("❌ خطا: حالت ناشناخته")
+        context.user_data.pop('awaiting_admin', None)
+        return ConversationHandler.END
     
     context.user_data.pop('awaiting_admin', None)
     
-    # Create async answer function
-    async def fake_answer(*args, **kwargs):
-        pass
+    # Send settings menu using bot.send_message
+    import asyncio
+    await asyncio.sleep(1)
     
-    fake_query = type('obj', (object,), {
+    # Call admin_settings_manage with a proper fake update
+    from telegram import CallbackQuery
+    
+    # Create a proper async callable for answer
+    async def noop_answer(*args, **kwargs):
+        return
+    
+    # Create fake callback query
+    fake_query = type('CallbackQuery', (), {
+        'answer': noop_answer,
         'data': 'admin_settings_manage',
-        'message': update.message,
-        'answer': fake_answer,
         'from_user': update.effective_user,
-    })
-    fake_update = type('obj', (object,), {'callback_query': fake_query, 'effective_user': update.effective_user})
+        'message': update.message,
+    })()
+    
+    fake_update = type('Update', (), {
+        'callback_query': fake_query,
+        'effective_user': update.effective_user,
+        'message': update.message,
+    })()
+    
     return await admin_settings_manage(fake_update, context)
 
 

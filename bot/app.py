@@ -296,8 +296,8 @@ def build_application() -> Application:
         except Exception:
             hour = DAILY_JOB_HOUR
         application.job_queue.run_daily(check_expirations, time=time(hour=hour, minute=0, second=0), name="daily_expiration_check")
-        # Traffic and expiry notifications - run every 6 hours
-        application.job_queue.run_repeating(check_low_traffic_and_expiry, interval=6*3600, first=300, name="notification_check")
+        # Traffic and expiry notifications - run every 12 hours
+        application.job_queue.run_repeating(check_low_traffic_and_expiry, interval=12*3600, first=300, name="notification_check")
         # Auto-backup scheduling
         try:
             ab_enabled = (query_db("SELECT value FROM settings WHERE key='auto_backup_enabled'", one=True) or {}).get('value') == '1'
