@@ -393,9 +393,18 @@ async def admin_set_talert_value_save(update: Update, context: ContextTypes.DEFA
             return SETTINGS_AWAIT_TRAFFIC_ALERT_VALUE
         execute_db("INSERT OR REPLACE INTO settings (key, value) VALUES ('auto_backup_hours', ?)", (str(hours),))
         await update.message.reply_text("ذخیره شد. ری‌استارت نیاز نیست؛ زمان‌بندی بعدی با بازه جدید اجرا می‌شود.")
+    
     context.user_data.pop('awaiting_admin', None)
+    
+    # Create async answer function
+    async def fake_answer(*args, **kwargs):
+        pass
+    
     fake_query = type('obj', (object,), {
-        'data': 'admin_settings_manage', 'message': update.message, 'answer': (lambda *args, **kwargs: None), 'from_user': update.effective_user,
+        'data': 'admin_settings_manage',
+        'message': update.message,
+        'answer': fake_answer,
+        'from_user': update.effective_user,
     })
     fake_update = type('obj', (object,), {'callback_query': fake_query, 'effective_user': update.effective_user})
     return await admin_settings_manage(fake_update, context)
