@@ -91,11 +91,21 @@ async def send_purchase_log(bot: Bot, order_id: int, user_id: int, plan_name: st
         
     except Exception as e:
         logger.error(f"Failed to send purchase log for order {order_id}: {e}", exc_info=True)
-        # Fallback to admin DM
+        # Fallback to admin DM with better formatting
         try:
+            fallback_text = (
+                f"🛒 <b>خرید جدید</b>\n\n"
+                f"👤 <b>کاربر:</b> {user_mention}\n"
+                f"📝 <b>نام:</b> {full_name}\n"
+                f"🆔 <b>یوزر آیدی:</b> <code>{user_id}</code>\n"
+                f"📦 <b>پلن:</b> {plan_name}\n"
+                f"💰 <b>مبلغ:</b> {final_price:,} تومان\n"
+                f"💳 <b>روش پرداخت:</b> {payment_method}\n"
+                f"🔢 <b>سفارش:</b> #{order_id}"
+            )
             await bot.send_message(
                 chat_id=ADMIN_ID,
-                text=f"🎉 خرید جدید: کاربر {user_id} | پلن: {plan_name} | مبلغ: {final_price:,} تومان | سفارش: #{order_id}",
+                text=fallback_text,
                 parse_mode=ParseMode.HTML
             )
         except Exception:
@@ -188,11 +198,21 @@ async def send_renewal_log(bot: Bot, order_id: int, user_id: int, plan_name: str
         
     except Exception as e:
         logger.error(f"Failed to send renewal log for order {order_id}: {e}", exc_info=True)
-        # Fallback to admin DM
+        # Fallback to admin DM with better formatting
         try:
+            fallback_text = (
+                f"🔄 <b>تمدید سرویس</b>\n\n"
+                f"👤 <b>کاربر:</b> {user_mention}\n"
+                f"📝 <b>نام:</b> {full_name}\n"
+                f"🆔 <b>یوزر آیدی:</b> <code>{user_id}</code>\n"
+                f"📦 <b>پلن:</b> {plan_name}\n"
+                f"💰 <b>مبلغ:</b> {final_price:,} تومان\n"
+                f"💳 <b>روش پرداخت:</b> {payment_method}\n"
+                f"🔢 <b>سفارش:</b> #{order_id}"
+            )
             await bot.send_message(
                 chat_id=ADMIN_ID,
-                text=f"🔄 تمدید: کاربر {user_id} | پلن: {plan_name} | مبلغ: {final_price:,} تومان | سفارش: #{order_id}",
+                text=fallback_text,
                 parse_mode=ParseMode.HTML
             )
         except Exception:
