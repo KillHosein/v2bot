@@ -70,7 +70,8 @@ def get_main_menu_keyboard():
             InlineKeyboardButton("💬 تیکت‌ها", callback_data="admin_tickets_menu")
         ],
         [
-            InlineKeyboardButton("🛠️ وضعیت سیستم", callback_data="admin_system_health")
+            InlineKeyboardButton("🛠️ وضعیت سیستم", callback_data="admin_system_health"),
+            InlineKeyboardButton("🔔 ارسال یادآوری‌ها", callback_data="run_alerts_now")
         ]
     ]
 
