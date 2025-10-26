@@ -37,7 +37,14 @@ async def force_join_checker(update: Update, context: ContextTypes.DEFAULT_TYPE)
 		# For normal users, show maintenance and stop
 		try:
 			mm = query_db("SELECT value FROM settings WHERE key='maintenance_message'", one=True)
-			text = (mm.get('value') if mm else None) or "⚠️ ربات موقتا در حال نگهداری است. لطفا بعدا مراجعه کنید."
+			text = (mm.get('value') if mm else None) or (
+                "🔧 <b>ربات در حال نگهداری است</b>\n\n"
+                "━━━━━━━━━━━━━━━━━━━━━━━━\n"
+                "⚠️ ربات به‌طور موقت برای نگهداری و بهبود خاموش شده است.\n\n"
+                "⏰ لطفاً چند لحظه دیگر مراجعه کنید.\n\n"
+                "💡 از صبر و شکیبایی شما متشکریم.\n"
+                "━━━━━━━━━━━━━━━━━━━━━━━━"
+            )
 			if update.callback_query:
 				await update.callback_query.answer("ربات موقتا خاموش است", show_alert=True)
 				await update.callback_query.message.edit_text(text)
@@ -107,14 +114,19 @@ async def force_join_checker(update: Update, context: ContextTypes.DEFAULT_TYPE)
 		keyboard.append([InlineKeyboardButton("\U0001F195 عضویت در کانال", url=join_url)])
 	keyboard.append([InlineKeyboardButton("\u2705 عضو شدم", callback_data="check_join")])
 	text = (
-		f"\u26A0\uFE0F **قفل عضویت**\n\nبرای استفاده از ربات، ابتدا در کانال ما عضو شوید و سپس دکمه «عضو شدم» را بزنید." + channel_hint
-	)
+        f"🔐 **الزام عضویت در کانال**\n\n"
+        f"━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        f"👋 سلام! برای استفاده از ربات:\n\n"
+        f"1️⃣ ابتدا در کانال ما عضو شوید\n"
+        f"2️⃣ سپس دکمه «✅ عضو شدم» را بزنید\n"
+        f"━━━━━━━━━━━━━━━━━━━━━━━━" + channel_hint
+    )
 	logger.info(f"force_join_checker: blocking user {user.id} with join gate")
 	if update.callback_query:
 		await update.callback_query.message.edit_text(
 			text, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode=ParseMode.MARKDOWN
 		)
-		await update.callback_query.answer("شما هنوز در کانال عضو نیستید!", show_alert=True)
+		await update.callback_query.answer("❌ شما هنوز در کانال عضو نیستید! لطفاً ابتدا عضو شوید.", show_alert=True)
 	elif update.message:
 		await update.message.reply_text(text, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode=ParseMode.MARKDOWN)
 	raise ApplicationHandlerStop
@@ -229,9 +241,11 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_check = query_db("SELECT COALESCE(banned,0) AS banned FROM users WHERE user_id = ?", (update.effective_user.id,), one=True)
     if user_check and int(user_check.get('banned', 0)) == 1:
         banned_message = (
-            "⛔ <b>دسترسی مسدود شد</b>\n\n"
-            "متأسفانه دسترسی شما به این ربات مسدود شده است.\n\n"
-            "برای اطلاعات بیشتر با پشتیبانی تماس بگیرید."
+            "🚫 <b>دسترسی مسدود شده است</b>\n\n"
+            "━━━━━━━━━━━━━━━━━━━━━━━━\n"
+            "❌ متأسفانه دسترسی شما به این ربات مسدود شده است.\n\n"
+            "📞 برای اطلاعات بیشتر لطفاً با پشتیبانی تماس بگیرید.\n"
+            "━━━━━━━━━━━━━━━━━━━━━━━━"
         )
         if update.message:
             await update.message.reply_text(banned_message, parse_mode=ParseMode.HTML)
@@ -347,10 +361,21 @@ async def unhandled_callback(update: Update, context: ContextTypes.DEFAULT_TYPE)
             except Exception:
                 pass
             try:
-                await query.message.reply_text("این دکمه در دسترس نیست یا منقضی شده است.", reply_markup=kb)
+                await query.message.reply_text(
+                    "⚠️ <b>دکمه نامعتبر</b>\n\n"
+                    "این دکمه در دسترس نیست یا منقضی شده است.\n\n"
+                    "🏠 لطفاً از منوی اصلی استفاده کنید.",
+                    reply_markup=kb,
+                    parse_mode=ParseMode.HTML
+                )
             except Exception:
                 try:
-                    await context.bot.send_message(chat_id=query.message.chat_id, text="این دکمه در دسترس نیست یا منقضی شده است.", reply_markup=kb)
+                    await context.bot.send_message(
+                        chat_id=query.message.chat_id,
+                        text="⚠️ <b>دکمه نامعتبر</b>\n\nاین دکمه در دسترس نیست یا منقضی شده است.\n\n🏠 لطفاً از منوی اصلی استفاده کنید.",
+                        reply_markup=kb,
+                        parse_mode=ParseMode.HTML
+                    )
                 except Exception:
                     pass
     except Exception:
