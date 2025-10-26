@@ -945,7 +945,11 @@ def build_application() -> Application:
 
     application.add_handler(support_conv, group=1)
 
-    # ... rest of the code remains the same ...
+    return application
+
+
+def run(token: str | None = None):
+    if not token:
         from .config import BOT_TOKEN as _TB
         token = _TB
 
