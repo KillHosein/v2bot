@@ -63,6 +63,13 @@ def get_main_menu_keyboard():
         ],
         [
             InlineKeyboardButton("💳 پرداخت‌ها", callback_data="admin_payments_menu"),
+            InlineKeyboardButton("🎁 کد تخفیف", callback_data="admin_discount_menu")
+        ],
+        [
+            InlineKeyboardButton("📝 مدیریت پیام‌ها", callback_data="admin_messages_menu"),
+            InlineKeyboardButton("💬 تیکت‌ها", callback_data="admin_tickets_menu")
+        ],
+        [
             InlineKeyboardButton("🛠️ وضعیت سیستم", callback_data="admin_system_health")
         ]
     ]
