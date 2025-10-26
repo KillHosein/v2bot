@@ -636,13 +636,25 @@ async def admin_approve_on_panel(update: Update, context: ContextTypes.DEFAULT_T
                             pass
             except Exception:
                 pass
-            # Send start menu shortcut for user convenience
+            # Send interactive menu for better user engagement
             try:
                 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+                keyboard = [
+                    [InlineKeyboardButton("📱 سرویس‌های من", callback_data='my_services')],
+                    [InlineKeyboardButton("📖 آموزش اتصال", callback_data='tutorials_menu'), InlineKeyboardButton("💬 پشتیبانی", callback_data='support_menu')],
+                    [InlineKeyboardButton("🏠 منوی اصلی", callback_data='start_main')]
+                ]
                 await context.bot.send_message(
                     chat_id=order['user_id'],
-                    text="می‌خواهید به منوی اصلی برگردید؟",
-                    reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🏠 منوی اصلی", callback_data='start_main')]])
+                    text=(
+                        "🎉 <b>تبریک! سرویس شما آماده است</b>\n\n"
+                        "✨ لینک اشتراک و QR Code شما ارسال شد\n"
+                        "📚 برای اتصال، دکمه «آموزش اتصال» را بزنید\n"
+                        "🔄 می‌توانید از منوی «سرویس‌های من» وضعیت سرویس را مشاهده کنید\n\n"
+                        "❓ سوالی دارید؟ از پشتیبانی کمک بگیرید"
+                    ),
+                    reply_markup=InlineKeyboardMarkup(keyboard),
+                    parse_mode=ParseMode.HTML
                 )
             except Exception:
                 pass

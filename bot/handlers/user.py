@@ -2206,9 +2206,31 @@ async def purchase_method_selected(update: Update, context: ContextTypes.DEFAULT
                 (user_id, -plan['price'], 'debit', 'wallet', 'approved', datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
             )
             await query.edit_message_text(
-                f"پرداخت با موفقیت انجام شد. ✅ سرویس شما به صورت خودکار ایجاد و به حساب کاربری شما ارسال گردید.\n\n"
-                f"موجودی جدید: {new_balance:,} تومان"
+                f"🎉 <b>پرداخت با موفقیت انجام شد!</b>\n\n"
+                f"✅ سرویس شما به صورت خودکار ایجاد و ارسال شد\n"
+                f"💰 موجودی جدید: {new_balance:,} تومان",
+                parse_mode=ParseMode.HTML
             )
+            # Send interactive menu
+            try:
+                keyboard = [
+                    [InlineKeyboardButton("📱 سرویس‌های من", callback_data='my_services')],
+                    [InlineKeyboardButton("📚 آموزش اتصال", callback_data='tutorials_menu'), InlineKeyboardButton("💬 پشتیبانی", callback_data='support_menu')],
+                    [InlineKeyboardButton("🏠 منوی اصلی", callback_data='start_main')]
+                ]
+                await context.bot.send_message(
+                    chat_id=user_id,
+                    text=(
+                        "✨ <b>سرویس شما آماده است!</b>\n\n"
+                        "📦 لینک اشتراک و QR Code برای شما ارسال شد\n"
+                        "📚 برای اتصال، دکمه «آموزش اتصال» را بزنید\n"
+                        "🔄 وضعیت سرویس را از «سرویس‌های من» ببینید"
+                    ),
+                    reply_markup=InlineKeyboardMarkup(keyboard),
+                    parse_mode=ParseMode.HTML
+                )
+            except Exception:
+                pass
         else:
             # On failure, notify admin for manual approval.
             # The order is already in 'pending_wallet' state.
