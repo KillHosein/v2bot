@@ -24,7 +24,7 @@ from ..panel import VpnPanelAPI
 from ..utils import register_new_user
 from ..states import *
 from .renewal import process_renewal_for_order
-from ..helpers.tg import safe_edit_text as _safe_edit_text, safe_edit_caption as _safe_edit_caption
+from ..helpers.tg import safe_edit_text as _safe_edit_text, safe_edit_caption as _safe_edit_caption, safe_edit_message, answer_safely
 
 # Normalize Persian/Arabic digits to ASCII
 _DIGIT_MAP = str.maketrans({
@@ -332,10 +332,7 @@ async def send_admin_panel(update: Update, context: ContextTypes.DEFAULT_TYPE) -
     text = "\U0001F5A5\uFE0F پنل مدیریت ربات."
 
     if update.callback_query:
-        try:
-            await update.callback_query.message.edit_text(text, reply_markup=InlineKeyboardMarkup(keyboard))
-        except TelegramError:
-            await update.callback_query.message.reply_text(text, reply_markup=InlineKeyboardMarkup(keyboard))
+        await safe_edit_message(update.callback_query, text, reply_markup=InlineKeyboardMarkup(keyboard), answer_callback=True)
     elif update.message:
         await update.message.reply_text(text, reply_markup=InlineKeyboardMarkup(keyboard))
 
@@ -344,7 +341,7 @@ async def send_admin_panel(update: Update, context: ContextTypes.DEFAULT_TYPE) -
 
 async def backup_restore_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     query = update.callback_query
-    await query.answer()
+    await answer_safely(query)
     context.user_data['awaiting_admin'] = 'backup_restore'
     await _safe_edit_text(query.message, "فایل بکاپ (.db یا .zip) را ارسال کنید. توجه: قبل از جایگزینی، از دیتابیس فعلی نسخه پشتیبان گرفته می‌شود.")
     from ..states import BACKUP_RESTORE_AWAIT_FILE
@@ -443,15 +440,16 @@ async def admin_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
 
 async def admin_toggle_bot_active(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     query = update.callback_query
-    if query:
-        await query.answer()
     try:
         cur = query_db("SELECT value FROM settings WHERE key='bot_active'", one=True)
         current = (cur or {}).get('value') or '1'
         new_val = '0' if str(current) == '1' else '1'
         execute_db("INSERT OR REPLACE INTO settings (key, value) VALUES ('bot_active', ?)", (new_val,))
-    except Exception:
-        pass
+        status = "روشن" if new_val == '1' else "خاموش"
+        await answer_safely(query, f"ربات {status} شد.", show_alert=False)
+    except Exception as e:
+        await answer_safely(query, "خطا در تغییر وضعیت", show_alert=True)
+        logger.error(f"Error toggling bot_active: {e}")
     # Refresh admin panel
     return await send_admin_panel(update, context)
 
@@ -459,7 +457,7 @@ async def admin_toggle_bot_active(update: Update, context: ContextTypes.DEFAULT_
 # --- Order Review / Approval ---
 async def admin_ask_panel_for_approval(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
-    await query.answer()
+    await answer_safely(query)
     order_id = int(query.data.split('_')[-1])
 
     order = query_db("SELECT * FROM orders WHERE id = ?", (order_id,), one=True)
@@ -1508,7 +1506,7 @@ async def admin_plan_edit_save(update: Update, context: ContextTypes.DEFAULT_TYP
 # --- Settings, Cards & Panel Management ---
 async def admin_settings_manage(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     query = update.callback_query
-    await query.answer()
+    await answer_safely(query)
     settings = {s['key']: s['value'] for s in query_db("SELECT key, value FROM settings")}
     trial_status = settings.get('free_trial_status', '0')
     trial_button_text = "\u274C غیرفعال کردن تست" if trial_status == '1' else "\u2705 فعال کردن تست"
