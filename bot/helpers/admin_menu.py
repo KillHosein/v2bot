@@ -64,9 +64,6 @@ def get_main_menu_keyboard():
         [
             InlineKeyboardButton("💳 پرداخت‌ها", callback_data="admin_payments_menu"),
             InlineKeyboardButton("🛠️ وضعیت سیستم", callback_data="admin_system_health")
-        ],
-        [
-            InlineKeyboardButton("🔧 ابزارهای پیشرفته", callback_data="admin_advanced_tools")
         ]
     ]
 

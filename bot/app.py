@@ -678,6 +678,7 @@ def build_application() -> Application:
     application.add_handler(CallbackQueryHandler(admin_xui_choose_inbound, pattern=r'^xui_inbound_'), group=3)
     application.add_handler(CallbackQueryHandler(admin_wallets_menu, pattern='^admin_wallets_menu$'), group=3)
     application.add_handler(CallbackQueryHandler(admin_settings_manage, pattern='^admin_settings_manage$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_toggle_bot_active, pattern='^admin_toggle_bot_active$'), group=3)
     application.add_handler(CallbackQueryHandler(admin_admins_menu, pattern='^admin_admins_menu$'), group=3)
     application.add_handler(CallbackQueryHandler(admin_plan_manage, pattern='^admin_plan_manage$'), group=3)
     application.add_handler(CallbackQueryHandler(admin_plan_add_start, pattern='^plan_add$'), group=3)
