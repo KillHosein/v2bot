@@ -750,8 +750,13 @@ async def pay_method_wallet(update: Update, context: ContextTypes.DEFAULT_TYPE) 
         # Inform user balance
         new_bal = (balance - int(final_price))
         await query.message.edit_text(
-            f"\u2705 پرداخت با کیف پول با موفقیت انجام شد و سرویس شما به‌صورت خودکار ساخته و ارسال گردید.\n" \
-            f"موجودی فعلی: {new_bal:,} تومان"
+            f"✅ <b>پرداخت موفق</b>\n\n"
+            f"━━━━━━━━━━━━━━━━━━━━━━━━\n"
+            f"🎉 پرداخت با کیف پول با موفقیت انجام شد!\n"
+            f"🚀 سرویس شما به‌صورت خودکار ساخته و ارسال می‌شود.\n\n"
+            f"💰 <b>موجودی باقیمانده:</b> <code>{new_bal:,}</code> تومان\n"
+            f"━━━━━━━━━━━━━━━━━━━━━━━━",
+            parse_mode=ParseMode.HTML
         )
         context.user_data.clear()
         context.user_data['suppress_join_log'] = True
@@ -781,9 +786,13 @@ async def pay_method_wallet(update: Update, context: ContextTypes.DEFAULT_TYPE) 
     # Inform user and return
     new_bal = (balance - int(final_price))
     await query.message.edit_text(
-        f"\u2705 پرداخت با کیف پول ثبت شد.\n"
-        f"سفارش شما در حال ساخت خودکار است و به‌زودی ارسال می‌شود.\n"
-        f"موجودی فعلی: {new_bal:,} تومان"
+        f"✅ <b>پرداخت ثبت شد</b>\n\n"
+        f"━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        f"⏳ سفارش شما در حال پردازش است...\n"
+        f"🚀 سرویس به‌زودی ساخته و ارسال خواهد شد.\n\n"
+        f"💰 <b>موجودی باقیمانده:</b> <code>{new_bal:,}</code> تومان\n"
+        f"━━━━━━━━━━━━━━━━━━━━━━━━",
+        parse_mode=ParseMode.HTML
     )
     context.user_data.clear()
     context.user_data['suppress_join_log'] = True
