@@ -638,7 +638,6 @@ async def admin_approve_on_panel(update: Update, context: ContextTypes.DEFAULT_T
                 pass
             # Send interactive menu for better user engagement
             try:
-                from telegram import InlineKeyboardButton, InlineKeyboardMarkup
                 keyboard = [
                     [InlineKeyboardButton("📱 سرویس‌های من", callback_data='my_services')],
                     [InlineKeyboardButton("📖 آموزش اتصال", callback_data='tutorials_menu'), InlineKeyboardButton("💬 پشتیبانی", callback_data='support_menu')],

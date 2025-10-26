@@ -465,14 +465,11 @@ async def show_payment_method_selection(update: Update, context: ContextTypes.DE
                 "✨ روش‌های پرداخت موجود:"
             )
         kb = []
-        # Wallet option always shown; validation happens on click
+        # Only show wallet and card payment methods
         kb.append([InlineKeyboardButton("💰 پرداخت با کیف پول", callback_data='pay_method_wallet')])
         if pay_card:
             kb.append([InlineKeyboardButton("💳 کارت به کارت", callback_data='pay_method_card')])
-        if pay_crypto:
-            kb.append([InlineKeyboardButton("₿ رمزارز (Crypto)", callback_data='pay_method_crypto')])
-        if pay_gateway:
-            kb.append([InlineKeyboardButton("🌐 درگاه پرداخت آنلاین", callback_data='pay_method_gateway')])
+        # Crypto and gateway payment methods removed - only wallet and card available
         kb.append([InlineKeyboardButton("🔙 بازگشت", callback_data='buy_config_main')])
         kb.append([InlineKeyboardButton("🏠 منوی اصلی", callback_data='start_main')])
         extra = f"\n\n💎 **موجودی کیف پول شما:** {balance:,} تومان"

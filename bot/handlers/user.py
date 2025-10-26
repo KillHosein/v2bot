@@ -1281,11 +1281,8 @@ async def wallet_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"🔽 <b>یک روش شارژ را انتخاب کنید:</b>"
     )
     keyboard = [
-        [
-            InlineKeyboardButton("💳 کارت به کارت", callback_data='wallet_topup_card'),
-            InlineKeyboardButton("🌐 درگاه آنلاین", callback_data='wallet_topup_gateway')
-        ],
-        [InlineKeyboardButton("₿ رمزارز (Crypto)", callback_data='wallet_topup_crypto')],
+        [InlineKeyboardButton("💳 کارت به کارت", callback_data='wallet_topup_card')],
+        # Crypto and gateway payment methods removed - only card available for wallet topup
         [
             InlineKeyboardButton("📱 سرویس‌ها", callback_data='my_services'),
             InlineKeyboardButton("💬 پشتیبانی", callback_data='support_menu')
