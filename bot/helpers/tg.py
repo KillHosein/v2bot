@@ -3,6 +3,32 @@ from ..db import query_db
 from ..config import ADMIN_ID, logger
 
 
+async def safe_edit_message(query, text, reply_markup=None, parse_mode=None, answer_callback=True):
+    """Safely edit message from callback query with automatic callback answering"""
+    # Answer callback query first to prevent timeout
+    if answer_callback and hasattr(query, 'answer'):
+        await answer_safely(query)
+    
+    try:
+        message = query.message if hasattr(query, 'message') else query
+        return await safe_edit_text(message, text, reply_markup, parse_mode)
+    except Exception as e:
+        logger.error(f"Failed to edit message: {e}")
+        # Try to send a new message as fallback
+        try:
+            if hasattr(query, 'message') and hasattr(query.message, 'chat'):
+                bot = query.message.get_bot()
+                return await bot.send_message(
+                    chat_id=query.message.chat.id,
+                    text=text,
+                    reply_markup=reply_markup,
+                    parse_mode=parse_mode
+                )
+        except Exception:
+            pass
+        return None
+
+
 async def safe_edit_text(message, text, reply_markup=None, parse_mode=None):
     # Log outgoing request details for troubleshooting
     try:
@@ -105,10 +131,16 @@ def ltr_code(text: str) -> str:
 
 
 async def answer_safely(query, text: str | None = None, show_alert: bool = False):
+    """Answer callback query safely with timeout handling"""
     try:
         await query.answer(text or '', show_alert=show_alert)
-    except Exception:
-        pass
+    except Exception as e:
+        # Ignore timeout errors (query already answered)
+        if 'query is too old' not in str(e).lower():
+            try:
+                logger.warning(f"Failed to answer callback query: {e}")
+            except Exception:
+                pass
 
 
 def get_all_admin_ids() -> list[int]:

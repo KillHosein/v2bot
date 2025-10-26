@@ -8,6 +8,7 @@ from ..db import query_db
 from ..utils import register_new_user
 from ..helpers.flow import get_flow
 from ..helpers.keyboards import build_start_menu_keyboard
+from ..helpers.tg import safe_edit_message, answer_safely
 
 
 async def force_join_checker(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -124,8 +125,11 @@ async def send_dynamic_message(update: Update, context: ContextTypes.DEFAULT_TYP
 
 	message_data = query_db("SELECT text, file_id, file_type FROM messages WHERE message_name = ?", (message_name,), one=True)
 	if not message_data:
-		await query.answer(f"محتوای '{message_name}' یافت نشد!", show_alert=True)
+		await answer_safely(query, f"محتوای '{message_name}' یافت نشد!", show_alert=True)
 		return
+	
+	# Answer callback query immediately to prevent timeout
+	await answer_safely(query)
 
 	text = message_data.get('text')
 	file_id = message_data.get('file_id')
@@ -165,7 +169,10 @@ async def send_dynamic_message(update: Update, context: ContextTypes.DEFAULT_TYP
 
 	try:
 		if file_id or (query.message and (query.message.photo or query.message.video or query.message.document)):
-			await query.message.delete()
+			try:
+				await query.message.delete()
+			except Exception:
+				pass  # Ignore if message already deleted
 			if file_id:
 				sender = getattr(context.bot, f"send_{file_type}", None)
 				if sender:
@@ -192,7 +199,8 @@ async def send_dynamic_message(update: Update, context: ContextTypes.DEFAULT_TYP
 					parse_mode=ParseMode.MARKDOWN,
 				)
 		else:
-			await query.message.edit_text(text, reply_markup=reply_markup, parse_mode=ParseMode.MARKDOWN)
+			# Use safe edit with callback already answered
+			await safe_edit_message(query, text, reply_markup=reply_markup, parse_mode=ParseMode.MARKDOWN, answer_callback=False)
 	except TelegramError as e:
 		# Fallback: if original message cannot be edited (e.g., deleted), send a new message instead
 		msg = str(e)
@@ -288,16 +296,7 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     reply_markup = build_start_menu_keyboard()
 
     if update.callback_query:
-        await update.callback_query.answer()
-        try:
-            await update.callback_query.message.edit_text(text, reply_markup=reply_markup, parse_mode=ParseMode.MARKDOWN)
-        except TelegramError:
-            # If edit fails (e.g., message too old), send new message
-            try:
-                await update.callback_query.message.delete()
-            except Exception:
-                pass
-            await context.bot.send_message(chat_id=update.callback_query.message.chat_id, text=text, reply_markup=reply_markup, parse_mode=ParseMode.MARKDOWN)
+        await safe_edit_message(update.callback_query, text, reply_markup=reply_markup, parse_mode=ParseMode.MARKDOWN, answer_callback=True)
     else:
         await sender(text, reply_markup=reply_markup, parse_mode=ParseMode.MARKDOWN)
         # Provide a persistent /start reply keyboard as a static bot button
@@ -323,7 +322,6 @@ async def dynamic_button_handler(update: Update, context: ContextTypes.DEFAULT_T
 	# First, check if the callback data corresponds to a dynamic message.
 	# This is safer than a blacklist of prefixes.
 	if query_db("SELECT 1 FROM messages WHERE message_name = ?", (message_name,), one=True):
-		await query.answer()
 		await send_dynamic_message(update, context, message_name=message_name, back_to='start_main')
 		# Stop further handlers from processing this update
 		raise ApplicationHandlerStop
