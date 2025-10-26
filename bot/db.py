@@ -321,6 +321,27 @@ def db_setup():
                     cursor.execute("ALTER TABLE orders ADD COLUMN is_trial INTEGER DEFAULT 0")
                 except sqlite3.Error:
                     pass
+            # Notification tracking columns
+            if 'notified_traffic_80' not in columns:
+                try:
+                    cursor.execute("ALTER TABLE orders ADD COLUMN notified_traffic_80 INTEGER DEFAULT 0")
+                except sqlite3.Error:
+                    pass
+            if 'notified_traffic_95' not in columns:
+                try:
+                    cursor.execute("ALTER TABLE orders ADD COLUMN notified_traffic_95 INTEGER DEFAULT 0")
+                except sqlite3.Error:
+                    pass
+            if 'notified_expiry_3d' not in columns:
+                try:
+                    cursor.execute("ALTER TABLE orders ADD COLUMN notified_expiry_3d INTEGER DEFAULT 0")
+                except sqlite3.Error:
+                    pass
+            if 'notified_expiry_1d' not in columns:
+                try:
+                    cursor.execute("ALTER TABLE orders ADD COLUMN notified_expiry_1d INTEGER DEFAULT 0")
+                except sqlite3.Error:
+                    pass
         else:
             cursor.execute(
                 """
@@ -329,7 +350,11 @@ def db_setup():
                     status TEXT DEFAULT 'pending', marzban_username TEXT, screenshot_file_id TEXT, timestamp TEXT,
                     panel_id INTEGER, discount_code TEXT, final_price INTEGER, last_reminder_date TEXT, panel_type TEXT,
                     last_link TEXT, xui_inbound_id INTEGER, xui_client_id TEXT, reseller_applied INTEGER DEFAULT 0,
-                    is_trial INTEGER DEFAULT 0
+                    is_trial INTEGER DEFAULT 0,
+                    notified_traffic_80 INTEGER DEFAULT 0,
+                    notified_traffic_95 INTEGER DEFAULT 0,
+                    notified_expiry_3d INTEGER DEFAULT 0,
+                    notified_expiry_1d INTEGER DEFAULT 0
                 )
                 """
             )

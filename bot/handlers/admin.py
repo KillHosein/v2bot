@@ -422,6 +422,16 @@ async def admin_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
                 reply_markup=InlineKeyboardMarkup(keyboard),
                 parse_mode=ParseMode.MARKDOWN
             )
+        except BadRequest as e:
+            # Ignore "Message is not modified" errors (benign)
+            if "message is not modified" in str(e).lower():
+                pass
+            else:
+                logger.error(f"Error updating admin message: {e}")
+                await update.callback_query.message.reply_text(
+                    "خطا در به‌روزرسانی پیام. لطفا دوباره امتحان کنید.",
+                    parse_mode=ParseMode.MARKDOWN
+                )
         except Exception as e:
             logger.error(f"Error updating admin message: {e}")
             await update.callback_query.message.reply_text(
