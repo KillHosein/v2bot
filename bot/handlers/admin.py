@@ -636,8 +636,9 @@ async def admin_approve_on_panel(update: Update, context: ContextTypes.DEFAULT_T
                             pass
             except Exception:
                 pass
-            # Send interactive menu for better user engagement
+            # Send interactive menu and return to main menu automatically
             try:
+                # First send the congratulations message with quick actions
                 keyboard = [
                     [InlineKeyboardButton("📱 سرویس‌های من", callback_data='my_services')],
                     [InlineKeyboardButton("📖 آموزش اتصال", callback_data='tutorials_menu'), InlineKeyboardButton("💬 پشتیبانی", callback_data='support_menu')],
@@ -655,8 +656,47 @@ async def admin_approve_on_panel(update: Update, context: ContextTypes.DEFAULT_T
                     reply_markup=InlineKeyboardMarkup(keyboard),
                     parse_mode=ParseMode.HTML
                 )
-            except Exception:
-                pass
+                
+                # Send main menu automatically after 2 seconds
+                import asyncio
+                await asyncio.sleep(2)
+                
+                # Import and call start_command to show main menu
+                from .common import start_command
+                from telegram import Update
+                # Create a fake update object to trigger start_command
+                class FakeUser:
+                    def __init__(self, user_id, first_name=""):
+                        self.id = user_id
+                        self.first_name = first_name
+                        self.username = None
+                        self.is_bot = False
+                
+                class FakeMessage:
+                    def __init__(self, chat_id, user):
+                        self.chat_id = chat_id
+                        self.from_user = user
+                        self.text = "/start"
+                        
+                    async def reply_text(self, text, **kwargs):
+                        await context.bot.send_message(chat_id=self.chat_id, text=text, **kwargs)
+                
+                fake_user = FakeUser(order['user_id'])
+                fake_message = FakeMessage(order['user_id'], fake_user)
+                
+                fake_update = type('obj', (object,), {
+                    'effective_user': fake_user,
+                    'message': fake_message,
+                    'callback_query': None
+                })()
+                
+                await start_command(fake_update, context)
+                
+            except Exception as e:
+                try:
+                    logger.error(f"Error sending post-purchase menu: {e}")
+                except:
+                    pass
             done_text = base_text + f"\n\n\u2705 **ارسال خودکار موفق بود.**"
             if is_media:
                 await _safe_edit_caption(query.message, done_text, parse_mode=ParseMode.HTML, reply_markup=None)

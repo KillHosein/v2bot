@@ -2208,7 +2208,7 @@ async def purchase_method_selected(update: Update, context: ContextTypes.DEFAULT
                 f"💰 موجودی جدید: {new_balance:,} تومان",
                 parse_mode=ParseMode.HTML
             )
-            # Send interactive menu
+            # Send interactive menu and main menu automatically
             try:
                 keyboard = [
                     [InlineKeyboardButton("📱 سرویس‌های من", callback_data='my_services')],
@@ -2226,6 +2226,40 @@ async def purchase_method_selected(update: Update, context: ContextTypes.DEFAULT
                     reply_markup=InlineKeyboardMarkup(keyboard),
                     parse_mode=ParseMode.HTML
                 )
+                
+                # Send main menu automatically after 2 seconds
+                import asyncio
+                await asyncio.sleep(2)
+                
+                # Import and call start_command
+                from .common import start_command
+                class FakeUser:
+                    def __init__(self, user_id, first_name=""):
+                        self.id = user_id
+                        self.first_name = first_name
+                        self.username = None
+                        self.is_bot = False
+                
+                class FakeMessage:
+                    def __init__(self, chat_id, user):
+                        self.chat_id = chat_id
+                        self.from_user = user
+                        self.text = "/start"
+                        
+                    async def reply_text(self, text, **kwargs):
+                        await context.bot.send_message(chat_id=self.chat_id, text=text, **kwargs)
+                
+                fake_user = FakeUser(user_id)
+                fake_message = FakeMessage(user_id, fake_user)
+                
+                fake_update = type('obj', (object,), {
+                    'effective_user': fake_user,
+                    'message': fake_message,
+                    'callback_query': None
+                })()
+                
+                await start_command(fake_update, context)
+                
             except Exception:
                 pass
         else:
