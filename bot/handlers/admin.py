@@ -1121,9 +1121,16 @@ async def master_message_handler(update: Update, context: ContextTypes.DEFAULT_T
     action = context.user_data.get('next_action')
     # Do not intercept if an admin-specific await flow is active
     if context.user_data.get('awaiting_admin'):
-        logger.debug(f"master_message_handler: awaiting_admin active for {update.effective_user.id}; skip intercept")
-        # Handle specific global admin awaits
         mode = context.user_data.get('awaiting_admin')
+        logger.debug(f"master_message_handler: awaiting_admin={mode} active for {update.effective_user.id}")
+        
+        # Only handle specific modes here, let conversation handler handle settings flows
+        if mode in ('set_talert_gb', 'set_time_alert_days', 'set_auto_backup_hours'):
+            # Let conversation handler handle these
+            logger.debug(f"master_message_handler: passing to conversation handler for mode={mode}")
+            return
+        
+        # Handle specific global admin awaits
         if mode == 'toggle_ban_user':
             txt = (update.message.text or '').strip()
             try:
