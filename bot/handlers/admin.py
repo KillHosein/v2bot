@@ -556,31 +556,75 @@ async def admin_approve_on_panel(update: Update, context: ContextTypes.DEFAULT_T
             f"<b>لینک اشتراک شما:</b>\n<code>{config_link}</code>\n\n" + footer
         )
         try:
-            # Send a stylish QR code of subscription link if available
-            sent_qr = False
+            # Try to get configs from subscription link
+            configs_list = []
+            if config_link and config_link.startswith('http'):
+                try:
+                    configs_list = _fetch_subscription_configs(config_link)
+                except Exception:
+                    pass
+            
+            # Send QR for first config if available
+            if configs_list:
+                try:
+                    from ..helpers.tg import build_styled_qr
+                    first_config = configs_list[0]
+                    buf = build_styled_qr(first_config)
+                    if buf:
+                        await context.bot.send_photo(
+                            chat_id=order['user_id'],
+                            photo=buf,
+                            caption="🔑 <b>QR Code کانفیگ اول</b>\n\nبرای اتصال سریع اسکن کنید",
+                            parse_mode=ParseMode.HTML
+                        )
+                except Exception:
+                    try:
+                        import qrcode, io as _io
+                        _b = _io.BytesIO(); qrcode.make(configs_list[0]).save(_b, format='PNG'); _b.seek(0)
+                        await context.bot.send_photo(
+                            chat_id=order['user_id'],
+                            photo=_b,
+                            caption="🔑 <b>QR Code کانفیگ</b>\n\nبرای اتصال سریع اسکن کنید",
+                            parse_mode=ParseMode.HTML
+                        )
+                    except Exception:
+                        pass
+            
+            # Send QR for subscription link
+            sent_sub_qr = False
             if config_link:
                 try:
                     from ..helpers.tg import build_styled_qr
                     buf = build_styled_qr(config_link)
                     if buf:
-                        await context.bot.send_photo(chat_id=order['user_id'], photo=buf, caption=("\U0001F517 لینک اشتراک شما:\n" + ltr_code(config_link)), parse_mode=ParseMode.HTML)
-                        sent_qr = True
+                        await context.bot.send_photo(
+                            chat_id=order['user_id'],
+                            photo=buf,
+                            caption="🔗 <b>QR Code لینک اشتراک</b>\n\nبرای بروزرسانی خودکار اسکن کنید",
+                            parse_mode=ParseMode.HTML
+                        )
+                        sent_sub_qr = True
                 except Exception as e:
                     try:
                         logger.warning(f"QR styled send failed (approve_on_panel): {e}")
                     except Exception:
                         pass
-                    sent_qr = False
+                    sent_sub_qr = False
             # Fallback to simple QR if styled QR failed
-            if not sent_qr and config_link:
+            if not sent_sub_qr and config_link:
                 try:
                     import qrcode, io as _io
                     _b = _io.BytesIO(); qrcode.make(config_link).save(_b, format='PNG'); _b.seek(0)
-                    await context.bot.send_photo(chat_id=order['user_id'], photo=_b, caption=("\U0001F517 لینک اشتراک شما:\n" + ltr_code(config_link)), parse_mode=ParseMode.HTML)
-                    sent_qr = True
+                    await context.bot.send_photo(
+                        chat_id=order['user_id'],
+                        photo=_b,
+                        caption="🔗 <b>لینک اشتراک شما</b>",
+                        parse_mode=ParseMode.HTML
+                    )
+                    sent_sub_qr = True
                 except Exception:
-                    sent_qr = False
-            if not sent_qr:
+                    sent_sub_qr = False
+            if not sent_sub_qr:
                 await context.bot.send_message(order['user_id'], final_message, parse_mode=ParseMode.HTML)
             # Purchase log to configured chat if enabled
             try:
