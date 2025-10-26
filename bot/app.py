@@ -945,15 +945,7 @@ def build_application() -> Application:
 
     application.add_handler(support_conv, group=1)
 
-    # Purchase quick handlers
-
-    return application
-
-
-def run():
-    # Toggle between polling (server) and webhook (shared host) via env
-    token = os.getenv('BOT_TOKEN') or ''
-    if not token:
+    # ... rest of the code remains the same ...
         from .config import BOT_TOKEN as _TB
         token = _TB
 
