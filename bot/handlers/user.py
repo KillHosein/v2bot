@@ -1405,17 +1405,40 @@ async def wallet_verify_gateway(update: Update, context: ContextTypes.DEFAULT_TY
     user_id = query.from_user.id
     amount = context.user_data.get('wallet_topup_amount')
     tx_id = execute_db("INSERT INTO wallet_transactions (user_id, amount, direction, method, status, created_at, reference) VALUES (?, ?, 'credit', 'gateway', 'pending', ?, ?)", (user_id, int(amount), datetime.now().strftime("%Y-%m-%d %H:%M:%S"), gw.get('transid','')))
+    
+    # Get full user info from Telegram API
+    try:
+        telegram_user = await context.bot.get_chat(user_id)
+        first_name = telegram_user.first_name or 'نامشخص'
+        last_name = telegram_user.last_name or ''
+        username = telegram_user.username or None
+        full_name = f"{first_name} {last_name}".strip()
+        user_mention = f"@{username}" if username else full_name
+    except Exception:
+        user_info_db = query_db("SELECT first_name FROM users WHERE user_id = ?", (user_id,), one=True)
+        first_name = user_info_db.get('first_name', 'نامشخص') if user_info_db else 'نامشخص'
+        full_name = first_name
+        username = None
+        user_mention = first_name
+    
     kb = InlineKeyboardMarkup([
         [InlineKeyboardButton("\u2705 تایید", callback_data=f"wallet_tx_approve_{tx_id}"), InlineKeyboardButton("\u274C رد", callback_data=f"wallet_tx_reject_{tx_id}")],
         [InlineKeyboardButton("\U0001F4B8 منوی درخواست‌ها", callback_data="admin_wallet_tx_menu")],
     ])
+    text_notification = (
+        f"💸 <b>درخواست شارژ کیف پول (Gateway)</b>\n\n"
+        f"👤 <b>کاربر:</b> {user_mention}\n"
+        f"📝 <b>نام:</b> {full_name}\n"
+        f"🔖 <b>یوزرنیم تلگرام:</b> {'@' + username if username else '-'}\n"
+        f"🆔 <b>یوزر آیدی:</b> <code>{user_id}</code>\n"
+        f"💰 <b>مبلغ:</b> {int(amount):,} تومان\n"
+        f"🔑 <b>TransID:</b> <code>{gw.get('transid','-')}</code>\n"
+        f"🕐 <b>زمان:</b> <code>{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</code>"
+    )
     await notify_admins(
         context.bot,
-        text=(f"\U0001F4B8 درخواست شارژ کیف پول (Gateway)\n\n"
-              f"کاربر: `{user_id}`\n"
-              f"مبلغ: {int(amount):,} تومان\n"
-              f"TransID: {gw.get('transid','-')}"),
-        parse_mode=ParseMode.MARKDOWN,
+        text=text_notification,
+        parse_mode=ParseMode.HTML,
         reply_markup=kb,
     )
     await query.message.edit_text("درخواست شارژ شما ثبت شد و پس از تایید ادمین به موجودی افزوده می‌شود.")
@@ -1979,12 +2002,36 @@ async def reseller_upload_router(update: Update, context: ContextTypes.DEFAULT_T
         "INSERT INTO reseller_requests (user_id, amount, method, status, created_at, screenshot_file_id, meta) VALUES (?, ?, ?, 'pending', ?, ?, ?)",
         (user_id, int(amount), method, datetime.now().strftime("%Y-%m-%d %H:%M:%S"), file_id, caption_extra[:500])
     )
+    
+    # Get full user info from Telegram API
+    try:
+        telegram_user = await context.bot.get_chat(user_id)
+        first_name = telegram_user.first_name or 'نامشخص'
+        last_name = telegram_user.last_name or ''
+        username = telegram_user.username or None
+        full_name = f"{first_name} {last_name}".strip()
+        user_mention = f"@{username}" if username else full_name
+    except Exception:
+        user_info_db = query_db("SELECT first_name FROM users WHERE user_id = ?", (user_id,), one=True)
+        first_name = user_info_db.get('first_name', 'نامشخص') if user_info_db else 'نامشخص'
+        full_name = first_name
+        username = None
+        user_mention = first_name
+    
     kb = InlineKeyboardMarkup([[InlineKeyboardButton("\u2705 تایید نمایندگی", callback_data=f"reseller_approve_{rr_id}"), InlineKeyboardButton("\u274C رد", callback_data=f"reseller_reject_{rr_id}")]])
-    caption = (f"\U0001F4B5 درخواست دریافت نمایندگی ({'Card' if method=='card' else 'Crypto'})\n\nکاربر: `{user_id}`\nمبلغ: {int(amount):,} تومان")
+    caption = (
+        f"💵 <b>درخواست دریافت نمایندگی ({'Card' if method=='card' else 'Crypto'})</b>\n\n"
+        f"👤 <b>کاربر:</b> {user_mention}\n"
+        f"📝 <b>نام:</b> {full_name}\n"
+        f"🔖 <b>یوزرنیم تلگرام:</b> {'@' + username if username else '-'}\n"
+        f"🆔 <b>یوزر آیدی:</b> <code>{user_id}</code>\n"
+        f"💰 <b>مبلغ:</b> {int(amount):,} تومان\n"
+        f"🕐 <b>زمان:</b> <code>{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</code>"
+    )
     if file_id:
-        await notify_admins(context.bot, photo=file_id, caption=caption, parse_mode=ParseMode.MARKDOWN, reply_markup=kb)
+        await notify_admins(context.bot, photo=file_id, caption=caption, parse_mode=ParseMode.HTML, reply_markup=kb)
     else:
-        await notify_admins(context.bot, text=f"{caption}\n\n{caption_extra}", parse_mode=ParseMode.MARKDOWN, reply_markup=kb)
+        await notify_admins(context.bot, text=f"{caption}\n\n{caption_extra}", parse_mode=ParseMode.HTML, reply_markup=kb)
     await update.message.reply_text("درخواست نمایندگی ثبت شد و پس از تایید ادمین فعال می‌شود.")
     context.user_data.pop('awaiting', None)
     context.user_data.pop('reseller_payment', None)
@@ -2064,20 +2111,40 @@ async def wallet_upload_router(update: Update, context: ContextTypes.DEFAULT_TYP
         "INSERT INTO wallet_transactions (user_id, amount, direction, method, status, created_at, screenshot_file_id, meta) VALUES (?, ?, 'credit', ?, 'pending', ?, ?, ?)",
         (user_id, int(amount), method, datetime.now().strftime("%Y-%m-%d %H:%M:%S"), file_id, caption_extra[:500])
     )
-    # notify admin accordingly
-    caption = (f"\U0001F4B8 درخواست شارژ کیف پول ({'Card' if method=='card' else 'Crypto'})\n\n"
-               f"کاربر: `{user_id}`\n"
-               f"مبلغ: {int(amount):,} تومان")
+    # notify admin accordingly - get full user info from Telegram API
+    try:
+        telegram_user = await context.bot.get_chat(user_id)
+        first_name = telegram_user.first_name or 'نامشخص'
+        last_name = telegram_user.last_name or ''
+        username = telegram_user.username or None
+        full_name = f"{first_name} {last_name}".strip()
+        user_mention = f"@{username}" if username else full_name
+    except Exception:
+        user_info_db = query_db("SELECT first_name FROM users WHERE user_id = ?", (user_id,), one=True)
+        first_name = user_info_db.get('first_name', 'نامشخص') if user_info_db else 'نامشخص'
+        full_name = first_name
+        username = None
+        user_mention = first_name
+    
+    caption = (
+        f"💸 <b>درخواست شارژ کیف پول ({'Card' if method=='card' else 'Crypto'})</b>\n\n"
+        f"👤 <b>کاربر:</b> {user_mention}\n"
+        f"📝 <b>نام:</b> {full_name}\n"
+        f"🔖 <b>یوزرنیم تلگرام:</b> {'@' + username if username else '-'}\n"
+        f"🆔 <b>یوزر آیدی:</b> <code>{user_id}</code>\n"
+        f"💰 <b>مبلغ:</b> {int(amount):,} تومان\n"
+        f"🕐 <b>زمان:</b> <code>{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</code>"
+    )
     kb = InlineKeyboardMarkup([[InlineKeyboardButton("\u2705 تایید", callback_data=f"wallet_tx_approve_{tx_id}"), InlineKeyboardButton("\u274C رد", callback_data=f"wallet_tx_reject_{tx_id}")],[InlineKeyboardButton("\U0001F4B8 منوی درخواست‌ها", callback_data="admin_wallet_tx_menu")]])
     if sent_as == 'photo' and file_id:
-        await notify_admins(context.bot, photo=file_id, caption=caption, parse_mode=ParseMode.MARKDOWN, reply_markup=kb)
+        await notify_admins(context.bot, photo=file_id, caption=caption, parse_mode=ParseMode.HTML, reply_markup=kb)
     elif sent_as == 'document' and file_id:
-        await notify_admins(context.bot, document=file_id, caption=caption, parse_mode=ParseMode.MARKDOWN, reply_markup=kb)
+        await notify_admins(context.bot, document=file_id, caption=caption, parse_mode=ParseMode.HTML, reply_markup=kb)
     elif sent_as in ('video','voice','audio') and file_id:
         # Fallback: send as document if we can't stream it directly to admins
-        await notify_admins(context.bot, document=file_id, caption=caption, parse_mode=ParseMode.MARKDOWN, reply_markup=kb)
+        await notify_admins(context.bot, document=file_id, caption=caption, parse_mode=ParseMode.HTML, reply_markup=kb)
     else:
-        await notify_admins(context.bot, text=f"{caption}\n\n{caption_extra}", parse_mode=ParseMode.MARKDOWN, reply_markup=kb)
+        await notify_admins(context.bot, text=f"{caption}\n\n{caption_extra}", parse_mode=ParseMode.HTML, reply_markup=kb)
     await update.message.reply_text("درخواست شارژ ثبت شد و پس از تایید ادمین اعمال می‌شود.")
     context.user_data.pop('awaiting', None)
     context.user_data.pop('wallet_method', None)
