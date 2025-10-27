@@ -438,6 +438,7 @@ async def admin_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
 
 
 async def admin_toggle_bot_active(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Toggle bot active/inactive status"""
     query = update.callback_query
     try:
         cur = query_db("SELECT value FROM settings WHERE key='bot_active'", one=True)
