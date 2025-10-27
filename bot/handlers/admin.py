@@ -346,17 +346,17 @@ async def backup_restore_receive_file(update: Update, context: ContextTypes.DEFA
             import zipfile
             with zipfile.ZipFile(target, 'r') as z:
                 z.extractall(tmpdir)
-            # find first .db
+            # find first .db or .sqlite file
             cand = None
             for root, dirs, files in os.walk(tmpdir):
                 for f in files:
-                    if f.lower().endswith('.db'):
+                    if f.lower().endswith('.db') or f.lower().endswith('.sqlite'):
                         cand = os.path.join(root, f)
                         break
                 if cand:
                     break
             if not cand:
-                await update.message.reply_text("در فایل زیپ، دیتابیس (.db) یافت نشد.")
+                await update.message.reply_text("در فایل زیپ، دیتابیس (.db یا .sqlite) یافت نشد.")
                 shutil.rmtree(tmpdir, ignore_errors=True)
                 return ConversationHandler.END
             db_path = cand
@@ -2865,7 +2865,7 @@ async def admin_orders_pending(update: Update, context: ContextTypes.DEFAULT_TYP
     
     pending = query_db(
         """SELECT o.id, o.user_id, o.timestamp, p.name as plan_name, 
-           COALESCE(o.final_price, p.price) as price, o.payment_method
+           COALESCE(o.final_price, p.price) as price
            FROM orders o
            LEFT JOIN plans p ON p.id = o.plan_id
            WHERE o.status = 'pending'
@@ -2887,8 +2887,7 @@ async def admin_orders_pending(update: Update, context: ContextTypes.DEFAULT_TYP
     for order in pending:
         plan = order.get('plan_name', 'نامشخص')
         price = order.get('price', 0)
-        payment = order.get('payment_method', 'نامشخص')
-        text += f"🆔 #{order['id']} | کاربر {order['user_id']}\n📦 {plan} | 💰 {int(price):,}ت | {payment}\n\n"
+        text += f"🆔 #{order['id']} | کاربر {order['user_id']}\n📦 {plan} | 💰 {int(price):,}ت\n\n"
         keyboard.append([
             InlineKeyboardButton(f"✅ تأیید #{order['id']}", callback_data=f"approve_auto_{order['id']}"),
             InlineKeyboardButton(f"❌ رد #{order['id']}", callback_data=f"reject_order_{order['id']}")
