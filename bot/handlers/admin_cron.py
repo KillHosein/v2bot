@@ -8,7 +8,10 @@ from ..helpers.tg import safe_edit_text as _safe_edit_text, answer_safely as _an
 
 async def admin_cron_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     query = update.callback_query
-    await query.answer()
+    try:
+        await query.answer()
+    except Exception:
+        pass  # Ignore expired callback queries
     st = {s['key']: s['value'] for s in (query_db("SELECT key, value FROM settings WHERE key IN ('reminder_job_enabled','daily_job_hour')") or [])}
     enabled = (st.get('reminder_job_enabled') or '1') == '1'
     hour = int((st.get('daily_job_hour') or '9') or 9)
@@ -52,7 +55,10 @@ async def admin_cron_set_hour_save(update: Update, context: ContextTypes.DEFAULT
         return ADMIN_CRON_AWAIT_HOUR
     execute_db("INSERT OR REPLACE INTO settings (key, value) VALUES ('daily_job_hour', ?)", (str(hour),))
     await update.message.reply_text("ذخیره شد. تغییر ساعت پس از ری‌استارت اعمال می‌شود.")
-    # Return to menu
-    fake_query = type('obj', (object,), {'data': 'admin_cron_menu', 'message': update.message, 'answer': (lambda *a, **k: None)})
+    # Return to menu with proper async answer
+    import asyncio
+    async def noop_answer(*args, **kwargs):
+        return
+    fake_query = type('obj', (object,), {'data': 'admin_cron_menu', 'message': update.message, 'answer': noop_answer})
     fake_update = type('obj', (object,), {'callback_query': fake_query, 'effective_user': update.effective_user})
     return await admin_cron_menu(fake_update, context)
