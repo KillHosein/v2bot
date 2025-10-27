@@ -63,13 +63,11 @@ async def check_expirations(context: ContextTypes.DEFAULT_TYPE):
     all_panels = query_db("SELECT id, panel_type FROM panels WHERE COALESCE(enabled,1)=1")
     for panel_data in all_panels:
         try:
-            # Skip 3x-UI panels as they don't support get_all_users
-            if panel_data.get('panel_type') == '3xui':
-                logger.info(f"Skipping panel {panel_data['id']} (3x-UI) in expiration check")
-                continue
-            
             panel_api = VpnPanelAPI(panel_id=panel_data['id'])
             all_users, msg = await panel_api.get_all_users()
+            
+            # For 3x-UI or panels that don't support bulk fetch, all_users will be None/empty
+            # and we'll use the fallback path below
 
             async def _process_user_record(username: str, m_user: dict):
                 if username not in orders_map:

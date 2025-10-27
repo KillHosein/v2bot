@@ -52,15 +52,61 @@ async def check_low_traffic(context):
                 orders_by_panel[panel_id] = []
             orders_by_panel[panel_id].append(order)
         
-        # For each panel, fetch all users once
+        # For each panel, fetch all users once (or individually for 3x-UI)
         for panel_id, panel_orders in orders_by_panel.items():
             try:
-                # Check panel type first - 3x-UI doesn't support get_all_users
+                # Check panel type first
                 panel_info = query_db("SELECT panel_type FROM panels WHERE id = ?", (panel_id,), one=True)
-                if panel_info and panel_info.get('panel_type') == '3xui':
-                    logger.info(f"[Notification Job] Skipping panel {panel_id} (3x-UI doesn't support bulk user fetch)")
-                    continue
+                panel_type = panel_info.get('panel_type') if panel_info else 'marzban'
                 
+                if panel_type == '3xui':
+                    # For 3x-UI, fetch each user individually (doesn't support bulk fetch)
+                    logger.info(f"[Notification Job] Processing panel {panel_id} (3x-UI) - fetching users individually...")
+                    api = VpnPanelAPI(panel_id=panel_id)
+                    
+                    for order in panel_orders:
+                        try:
+                            username = order['marzban_username']
+                            result = await api.get_user(username)
+                            
+                            # Handle both tuple (user_data, message) and dict returns
+                            if isinstance(result, tuple):
+                                user_data, _ = result
+                            else:
+                                user_data = result
+                            
+                            if not user_data or not isinstance(user_data, dict):
+                                continue
+                            
+                            # Calculate usage percentage
+                            used = user_data.get('used_traffic', 0) / (1024**3)  # Convert to GB
+                            total = float(order['traffic_gb'] or 0)
+                            
+                            if total == 0:  # Unlimited traffic
+                                continue
+                            
+                            usage_percent = (used / total) * 100
+                            
+                            # Check thresholds
+                            if usage_percent >= 80 and not order.get('notified_traffic_80'):
+                                await send_traffic_warning(
+                                    context.bot, order['user_id'], order['id'],
+                                    order['plan_name'], usage_percent, used, total, level='warning'
+                                )
+                                execute_db("UPDATE orders SET notified_traffic_80 = 1 WHERE id = ?", (order['id'],))
+                            elif usage_percent >= 95 and not order.get('notified_traffic_95'):
+                                await send_traffic_warning(
+                                    context.bot, order['user_id'], order['id'],
+                                    order['plan_name'], usage_percent, used, total, level='critical'
+                                )
+                                execute_db("UPDATE orders SET notified_traffic_95 = 1 WHERE id = ?", (order['id'],))
+                        except Exception as e:
+                            logger.error(f"Error checking traffic for 3x-UI order {order['id']}: {e}")
+                            continue
+                    
+                    continue  # Move to next panel
+                
+                # For Marzban/other panels: fetch all users at once
                 logger.info(f"[Notification Job] Fetching users from panel {panel_id} (using cache if available)...")
                 api = VpnPanelAPI(panel_id=panel_id)
                 all_users, msg = await api.get_all_users()
