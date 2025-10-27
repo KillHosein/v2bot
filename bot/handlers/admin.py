@@ -441,6 +441,28 @@ async def admin_toggle_bot_active(update: Update, context: ContextTypes.DEFAULT_
         )
     except Exception as e:
         logger.error(f"Error updating admin panel after toggle: {e}")
+        # If edit fails, try deleting and sending new message
+        try:
+            await query.message.delete()
+        except Exception:
+            pass
+        try:
+            await query.message.reply_text(
+                text,
+                reply_markup=InlineKeyboardMarkup(keyboard),
+                parse_mode=ParseMode.MARKDOWN
+            )
+        except Exception:
+            # Last resort: send to chat directly
+            try:
+                await context.bot.send_message(
+                    chat_id=query.message.chat_id,
+                    text=text,
+                    reply_markup=InlineKeyboardMarkup(keyboard),
+                    parse_mode=ParseMode.MARKDOWN
+                )
+            except Exception:
+                pass
     
     return ADMIN_MAIN_MENU
 
