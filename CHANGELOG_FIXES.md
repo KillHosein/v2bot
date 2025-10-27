@@ -1,4 +1,4 @@
-# تغییرات و رفع مشکلات
+# Wings Bot - تغییرات و رفع مشکلات
 
 تاریخ: 27 اکتبر 2025
 
@@ -137,7 +137,7 @@ async def alert_snooze_handler(update: Update, context: ContextTypes.DEFAULT_TYP
 
 **محتویات جدید بکاپ:**
 ```
-wingsbot_backup.zip
+wings_bot_backup.zip
 ├── bot.db                      # دیتابیس کامل
 ├── .env                        # متغیرهای محیطی
 ├── settings.json               # تنظیمات
