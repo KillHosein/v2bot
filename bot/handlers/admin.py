@@ -308,37 +308,8 @@ def _reset_pending_flows(context: ContextTypes.DEFAULT_TYPE):
         pass
 
 async def send_admin_panel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    # Read bot active flag
-    try:
-        active_val = (query_db("SELECT value FROM settings WHERE key='bot_active'", one=True) or {}).get('value') or '1'
-        bot_on = str(active_val) == '1'
-    except Exception:
-        bot_on = True
-    toggle_label = "🟢 ربات روشن (خاموش کردن)" if bot_on else "🔴 ربات خاموش (روشن کردن)"
-    keyboard = [
-        [InlineKeyboardButton(toggle_label, callback_data='admin_toggle_bot_active')],
-        [InlineKeyboardButton("\U0001F4CB مدیریت پلن‌ها", callback_data='admin_plan_manage'), InlineKeyboardButton("\u2699\uFE0F تنظیمات", callback_data='admin_settings_manage')],
-        [InlineKeyboardButton("👥 کاربران", callback_data='admin_users_menu'), InlineKeyboardButton("\U0001F4E6 سفارشات", callback_data='admin_orders_menu')],
-        [InlineKeyboardButton("\U0001F4C8 آمار", callback_data='admin_stats'), InlineKeyboardButton("\U0001F4B3 پرداخت ها", callback_data='admin_wallet_tx_menu')],
-        [InlineKeyboardButton("\U0001F4E4 ارسال همگانی", callback_data='admin_broadcast_menu'), InlineKeyboardButton("\U0001F4E8 ارسال با آیدی", callback_data='admin_send_by_id_start')],
-        [InlineKeyboardButton("\U0001F4DD مدیریت پیام‌ها", callback_data='admin_messages_menu'), InlineKeyboardButton("\U0001F381 کد تخفیف", callback_data='admin_discount_menu')],
-        [InlineKeyboardButton("\U0001F4BB پنل‌ها", callback_data='admin_panels_menu'), InlineKeyboardButton("\U0001F551 کرون", callback_data='admin_cron_menu')],
-        [InlineKeyboardButton("\U0001F4AC تیکت‌ها", callback_data='admin_tickets_menu'), InlineKeyboardButton("\U0001F4D6 آموزش‌ها", callback_data='admin_tutorials_menu')],
-        [InlineKeyboardButton("\U0001F6E0\uFE0F وضعیت سیستم", callback_data='admin_system_health')],
-        [InlineKeyboardButton("💾 دریافت سریع بکاپ", callback_data='admin_quick_backup'), InlineKeyboardButton("\U0001F4BE بکاپ پیشرفته", callback_data='backup_start')],
-        [InlineKeyboardButton("📥 بازیابی از بکاپ", callback_data='backup_restore_start'), InlineKeyboardButton("👑 افزودن ادمین", callback_data='admin_admins_menu')],
-        [InlineKeyboardButton("\U0001F514 تست یادآوری", callback_data='admin_test_reminder')],
-        [InlineKeyboardButton("\u274C خروج", callback_data='admin_exit')],
-    ]
-    text = "\U0001F5A5\uFE0F پنل مدیریت ربات."
-
-    if update.callback_query:
-        await safe_edit_message(update.callback_query, text, reply_markup=InlineKeyboardMarkup(keyboard), answer_callback=True)
-    elif update.message:
-        await update.message.reply_text(text, reply_markup=InlineKeyboardMarkup(keyboard))
-
-    return ADMIN_MAIN_MENU
-
+    """Same as admin_command but simpler (no stats)"""
+    return await admin_command(update, context)
 
 async def backup_restore_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     query = update.callback_query
@@ -3215,6 +3186,66 @@ async def admin_quick_backup(update: Update, context: ContextTypes.DEFAULT_TYPE)
             zf.writestr("services.json", _json.dumps(orders_tbl, ensure_ascii=False, indent=2))
         except Exception as e:
             logger.error(f"Could not add services.json: {e}")
+        
+        try:
+            wallets_tbl = query_db("SELECT user_id, balance FROM user_wallets ORDER BY user_id") or []
+            zf.writestr("wallet_balances.json", _json.dumps(wallets_tbl, ensure_ascii=False, indent=2))
+        except Exception as e:
+            logger.error(f"Could not add wallet_balances.json: {e}")
+        
+        try:
+            plans_tbl = query_db("SELECT id, name, description, price, duration_days, traffic_gb FROM plans ORDER BY id") or []
+            zf.writestr("plans.json", _json.dumps(plans_tbl, ensure_ascii=False, indent=2))
+        except Exception as e:
+            logger.error(f"Could not add plans.json: {e}")
+        
+        try:
+            panels_tbl = query_db("SELECT id, name, panel_type, url, sub_base FROM panels ORDER BY id") or []
+            zf.writestr("panels.json", _json.dumps(panels_tbl, ensure_ascii=False, indent=2))
+        except Exception as e:
+            logger.error(f"Could not add panels.json: {e}")
+        
+        try:
+            cards_tbl = query_db("SELECT number, holder FROM cards ORDER BY id") or []
+            zf.writestr("cards.json", _json.dumps(cards_tbl, ensure_ascii=False, indent=2))
+        except Exception as e:
+            logger.error(f"Could not add cards.json: {e}")
+        
+        try:
+            tickets_tbl = query_db("SELECT * FROM tickets ORDER BY id") or []
+            zf.writestr("tickets.json", _json.dumps(tickets_tbl, ensure_ascii=False, indent=2))
+        except Exception as e:
+            logger.error(f"Could not add tickets.json: {e}")
+        
+        try:
+            settings_tbl = query_db("SELECT key, value FROM settings ORDER BY key") or []
+            zf.writestr("settings.json", _json.dumps(settings_tbl, ensure_ascii=False, indent=2))
+        except Exception as e:
+            logger.error(f"Could not add settings.json: {e}")
+        
+        try:
+            discounts_tbl = query_db("SELECT * FROM discount_codes ORDER BY id") or []
+            zf.writestr("discount_codes.json", _json.dumps(discounts_tbl, ensure_ascii=False, indent=2))
+        except Exception as e:
+            logger.error(f"Could not add discount_codes.json: {e}")
+        
+        try:
+            refs_tbl = query_db("SELECT * FROM referrals ORDER BY id") or []
+            zf.writestr("referrals.json", _json.dumps(refs_tbl, ensure_ascii=False, indent=2))
+        except Exception as e:
+            logger.error(f"Could not add referrals.json: {e}")
+        
+        try:
+            wallet_tx_tbl = query_db("SELECT * FROM wallet_transactions ORDER BY id") or []
+            zf.writestr("wallet_transactions.json", _json.dumps(wallet_tx_tbl, ensure_ascii=False, indent=2))
+        except Exception as e:
+            logger.error(f"Could not add wallet_transactions.json: {e}")
+        
+        try:
+            admins_tbl = query_db("SELECT user_id FROM admins ORDER BY user_id") or []
+            zf.writestr("admins.json", _json.dumps(admins_tbl, ensure_ascii=False, indent=2))
+        except Exception as e:
+            logger.error(f"Could not add admins.json: {e}")
     
     zip_buffer.seek(0)
     filename = f"panel_backup_{datetime.now().strftime('%Y%m%d_%H%M%S')}.zip"
