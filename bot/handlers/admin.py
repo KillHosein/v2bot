@@ -412,7 +412,10 @@ async def admin_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
 async def admin_toggle_bot_active(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Toggle bot active/inactive status"""
     query = update.callback_query
-    await query.answer()  # Answer callback first
+    try:
+        await query.answer()
+    except Exception:
+        pass
     
     try:
         cur = query_db("SELECT value FROM settings WHERE key='bot_active'", one=True)
@@ -424,8 +427,22 @@ async def admin_toggle_bot_active(update: Update, context: ContextTypes.DEFAULT_
     except Exception as e:
         logger.error(f"Error toggling bot_active: {e}")
     
-    # Refresh admin panel with updated button
-    return await admin_command(update, context)
+    # Refresh admin panel with updated button - manually rebuild to ensure fresh data
+    from ..helpers.admin_menu import get_admin_dashboard_text, get_main_menu_keyboard
+    
+    text = await get_admin_dashboard_text()
+    keyboard = get_main_menu_keyboard()
+    
+    try:
+        await query.message.edit_text(
+            text,
+            reply_markup=InlineKeyboardMarkup(keyboard),
+            parse_mode=ParseMode.MARKDOWN
+        )
+    except Exception as e:
+        logger.error(f"Error updating admin panel after toggle: {e}")
+    
+    return ADMIN_MAIN_MENU
 
 
 # --- Order Review / Approval ---
