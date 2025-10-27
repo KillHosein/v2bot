@@ -624,10 +624,11 @@ async def show_specific_service_details(update: Update, context: ContextTypes.DE
         )
 
     keyboard = [
-        [InlineKeyboardButton("\U0001F504 تمدید این سرویس", callback_data=f"renew_service_{order_id}")],
-        [InlineKeyboardButton("\U0001F4CA وضعیت سرویس", callback_data=f"check_service_status_{order_id}")],
-        [InlineKeyboardButton("\U0001F5D1 حذف این سرویس", callback_data=f"delete_service_{order_id}")],
-        [InlineKeyboardButton("\U0001F519 بازگشت", callback_data='my_services')],
+        [InlineKeyboardButton("\U0001F504 تمدید سرویس", callback_data=f"renew_service_{order_id}")],
+        [InlineKeyboardButton("\U0001F4CA بررسی وضعیت", callback_data=f"check_service_status_{order_id}")],
+        [InlineKeyboardButton("\U0001F5D1 حذف سرویس", callback_data=f"delete_service_{order_id}")],
+        [InlineKeyboardButton("\U0001F4DD سفارشات من", callback_data='my_services'), InlineKeyboardButton("\U0001F4B3 کارت به کارت", callback_data='card_to_card_info')],
+        [InlineKeyboardButton("\U0001F519 بازگشت به منو", callback_data='start_main')],
     ]
     # Try to send QR image for the first config or sub link
     qr_target = None
@@ -2429,5 +2430,42 @@ async def purchase_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         return PURCHASE_AWAIT_PLAN
     except Exception as e:
         logger.error(f"Critical error in purchase_start: {e}", exc_info=True)
-        await query.edit_message_text("خطایی در نمایش پلن‌ها رخ داد. لطفا دوباره تلاش کنید.")
-        return ConversationHandler.END
+
+
+async def card_to_card_info(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Show card-to-card payment information"""
+    query = update.callback_query
+    await query.answer()
+    
+    # Get card information from database
+    cards = query_db("SELECT number, holder FROM cards")
+    
+    if not cards:
+        text = (
+            "💳 <b>اطلاعات کارت به کارت</b>\n\n"
+            "❌ در حال حاضر اطلاعات کارتی ثبت نشده است.\n\n"
+            "لطفاً با پشتیبانی تماس بگیرید."
+        )
+    else:
+        text = "💳 <b>اطلاعات کارت به کارت</b>\n\n"
+        for idx, card in enumerate(cards, 1):
+            text += (
+                f"━━━━━━━━━━━━━━━━━━━━━━━━\n"
+                f"🔹 <b>کارت {idx}:</b>\n"
+                f"📇 شماره کارت: <code>{card['number']}</code>\n"
+                f"👤 به نام: {card['holder']}\n\n"
+            )
+        text += (
+            "━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
+            "⚠️ پس از واریز، حتماً اسکرین‌شات رسید را ارسال کنید."
+        )
+    
+    keyboard = [
+        [InlineKeyboardButton("🔙 بازگشت", callback_data='start_main')]
+    ]
+    
+    await query.message.edit_text(
+        text,
+        parse_mode=ParseMode.HTML,
+        reply_markup=InlineKeyboardMarkup(keyboard)
+    )

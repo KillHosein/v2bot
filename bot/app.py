@@ -105,7 +105,8 @@ from .handlers.admin import (
     admin_xui_choose_inbound,
     admin_reseller_menu, admin_toggle_reseller, admin_reseller_requests, admin_reseller_set_value_start, admin_reseller_set_value_save, admin_reseller_approve, admin_reseller_reject, admin_reseller_delete_start, admin_reseller_delete_receive,
     admin_toggle_signup_bonus, admin_set_signup_bonus_amount_start, admin_set_signup_bonus_amount_save,
-    admin_orders_menu, admin_orders_manage, admin_user_management, admin_payments_menu,
+    admin_orders_menu, admin_orders_manage, admin_orders_pending, admin_user_management, admin_payments_menu,
+    admin_quick_backup,
 )
 from .handlers.user import (
     get_free_config_handler, my_services_handler, show_specific_service_details, wallet_menu,
@@ -116,7 +117,7 @@ from .handlers.user import (
     support_menu, ticket_create_start, ticket_receive_message, tutorials_menu, tutorial_show,
     referral_menu, wallet_select_amount, wallet_upload_start_card, wallet_upload_start_crypto,
     composite_upload_router, refresh_service_link, revoke_key, view_service_qr, delete_service_start, delete_service_confirm,
-    check_service_status,
+    check_service_status, card_to_card_info,
     reseller_menu, reseller_pay_start,
     reseller_pay_card, reseller_pay_crypto, reseller_pay_gateway, reseller_verify_gateway,
     reseller_upload_start_card, reseller_upload_start_crypto, reseller_upload_router
@@ -699,11 +700,14 @@ def build_application() -> Application:
     application.add_handler(CallbackQueryHandler(admin_panel_inbounds_menu, pattern=r'^panel_inbounds_\d+$'), group=3)
     # Admin menu buttons (orders, users, payments)
     application.add_handler(CallbackQueryHandler(admin_orders_manage, pattern='^admin_orders_manage$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_orders_manage, pattern='^admin_orders_menu$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_orders_pending, pattern='^admin_orders_pending$'), group=3)
     application.add_handler(CallbackQueryHandler(lambda u, c: admin_orders_menu(u, c, int(u.callback_query.data.split('_')[-1])), pattern=r'^admin_orders_page_\d+$'), group=3)
     application.add_handler(CallbackQueryHandler(admin_user_management, pattern='^admin_user_management$'), group=3)
     application.add_handler(CallbackQueryHandler(admin_payments_menu, pattern='^admin_payments_menu$'), group=3)
     application.add_handler(CallbackQueryHandler(admin_system_health, pattern='^admin_system_health$'), group=3)
     application.add_handler(CallbackQueryHandler(admin_clear_notifications, pattern='^admin_clear_notifications$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_quick_backup, pattern='^admin_quick_backup$'), group=3)
     application.add_handler(CallbackQueryHandler(admin_discount_menu, pattern='^admin_discount_menu$'), group=3)
     application.add_handler(CallbackQueryHandler(admin_messages_menu, pattern='^admin_messages_menu$'), group=3)
     application.add_handler(CallbackQueryHandler(admin_tickets_menu, pattern='^admin_tickets_menu$'), group=3)
@@ -870,6 +874,7 @@ def build_application() -> Application:
     application.add_handler(CallbackQueryHandler(tutorial_show, pattern=r'^tutorial_show_\d+$'), group=3)
     application.add_handler(CallbackQueryHandler(referral_menu, pattern=r'^referral_menu$'), group=3)
     application.add_handler(CallbackQueryHandler(reseller_menu, pattern=r'^reseller_menu$'), group=3)
+    application.add_handler(CallbackQueryHandler(card_to_card_info, pattern=r'^card_to_card_info$'), group=3)
 
     # User wallet flows and support/tutorials (global callbacks)
     application.add_handler(CallbackQueryHandler(wallet_verify_gateway, pattern=r'^wallet_verify_gateway$'), group=3)

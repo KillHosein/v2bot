@@ -2884,6 +2884,52 @@ async def admin_orders_menu(update: Update, context: ContextTypes.DEFAULT_TYPE, 
     return ADMIN_MAIN_MENU
 
 
+async def admin_orders_pending(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Show pending orders with action buttons"""
+    query = update.callback_query
+    await query.answer()
+    
+    pending = query_db(
+        """SELECT o.id, o.user_id, o.timestamp, p.name as plan_name, 
+           COALESCE(o.final_price, p.price) as price, o.payment_method
+           FROM orders o
+           LEFT JOIN plans p ON p.id = o.plan_id
+           WHERE o.status = 'pending'
+           ORDER BY o.timestamp DESC
+           LIMIT 20""",
+    )
+    
+    if not pending:
+        await query.message.edit_text(
+            "✅ <b>سفارشات در انتظار</b>\n\nهیچ سفارشی در انتظار تأیید نیست.",
+            parse_mode=ParseMode.HTML,
+            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔙 بازگشت", callback_data='admin_orders_menu')]])
+        )
+        return ADMIN_MAIN_MENU
+    
+    text = f"⏳ <b>سفارشات در انتظار ({len(pending)} عدد)</b>\n\n"
+    keyboard = []
+    
+    for order in pending:
+        plan = order.get('plan_name', 'نامشخص')
+        price = order.get('price', 0)
+        payment = order.get('payment_method', 'نامشخص')
+        text += f"🆔 #{order['id']} | کاربر {order['user_id']}\n📦 {plan} | 💰 {int(price):,}ت | {payment}\n\n"
+        keyboard.append([
+            InlineKeyboardButton(f"✅ تأیید #{order['id']}", callback_data=f"approve_auto_{order['id']}"),
+            InlineKeyboardButton(f"❌ رد #{order['id']}", callback_data=f"reject_order_{order['id']}")
+        ])
+    
+    keyboard.append([InlineKeyboardButton("🔙 بازگشت", callback_data='admin_orders_menu')])
+    
+    await query.message.edit_text(
+        text,
+        parse_mode=ParseMode.HTML,
+        reply_markup=InlineKeyboardMarkup(keyboard)
+    )
+    return ADMIN_MAIN_MENU
+
+
 async def admin_user_management(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Show user management menu"""
     query = update.callback_query
@@ -3099,6 +3145,19 @@ async def admin_generate_backup(update: Update, context: ContextTypes.DEFAULT_TY
     except Exception:
         pass
     return await send_admin_panel(update, context)
+
+
+async def admin_quick_backup(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Quick backup - send backup file directly without menu"""
+    query = update.callback_query
+    await query.answer()
+    await query.message.edit_text("⏳ <b>در حال آماده‌سازی فایل بکاپ...</b>\n\nلطفاً صبر کنید، این کار ممکن است چند لحظه طول بکشد.", parse_mode=ParseMode.HTML)
+    
+    # Set target to 'all' to backup everything
+    context.user_data['backup_target'] = 'all'
+    
+    # Call the main backup generator
+    return await admin_generate_backup(update, context)
 
 
 # --- Admin fallback ---

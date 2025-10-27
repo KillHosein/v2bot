@@ -72,6 +72,10 @@ def get_main_menu_keyboard():
         [
             InlineKeyboardButton("🛠️ وضعیت سیستم", callback_data="admin_system_health"),
             InlineKeyboardButton("🔔 ارسال یادآوری‌ها", callback_data="run_alerts_now")
+        ],
+        [
+            InlineKeyboardButton("💾 دریافت فایل بکاپ", callback_data="admin_quick_backup"),
+            InlineKeyboardButton("📥 بازیابی از بکاپ", callback_data="backup_restore_start")
         ]
     ]
 
