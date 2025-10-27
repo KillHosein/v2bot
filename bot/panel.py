@@ -4565,7 +4565,9 @@ def VpnPanelAPI(panel_id: int) -> BasePanelAPI:
     cached = _PANEL_API_CACHE.get(key)
     now = _time.time()
     if cached and (now - cached[1] < _PANEL_API_TTL_SECONDS):
+        logger.debug(f"Using cached API instance for panel {panel_id} (type={ptype}, age={int(now - cached[1])}s)")
         return cached[0]
+    logger.info(f"Creating new API instance for panel {panel_id} (type={ptype})")
     if ptype == 'marzban':
         api = MarzbanAPI(panel_row)
         _PANEL_API_CACHE[key] = (api, now)
