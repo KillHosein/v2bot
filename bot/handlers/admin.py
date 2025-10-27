@@ -2514,18 +2514,13 @@ async def admin_panel_inbound_receive_tag(update: Update, context: ContextTypes.
 
 
 # --- Messages & Buttons Editor ---
-async def admin_messages_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    query = update.callback_query
-    await query.answer()
-    messages = query_db("SELECT message_name FROM messages")
-    keyboard = [[InlineKeyboardButton(m['message_name'], callback_data=f"msg_select_{m['message_name']}")] for m in messages]
-    keyboard.append([InlineKeyboardButton("\u2795 افزودن پیام جدید", callback_data="msg_add_start")])
-    keyboard.append([InlineKeyboardButton("\U0001F519 بازگشت", callback_data="admin_main")])
-    if message_sender is query.message.edit_text:
-        await _safe_edit_text(query.message, "مدیریت پیام‌ها و صفحات:", reply_markup=InlineKeyboardMarkup(keyboard))
-    else:
-        await update.message.reply_text("مدیریت پیام‌ها و صفحات:", reply_markup=InlineKeyboardMarkup(keyboard))
-    return ADMIN_MESSAGES_MENU
+# NOTE: این تابع قدیمی است - تابع جدید در admin_messages.py است
+# این تابع را حذف نمی‌کنیم چون ممکن است جاهایی به آن وابسته باشند
+# اما نامش را تغییر می‌دهیم تا conflict نداشته باشد
+async def admin_messages_menu_OLD_DEPRECATED(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    # این تابع deprecated شده - از admin_messages.admin_messages_menu استفاده کنید
+    from .admin_messages import admin_messages_menu as new_admin_messages_menu
+    return await new_admin_messages_menu(update, context)
 
 
 async def msg_add_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
