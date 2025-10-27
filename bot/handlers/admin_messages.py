@@ -36,13 +36,20 @@ def _md_escape(text: str) -> str:
 
 
 async def admin_messages_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    from ..config import logger
+    import time
+    
     query = update.callback_query
     await query.answer()
+    
+    start_time = time.time()
+    logger.info(f"[admin_messages_menu] START - callback_id={query.id}, data={query.data}")
     
     # Prevent duplicate execution
     callback_id = f"{query.id}_{query.data}" if query else None
     last_callback = context.user_data.get('last_messages_callback')
     if callback_id and callback_id == last_callback:
+        logger.warning(f"[admin_messages_menu] DUPLICATE PREVENTED - same callback_id={callback_id}")
         return ADMIN_MESSAGES_MENU
     if callback_id:
         context.user_data['last_messages_callback'] = callback_id
@@ -80,17 +87,22 @@ async def admin_messages_menu(update: Update, context: ContextTypes.DEFAULT_TYPE
 
     menu_text = get_message_text('admin_messages_menu', 'مدیریت پیام‌ها و صفحات:')
     
-    # Debug: log keyboard info
-    from ..config import logger
-    logger.info(f"[admin_messages_menu] total={total}, rows={len(rows) if rows else 0}, keyboard_rows={len(keyboard)}")
+    logger.info(f"[admin_messages_menu] DATA - total={total}, rows={len(rows) if rows else 0}, keyboard_rows={len(keyboard)}")
     
     try:
-        await _safe_edit_text(query.message, menu_text, reply_markup=InlineKeyboardMarkup(keyboard))
-    except Exception:
+        logger.info(f"[admin_messages_menu] EDITING MESSAGE - message_id={query.message.message_id}")
+        result = await _safe_edit_text(query.message, menu_text, reply_markup=InlineKeyboardMarkup(keyboard))
+        logger.info(f"[admin_messages_menu] EDIT SUCCESS - result={result is not None}")
+    except Exception as e:
+        logger.error(f"[admin_messages_menu] EDIT FAILED - error={e}")
         try:
-            await query.message.reply_text(menu_text, reply_markup=InlineKeyboardMarkup(keyboard))
-        except Exception:
-            pass
+            result = await query.message.reply_text(menu_text, reply_markup=InlineKeyboardMarkup(keyboard))
+            logger.info(f"[admin_messages_menu] REPLY SUCCESS")
+        except Exception as e2:
+            logger.error(f"[admin_messages_menu] REPLY FAILED - error={e2}")
+    
+    elapsed = time.time() - start_time
+    logger.info(f"[admin_messages_menu] END - elapsed={elapsed:.3f}s, returning ADMIN_MESSAGES_MENU")
     return ADMIN_MESSAGES_MENU
 
 
