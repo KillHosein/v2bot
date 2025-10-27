@@ -875,9 +875,6 @@ def build_application() -> Application:
 
     application.add_handler(CallbackQueryHandler(dynamic_button_handler), group=4)
 
-    # Global: admin messages menu so it opens from anywhere
-    application.add_handler(CallbackQueryHandler(admin_messages_menu, pattern='^admin_messages_menu$'), group=3)
-
     # User main menu callbacks (global)
     application.add_handler(CallbackQueryHandler(wallet_menu, pattern=r'^wallet_menu$'), group=3)
     application.add_handler(CallbackQueryHandler(support_menu, pattern=r'^support_menu$'), group=3)
