@@ -308,9 +308,9 @@ def build_application() -> Application:
         # Auto-backup scheduling
         try:
             ab_enabled = (query_db("SELECT value FROM settings WHERE key='auto_backup_enabled'", one=True) or {}).get('value') == '1'
-            ab_hours = int((query_db("SELECT value FROM settings WHERE key='auto_backup_hours'", one=True) or {}).get('value') or '12')
+            ab_hours = int((query_db("SELECT value FROM settings WHERE key='auto_backup_hours'", one=True) or {}).get('value') or '3')
         except Exception:
-            ab_enabled = False; ab_hours = 12
+            ab_enabled = False; ab_hours = 3
         if ab_enabled and ab_hours > 0:
             from .jobs import backup_and_send_to_admins
             application.job_queue.run_repeating(backup_and_send_to_admins, interval=ab_hours*3600, first=60, name="auto_backup_send")
