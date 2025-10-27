@@ -3153,11 +3153,17 @@ async def admin_quick_backup(update: Update, context: ContextTypes.DEFAULT_TYPE)
     await query.answer()
     await query.message.edit_text("⏳ <b>در حال آماده‌سازی فایل بکاپ...</b>\n\nلطفاً صبر کنید، این کار ممکن است چند لحظه طول بکشد.", parse_mode=ParseMode.HTML)
     
-    # Set target to 'all' to backup everything
-    context.user_data['backup_target'] = 'all'
+    # Temporarily change callback data to match expected format
+    original_data = query.data
+    query.data = 'backup_panel_all'
     
     # Call the main backup generator
-    return await admin_generate_backup(update, context)
+    result = await admin_generate_backup(update, context)
+    
+    # Restore original data
+    query.data = original_data
+    
+    return result
 
 
 # --- Admin fallback ---
