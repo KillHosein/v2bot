@@ -6,12 +6,40 @@
 
 import sqlite3
 import sys
+import os
 
 DB_NAME = "bot_db.sqlite"
+
+def initialize_messages_table():
+    """ایجاد جدول messages اگر وجود ندارد"""
+    try:
+        with sqlite3.connect(DB_NAME) as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS messages (
+                    message_name TEXT PRIMARY KEY,
+                    text TEXT,
+                    file_id TEXT,
+                    file_type TEXT
+                )
+            """)
+            conn.commit()
+            print("✅ جدول messages ایجاد شد")
+            return True
+    except Exception as e:
+        print(f"❌ خطا در ایجاد جدول: {e}")
+        return False
 
 def update_messages():
     """اضافه کردن متن‌های جدید به دیتابیس"""
     new_messages = {
+        # متن‌های اصلی
+        'start_main': '👋 سلام! به ربات فروش کانفیگ ما خوش آمدید.\nبرای شروع از دکمه‌های زیر استفاده کنید.',
+        'admin_panel_main': '🖥️ پنل مدیریت ربات. لطفا یک گزینه را انتخاب کنید.',
+        'buy_config_main': '📡 **خرید کانفیگ**\n\nلطفا یکی از پلن‌های زیر را انتخاب کنید:',
+        'payment_info_text': '💳 **اطلاعات پرداخت** 💳\n\nمبلغ پلن انتخابی را به یکی از کارت‌های زیر واریز کرده و سپس اسکرین‌شات رسید را در همین صفحه ارسال نمایید.',
+        'renewal_reminder_text': '⚠️ **یادآوری تمدید سرویس**\n\nکاربر گرامی، اعتبار سرویس شما رو به اتمام است.\n\n{details}\n\nبرای جلوگیری از قطع شدن سرویس، لطفاً از طریق دکمه "سرویس من" در منوی اصلی ربات اقدام به تمدید نمایید.',
+        # متن‌های منوی ادمین
         'admin_messages_menu': 'مدیریت پیام‌ها و صفحات:',
         'admin_users_menu': '👥 مدیریت کاربران',
         'admin_stats_title': '📈 **آمار ربات**',
@@ -31,11 +59,15 @@ def update_messages():
         with sqlite3.connect(DB_NAME) as conn:
             cursor = conn.cursor()
             
-            # بررسی وجود جدول messages
+            # بررسی وجود جدول messages و ایجاد آن در صورت نیاز
             cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='messages'")
             if not cursor.fetchone():
-                print("❌ جدول messages یافت نشد!")
-                return False
+                print("⚠️  جدول messages یافت نشد. در حال ایجاد...")
+                conn.close()
+                if not initialize_messages_table():
+                    return False
+                # اتصال مجدد بعد از ایجاد جدول
+                return update_messages()  # Call recursively after creating table
             
             # اضافه کردن متن‌های جدید
             added = 0
@@ -80,8 +112,20 @@ def update_messages():
 
 if __name__ == "__main__":
     print("🔄 شروع بروزرسانی متن‌های دیتابیس...")
-    print(f"📁 دیتابیس: {DB_NAME}\n")
+    print(f"📁 دیتابیس: {DB_NAME}")
     
+    # بررسی وجود فایل دیتابیس
+    if not os.path.exists(DB_NAME):
+        print(f"⚠️  فایل دیتابیس یافت نشد. در حال ایجاد {DB_NAME}...")
+        # ایجاد فایل جدید
+        try:
+            with sqlite3.connect(DB_NAME) as conn:
+                print("✅ فایل دیتابیس ایجاد شد")
+        except Exception as e:
+            print(f"❌ خطا در ایجاد فایل دیتابیس: {e}")
+            sys.exit(1)
+    
+    print()
     success = update_messages()
     
     if success:
