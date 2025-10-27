@@ -71,6 +71,7 @@ class MarzbanAPI(BasePanelAPI):
         # Check if cached token is still valid (cache for 55 minutes)
         if self.access_token and self.token_expire_time:
             if _time.time() < self.token_expire_time:
+                logger.debug(f"Using cached Marzban token for panel {self.panel_id} (expires in {int(self.token_expire_time - _time.time())}s)")
                 return True
         
         # Login to get new token
@@ -231,19 +232,6 @@ class MarzbanAPI(BasePanelAPI):
         # Fallback: recreate
         created_user, sub_link, msg = self.create_user_on_inbound(inbound_id, 0, {'traffic_gb': 0, 'duration_days': 0}, desired_username=username)
         return {"email": username} if (created_user and sub_link) else None
-        try:
-            r = self.session.post(
-                f"{self.base_url}/api/admin/token",
-                data={'username': self.username, 'password': self.password},
-                headers={'Content-Type': 'application/x-www-form-urlencoded', 'accept': 'application/json'},
-                timeout=10,
-            )
-            r.raise_for_status()
-            self.access_token = r.json().get('access_token')
-            return True
-        except requests.RequestException as e:
-            logger.error(f"Failed to get Marzban token for {self.base_url}: {e}")
-            return False
 
     async def get_all_users(self, limit=None, offset=0):
         if not self.access_token and not self.get_token():
@@ -581,6 +569,7 @@ class XuiAPI(BasePanelAPI):
         # Check if already logged in recently (cache for 50 minutes)
         if self._logged_in and self._login_time:
             if _time.time() - self._login_time < (50 * 60):
+                logger.debug(f"Using cached X-UI session for panel {self.panel_id} (logged in {int(_time.time() - self._login_time)}s ago)")
                 return True
         
         # Try form login first (more compatible across versions)

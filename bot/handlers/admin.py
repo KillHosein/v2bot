@@ -412,16 +412,18 @@ async def admin_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
 async def admin_toggle_bot_active(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Toggle bot active/inactive status"""
     query = update.callback_query
+    await query.answer()  # Answer callback first
+    
     try:
         cur = query_db("SELECT value FROM settings WHERE key='bot_active'", one=True)
         current = (cur or {}).get('value') or '1'
         new_val = '0' if str(current) == '1' else '1'
         execute_db("INSERT OR REPLACE INTO settings (key, value) VALUES ('bot_active', ?)", (new_val,))
         status = "روشن" if new_val == '1' else "خاموش"
-        await answer_safely(query, f"ربات {status} شد.", show_alert=False)
+        logger.info(f"Bot status toggled to: {status} (value={new_val})")
     except Exception as e:
-        await answer_safely(query, "خطا در تغییر وضعیت", show_alert=True)
         logger.error(f"Error toggling bot_active: {e}")
+    
     # Refresh admin panel with updated button
     return await admin_command(update, context)
 
