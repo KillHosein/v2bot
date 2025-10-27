@@ -70,6 +70,10 @@ def get_main_menu_keyboard():
             InlineKeyboardButton("💬 تیکت‌ها", callback_data="admin_tickets_menu")
         ],
         [
+            InlineKeyboardButton("📤 ارسال همگانی", callback_data="admin_broadcast_menu"),
+            InlineKeyboardButton("📧 پیام به کاربر", callback_data="admin_send_by_id_start")
+        ],
+        [
             InlineKeyboardButton("🛠️ وضعیت سیستم", callback_data="admin_system_health"),
             InlineKeyboardButton("🔔 ارسال یادآوری‌ها", callback_data="run_alerts_now")
         ],
@@ -78,7 +82,12 @@ def get_main_menu_keyboard():
             InlineKeyboardButton("📦 بکاپ پیشرفته", callback_data="backup_start")
         ],
         [
-            InlineKeyboardButton("📥 بازیابی از بکاپ", callback_data="backup_restore_start")
+            InlineKeyboardButton("📥 بازیابی از بکاپ", callback_data="backup_restore_start"),
+            InlineKeyboardButton("👑 افزودن ادمین", callback_data="admin_admins_menu")
+        ],
+        [
+            InlineKeyboardButton("🕐 کرون جاب‌ها", callback_data="admin_cron_menu"),
+            InlineKeyboardButton("📚 آموزش‌ها", callback_data="admin_tutorials_menu")
         ]
     ]
 
