@@ -55,6 +55,12 @@ async def check_low_traffic(context):
         # For each panel, fetch all users once
         for panel_id, panel_orders in orders_by_panel.items():
             try:
+                # Check panel type first - 3x-UI doesn't support get_all_users
+                panel_info = query_db("SELECT panel_type FROM panels WHERE id = ?", (panel_id,), one=True)
+                if panel_info and panel_info.get('panel_type') == '3xui':
+                    logger.info(f"[Notification Job] Skipping panel {panel_id} (3x-UI doesn't support bulk user fetch)")
+                    continue
+                
                 logger.info(f"[Notification Job] Fetching users from panel {panel_id} (using cache if available)...")
                 api = VpnPanelAPI(panel_id=panel_id)
                 all_users, msg = await api.get_all_users()

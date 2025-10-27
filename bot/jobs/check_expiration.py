@@ -60,9 +60,14 @@ async def check_expirations(context: ContextTypes.DEFAULT_TYPE):
     except Exception:
         time_alert_days = 3
 
-    all_panels = query_db("SELECT id FROM panels WHERE COALESCE(enabled,1)=1")
+    all_panels = query_db("SELECT id, panel_type FROM panels WHERE COALESCE(enabled,1)=1")
     for panel_data in all_panels:
         try:
+            # Skip 3x-UI panels as they don't support get_all_users
+            if panel_data.get('panel_type') == '3xui':
+                logger.info(f"Skipping panel {panel_data['id']} (3x-UI) in expiration check")
+                continue
+            
             panel_api = VpnPanelAPI(panel_id=panel_data['id'])
             all_users, msg = await panel_api.get_all_users()
 

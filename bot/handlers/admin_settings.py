@@ -25,7 +25,10 @@ def _md_escape(text: str) -> str:
 
 async def admin_settings_manage(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     query = update.callback_query
-    await query.answer()
+    try:
+        await query.answer()
+    except Exception:
+        pass  # Ignore expired callback queries
     settings = {s['key']: s['value'] for s in query_db("SELECT key, value FROM settings")}
     trial_status = settings.get('free_trial_status', '0')
     trial_button_text = "\u274C غیرفعال کردن تست" if trial_status == '1' else "\u2705 فعال کردن تست"
