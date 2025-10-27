@@ -27,7 +27,27 @@ async def admin_cron_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
         [InlineKeyboardButton("تغییر ساعت اجرای روزانه", callback_data="cron_set_hour_start")],
         [InlineKeyboardButton("بازگشت", callback_data="admin_main")],
     ]
-    await _safe_edit_text(query.message, text, parse_mode=ParseMode.MARKDOWN, reply_markup=InlineKeyboardMarkup(kb))
+    try:
+        await _safe_edit_text(query.message, text, parse_mode=ParseMode.MARKDOWN, reply_markup=InlineKeyboardMarkup(kb))
+    except Exception as e:
+        # If edit fails, try deleting and sending new message
+        try:
+            await query.message.delete()
+        except Exception:
+            pass
+        try:
+            await query.message.reply_text(text, parse_mode=ParseMode.MARKDOWN, reply_markup=InlineKeyboardMarkup(kb))
+        except Exception:
+            # Last resort: send to chat directly
+            try:
+                await context.bot.send_message(
+                    chat_id=query.message.chat_id,
+                    text=text,
+                    parse_mode=ParseMode.MARKDOWN,
+                    reply_markup=InlineKeyboardMarkup(kb)
+                )
+            except Exception:
+                pass
     return ADMIN_CRON_MENU
 
 async def admin_cron_toggle_reminders(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
