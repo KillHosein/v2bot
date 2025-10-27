@@ -24,8 +24,10 @@ async def check_low_traffic(context):
     """
     Check services with low traffic and notify users
     Notification at 80% and 95% usage
+    Optimized: fetch all users per panel once, then lookup
     """
     try:
+        logger.info("[Notification Job] Starting traffic check...")
         # Get active orders
         orders = query_db("""
             SELECT o.id, o.user_id, o.marzban_username, o.panel_id,
@@ -38,68 +40,91 @@ async def check_low_traffic(context):
             AND o.panel_id IS NOT NULL
         """) or []
         
+        if not orders:
+            logger.info("[Notification Job] No active orders to check")
+            return
+        
+        # Group orders by panel_id to minimize API calls
+        orders_by_panel = {}
         for order in orders:
+            panel_id = order['panel_id']
+            if panel_id not in orders_by_panel:
+                orders_by_panel[panel_id] = []
+            orders_by_panel[panel_id].append(order)
+        
+        # For each panel, fetch all users once
+        for panel_id, panel_orders in orders_by_panel.items():
             try:
-                # Get panel info
-                panel = query_db("SELECT * FROM panels WHERE id = ?", (order['panel_id'],), one=True)
-                if not panel:
+                logger.info(f"[Notification Job] Fetching users from panel {panel_id} (using cache if available)...")
+                api = VpnPanelAPI(panel_id=panel_id)
+                all_users, msg = await api.get_all_users()
+                
+                if not all_users:
+                    logger.warning(f"[Notification Job] Could not fetch users from panel {panel_id}: {msg}")
                     continue
                 
-                # Get service stats from panel - pass panel_id not the whole dict
-                api = VpnPanelAPI(panel_id=order['panel_id'])
-                result = await api.get_user(order['marzban_username'])
+                # Build lookup dict by username
+                users_dict = {}
+                for u in all_users:
+                    username = u.get('username') or u.get('email')
+                    if username:
+                        users_dict[username] = u
                 
-                # Handle both tuple (user_data, message) and dict returns
-                if isinstance(result, tuple):
-                    user_data, _ = result
-                else:
-                    user_data = result
-                
-                if not user_data or not isinstance(user_data, dict):
-                    continue
-                
-                # Calculate usage percentage
-                used = user_data.get('used_traffic', 0) / (1024**3)  # Convert to GB
-                total = float(order['traffic_gb'] or 0)
-                
-                if total == 0:  # Unlimited traffic
-                    continue
-                
-                usage_percent = (used / total) * 100
-                
-                # Check 80% threshold
-                if usage_percent >= 80 and not order.get('notified_traffic_80'):
-                    await send_traffic_warning(
-                        context.bot,
-                        order['user_id'],
-                        order['id'],
-                        order['plan_name'],
-                        usage_percent,
-                        used,
-                        total,
-                        level='warning'
-                    )
-                    execute_db("UPDATE orders SET notified_traffic_80 = 1 WHERE id = ?", (order['id'],))
-                
-                # Check 95% threshold
-                elif usage_percent >= 95 and not order.get('notified_traffic_95'):
-                    await send_traffic_warning(
-                        context.bot,
-                        order['user_id'],
-                        order['id'],
-                        order['plan_name'],
-                        usage_percent,
-                        used,
-                        total,
-                        level='critical'
-                    )
-                    execute_db("UPDATE orders SET notified_traffic_95 = 1 WHERE id = ?", (order['id'],))
+                # Check each order against the fetched data
+                for order in panel_orders:
+                    try:
+                        username = order['marzban_username']
+                        user_data = users_dict.get(username)
+                        
+                        if not user_data:
+                            continue
+                        
+                        # Calculate usage percentage
+                        used = user_data.get('used_traffic', 0) / (1024**3)  # Convert to GB
+                        total = float(order['traffic_gb'] or 0)
+                        
+                        if total == 0:  # Unlimited traffic
+                            continue
+                        
+                        usage_percent = (used / total) * 100
+                        
+                        # Check 80% threshold
+                        if usage_percent >= 80 and not order.get('notified_traffic_80'):
+                            await send_traffic_warning(
+                                context.bot,
+                                order['user_id'],
+                                order['id'],
+                                order['plan_name'],
+                                usage_percent,
+                                used,
+                                total,
+                                level='warning'
+                            )
+                            execute_db("UPDATE orders SET notified_traffic_80 = 1 WHERE id = ?", (order['id'],))
+                        
+                        # Check 95% threshold
+                        elif usage_percent >= 95 and not order.get('notified_traffic_95'):
+                            await send_traffic_warning(
+                                context.bot,
+                                order['user_id'],
+                                order['id'],
+                                order['plan_name'],
+                                usage_percent,
+                                used,
+                                total,
+                                level='critical'
+                            )
+                            execute_db("UPDATE orders SET notified_traffic_95 = 1 WHERE id = ?", (order['id'],))
+                        
+                    except Exception as e:
+                        logger.error(f"Error checking traffic for order {order['id']}: {e}")
+                        continue
                 
             except Exception as e:
-                logger.error(f"Error checking traffic for order {order['id']}: {e}")
+                logger.error(f"Error processing panel {panel_id} in traffic check: {e}")
                 continue
         
-        logger.info(f"Traffic check completed for {len(orders)} orders")
+        logger.info(f"[Notification Job] Traffic check completed for {len(orders)} orders")
         
     except Exception as e:
         logger.error(f"Error in check_low_traffic: {e}")
