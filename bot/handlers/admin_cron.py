@@ -7,10 +7,13 @@ from ..states import ADMIN_CRON_MENU, ADMIN_CRON_AWAIT_HOUR
 from ..helpers.tg import safe_edit_text as _safe_edit_text, answer_safely as _ans
 
 async def admin_cron_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    from ..config import logger
+    logger.info("admin_cron_menu called")
     query = update.callback_query
     try:
         await query.answer()
-    except Exception:
+    except Exception as e:
+        logger.warning(f"Failed to answer callback in cron menu: {e}")
         pass  # Ignore expired callback queries
     st = {s['key']: s['value'] for s in (query_db("SELECT key, value FROM settings WHERE key IN ('reminder_job_enabled','daily_job_hour')") or [])}
     enabled = (st.get('reminder_job_enabled') or '1') == '1'
