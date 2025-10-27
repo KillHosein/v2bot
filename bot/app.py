@@ -568,7 +568,7 @@ def build_application() -> Application:
             CallbackQueryHandler(admin_command, pattern='^admin_main$'),
         ],
         allow_reentry=True,
-        per_message=True,
+        per_message=False,
     )
 
     purchase_conv = ConversationHandler(
@@ -594,7 +594,7 @@ def build_application() -> Application:
         },
         fallbacks=[],
         allow_reentry=True,
-        per_message=True,
+        per_message=False,
     )
 
     renewal_conv = ConversationHandler(
@@ -616,7 +616,7 @@ def build_application() -> Application:
         },
         fallbacks=[CallbackQueryHandler(show_specific_service_details, pattern=r'^view_service_')],
         allow_reentry=True,
-        per_message=True,
+        per_message=False,
     )
 
     application.add_handler(admin_conv, group=1)
@@ -736,18 +736,18 @@ def build_application() -> Application:
     application.add_handler(CallbackQueryHandler(admin_toggle_gateway_type, pattern=r'^toggle_gateway_type_(zarinpal|aghapay)$'), group=3)
     application.add_handler(CallbackQueryHandler(admin_toggle_signup_bonus, pattern=r'^toggle_signup_bonus_(0|1)$'), group=3)
     application.add_handler(CallbackQueryHandler(admin_set_signup_bonus_amount_start, pattern='^set_signup_bonus_amount$'), group=3)
-    application.add_handler(CallbackQueryHandler(admin_set_trial_panel_start, pattern='^set_trial_panel_start$'), group=3)
-    application.add_handler(CallbackQueryHandler(admin_set_trial_panel_choose, pattern=r'^set_trial_panel_\d+$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_set_trial_inbound_start, pattern='^set_trial_inbound_start$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_set_trial_inbound_choose, pattern=r'^set_trial_inbound_\d+$'), group=3)
     application.add_handler(CallbackQueryHandler(admin_set_ref_percent_start, pattern='^set_ref_percent_start$'), group=3)
     application.add_handler(CallbackQueryHandler(admin_set_config_footer_start, pattern='^set_config_footer_start$'), group=3)
     # Alerts & Auto-backup (global)
     application.add_handler(CallbackQueryHandler(admin_toggle_user_quota, pattern=r'^toggle_user_quota_(0|1)$'), group=3)
     application.add_handler(CallbackQueryHandler(admin_toggle_talert, pattern=r'^toggle_talert_(0|1)$'), group=3)
-    application.add_handler(CallbackQueryHandler(admin_set_talert_gb_start, pattern=r'^set_talert_gb_start$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_set_talert_gb_start, pattern='^set_talert_gb_start$'), group=3)
     application.add_handler(CallbackQueryHandler(admin_toggle_time_alert, pattern=r'^toggle_time_alert_(0|1)$'), group=3)
-    application.add_handler(CallbackQueryHandler(admin_set_time_alert_days_start, pattern=r'^set_time_alert_days_start$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_set_time_alert_days_start, pattern='^set_time_alert_days_start$'), group=3)
     application.add_handler(CallbackQueryHandler(admin_toggle_auto_backup, pattern=r'^toggle_auto_backup_(0|1)$'), group=3)
-    application.add_handler(CallbackQueryHandler(admin_set_auto_backup_hours_start, pattern=r'^set_auto_backup_hours_start$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_set_auto_backup_hours_start, pattern='^set_auto_backup_hours_start$'), group=3)
 
     # Wallet manual adjust (global)
     application.add_handler(CallbackQueryHandler(admin_wallet_adjust_start, pattern=r'^wallet_adjust_start_(credit|debit)$'), group=3)
@@ -903,7 +903,7 @@ def build_application() -> Application:
         },
         fallbacks=[CallbackQueryHandler(admin_tickets_menu, pattern='^admin_tickets_menu$')],
         allow_reentry=True,
-        per_message=True,
+        per_message=False,
     )
     application.add_handler(admin_reply_conv, group=1)
 
@@ -937,7 +937,7 @@ def build_application() -> Application:
         },
         fallbacks=[CallbackQueryHandler(wallet_menu, pattern='^wallet_menu$')],
         allow_reentry=True,
-        per_message=True,
+        per_message=False,
     )
     application.add_handler(wallet_conv, group=1)
 
@@ -948,7 +948,7 @@ def build_application() -> Application:
         },
         fallbacks=[],
         allow_reentry=True,
-        per_message=True,
+        per_message=False,
     )
 
     application.add_handler(support_conv, group=1)
