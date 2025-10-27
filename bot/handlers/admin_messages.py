@@ -2,7 +2,7 @@ from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.constants import ParseMode
 from telegram.ext import ContextTypes
 
-from ..db import query_db, execute_db
+from ..db import query_db, execute_db, get_message_text
 from ..states import (
     ADMIN_MESSAGES_MENU,
     ADMIN_MESSAGES_SELECT,
@@ -69,11 +69,12 @@ async def admin_messages_menu(update: Update, context: ContextTypes.DEFAULT_TYPE
     keyboard.append([InlineKeyboardButton("➕ افزودن پیام جدید", callback_data="msg_add_start")])
     keyboard.append([InlineKeyboardButton("\U0001F519 بازگشت", callback_data="admin_main")])
 
+    menu_text = get_message_text('admin_messages_menu', 'مدیریت پیام‌ها و صفحات:')
     try:
-        await _safe_edit_text(query.message, "مدیریت پیام‌ها و صفحات:", reply_markup=InlineKeyboardMarkup(keyboard))
+        await _safe_edit_text(query.message, menu_text, reply_markup=InlineKeyboardMarkup(keyboard))
     except Exception:
         try:
-            await query.message.reply_text("مدیریت پیام‌ها و صفحات:", reply_markup=InlineKeyboardMarkup(keyboard))
+            await query.message.reply_text(menu_text, reply_markup=InlineKeyboardMarkup(keyboard))
         except Exception:
             pass
     return ADMIN_MESSAGES_MENU
