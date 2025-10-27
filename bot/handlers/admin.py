@@ -439,15 +439,24 @@ async def admin_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
 
 async def admin_toggle_bot_active(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     query = update.callback_query
+<<<<<<< HEAD
     await answer_safely(query)
+=======
+>>>>>>> e44d1cb8d338f50559cb401d4e0f9381ec574ce9
     try:
         cur = query_db("SELECT value FROM settings WHERE key='bot_active'", one=True)
         current = (cur or {}).get('value') or '1'
         new_val = '0' if str(current) == '1' else '1'
         execute_db("INSERT OR REPLACE INTO settings (key, value) VALUES ('bot_active', ?)", (new_val,))
         status = "روشن" if new_val == '1' else "خاموش"
+<<<<<<< HEAD
         logger.info(f"Bot status toggled to: {status} (value={new_val})")
     except Exception as e:
+=======
+        await answer_safely(query, f"ربات {status} شد.", show_alert=False)
+    except Exception as e:
+        await answer_safely(query, "خطا در تغییر وضعیت", show_alert=True)
+>>>>>>> e44d1cb8d338f50559cb401d4e0f9381ec574ce9
         logger.error(f"Error toggling bot_active: {e}")
     # Refresh admin panel with updated button
     return await admin_command(update, context)
@@ -556,20 +565,70 @@ async def admin_approve_on_panel(update: Update, context: ContextTypes.DEFAULT_T
             f"<b>لینک اشتراک شما:</b>\n<code>{config_link}</code>\n\n" + footer
         )
         try:
+<<<<<<< HEAD
             # Send a stylish QR code of subscription link if available
             sent_qr = False
+=======
+            # Try to get configs from subscription link
+            configs_list = []
+            if config_link and config_link.startswith('http'):
+                try:
+                    configs_list = _fetch_subscription_configs(config_link)
+                except Exception:
+                    pass
+            
+            # Send QR for first config if available
+            if configs_list:
+                try:
+                    from ..helpers.tg import build_styled_qr
+                    first_config = configs_list[0]
+                    buf = build_styled_qr(first_config)
+                    if buf:
+                        await context.bot.send_photo(
+                            chat_id=order['user_id'],
+                            photo=buf,
+                            caption="🔑 <b>QR Code کانفیگ اول</b>\n\nبرای اتصال سریع اسکن کنید",
+                            parse_mode=ParseMode.HTML
+                        )
+                except Exception:
+                    try:
+                        import qrcode, io as _io
+                        _b = _io.BytesIO(); qrcode.make(configs_list[0]).save(_b, format='PNG'); _b.seek(0)
+                        await context.bot.send_photo(
+                            chat_id=order['user_id'],
+                            photo=_b,
+                            caption="🔑 <b>QR Code کانفیگ</b>\n\nبرای اتصال سریع اسکن کنید",
+                            parse_mode=ParseMode.HTML
+                        )
+                    except Exception:
+                        pass
+            
+            # Send QR for subscription link
+            sent_sub_qr = False
+>>>>>>> e44d1cb8d338f50559cb401d4e0f9381ec574ce9
             if config_link:
                 try:
                     from ..helpers.tg import build_styled_qr
                     buf = build_styled_qr(config_link)
                     if buf:
+<<<<<<< HEAD
                         await context.bot.send_photo(chat_id=order['user_id'], photo=buf, caption=("\U0001F517 لینک اشتراک شما:\n" + ltr_code(config_link)), parse_mode=ParseMode.HTML)
                         sent_qr = True
+=======
+                        await context.bot.send_photo(
+                            chat_id=order['user_id'],
+                            photo=buf,
+                            caption="🔗 <b>QR Code لینک اشتراک</b>\n\nبرای بروزرسانی خودکار اسکن کنید",
+                            parse_mode=ParseMode.HTML
+                        )
+                        sent_sub_qr = True
+>>>>>>> e44d1cb8d338f50559cb401d4e0f9381ec574ce9
                 except Exception as e:
                     try:
                         logger.warning(f"QR styled send failed (approve_on_panel): {e}")
                     except Exception:
                         pass
+<<<<<<< HEAD
                     sent_qr = False
             # Fallback to simple QR if styled QR failed
             if not sent_qr and config_link:
@@ -581,6 +640,24 @@ async def admin_approve_on_panel(update: Update, context: ContextTypes.DEFAULT_T
                 except Exception:
                     sent_qr = False
             if not sent_qr:
+=======
+                    sent_sub_qr = False
+            # Fallback to simple QR if styled QR failed
+            if not sent_sub_qr and config_link:
+                try:
+                    import qrcode, io as _io
+                    _b = _io.BytesIO(); qrcode.make(config_link).save(_b, format='PNG'); _b.seek(0)
+                    await context.bot.send_photo(
+                        chat_id=order['user_id'],
+                        photo=_b,
+                        caption="🔗 <b>لینک اشتراک شما</b>",
+                        parse_mode=ParseMode.HTML
+                    )
+                    sent_sub_qr = True
+                except Exception:
+                    sent_sub_qr = False
+            if not sent_sub_qr:
+>>>>>>> e44d1cb8d338f50559cb401d4e0f9381ec574ce9
                 await context.bot.send_message(order['user_id'], final_message, parse_mode=ParseMode.HTML)
             # Purchase log to configured chat if enabled
             try:
@@ -2920,7 +2997,7 @@ async def admin_orders_pending(update: Update, context: ContextTypes.DEFAULT_TYP
             text += f"   🕐 {timestamp}\n\n"
             
             keyboard.append([
-                InlineKeyboardButton(f"✅ بررسی سفارش #{order['id']}", callback_data=f"admin_review_order_{order['id']}")
+                InlineKeyboardButton(f"✅ بررسی سفارش #{order['id']}", callback_data=f"approve_auto_{order['id']}")
             ])
         
         keyboard.append([InlineKeyboardButton("🔙 بازگشت", callback_data='admin_orders_menu')])
@@ -3709,8 +3786,31 @@ async def admin_ticket_receive_reply(update: Update, context: ContextTypes.DEFAU
         context.user_data.pop('awaiting_admin', None)
         raise ApplicationHandlerStop
     target_chat_id = int(t['user_id'])
+<<<<<<< HEAD
     # Try to copy full message; fallback to plain text
     try:
+=======
+    
+    # Send ticket header with ticket number
+    ticket_header = (
+        f"📩 <b>پاسخ تیکت #{ticket_id}</b>\n"
+        f"━━━━━━━━━━━━━━━━━━━━━━━━\n"
+    )
+    
+    # Send signature footer
+    ticket_footer = (
+        f"\n━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        f"🙏 <i>با تشکر از صبر و شکیبایی شما</i>\n"
+        f"💬 تیم پشتیبانی"
+    )
+    
+    # Try to copy full message; fallback to plain text
+    try:
+        # First send the header
+        await context.bot.send_message(chat_id=target_chat_id, text=ticket_header, parse_mode=ParseMode.HTML)
+        
+        # Then send admin's message
+>>>>>>> e44d1cb8d338f50559cb401d4e0f9381ec574ce9
         if update.message:
             if update.message.text and update.message.text.startswith('reply:'):
                 # strip reply:tid prefix
@@ -3720,12 +3820,27 @@ async def admin_ticket_receive_reply(update: Update, context: ContextTypes.DEFAU
                 await context.bot.copy_message(chat_id=target_chat_id, from_chat_id=update.message.chat_id, message_id=update.message.message_id)
         else:
             await context.bot.send_message(chat_id=target_chat_id, text=update.effective_message.text or '')
+<<<<<<< HEAD
     except Forbidden:
         await update.message.reply_text("❌ کاربر هنوز استارت نکرده یا پیام‌های ربات را مسدود کرده است. از کاربر بخواهید /start را بزند.")
         raise ApplicationHandlerStop
     except Exception:
         try:
             await context.bot.send_message(chat_id=target_chat_id, text=(update.message.text or ''))
+=======
+        
+        # Finally send the footer
+        await context.bot.send_message(chat_id=target_chat_id, text=ticket_footer, parse_mode=ParseMode.HTML)
+        
+    except Forbidden:
+        await update.message.reply_text("❌ کاربر هنوز استارت نکرده یا پیام‌های ربات را مسدود کرده است. از کاربر بخواهید /start را بزند.")
+        raise ApplicationHandlerStop
+    except Exception as e:
+        try:
+            # Fallback: send as one message
+            full_message = ticket_header + (update.message.text or '') + ticket_footer
+            await context.bot.send_message(chat_id=target_chat_id, text=full_message, parse_mode=ParseMode.HTML)
+>>>>>>> e44d1cb8d338f50559cb401d4e0f9381ec574ce9
         except Forbidden:
             await update.message.reply_text("❌ کاربر هنوز استارت نکرده یا پیام‌های ربات را مسدود کرده است. از کاربر بخواهید /start را بزند.")
             raise ApplicationHandlerStop

@@ -99,7 +99,11 @@ from .handlers.admin import (
     admin_xui_choose_inbound,
     admin_reseller_menu, admin_toggle_reseller, admin_reseller_requests, admin_reseller_set_value_start, admin_reseller_set_value_save, admin_reseller_approve, admin_reseller_reject, admin_reseller_delete_start, admin_reseller_delete_receive,
     admin_toggle_signup_bonus, admin_set_signup_bonus_amount_start, admin_set_signup_bonus_amount_save,
+<<<<<<< HEAD
     admin_orders_menu, admin_orders_manage, admin_user_management, admin_payments_menu, admin_orders_pending,
+=======
+    admin_orders_menu, admin_orders_manage, admin_user_management, admin_payments_menu,
+>>>>>>> e44d1cb8d338f50559cb401d4e0f9381ec574ce9
 )
 from .handlers.user import (
     get_free_config_handler, my_services_handler, show_specific_service_details, wallet_menu,
@@ -110,7 +114,11 @@ from .handlers.user import (
     support_menu, ticket_create_start, ticket_receive_message, tutorials_menu, tutorial_show,
     referral_menu, wallet_select_amount, wallet_upload_start_card, wallet_upload_start_crypto,
     composite_upload_router, refresh_service_link, revoke_key, view_service_qr, delete_service_start, delete_service_confirm,
+<<<<<<< HEAD
     check_service_status, alert_snooze_handler,
+=======
+    check_service_status, refresh_service_details,
+>>>>>>> e44d1cb8d338f50559cb401d4e0f9381ec574ce9
     reseller_menu, reseller_pay_start,
     reseller_pay_card, reseller_pay_crypto, reseller_pay_gateway, reseller_verify_gateway,
     reseller_upload_start_card, reseller_upload_start_crypto, reseller_upload_router
@@ -650,7 +658,10 @@ def build_application() -> Application:
     application.add_handler(CallbackQueryHandler(view_service_qr, pattern=r'^view_service_qr_\d+$'), group=2)
     application.add_handler(CallbackQueryHandler(refresh_service_link, pattern=r'^refresh_service_link_\d+$'), group=2)
     application.add_handler(CallbackQueryHandler(revoke_key, pattern=r'^revoke_key_\d+$'), group=2)
+<<<<<<< HEAD
     application.add_handler(CallbackQueryHandler(alert_snooze_handler, pattern=r'^alert_snooze_\d+$'), group=2)
+=======
+>>>>>>> e44d1cb8d338f50559cb401d4e0f9381ec574ce9
     application.add_handler(CallbackQueryHandler(delete_service_start, pattern=r'^delete_service_\d+$'), group=2)
     application.add_handler(CallbackQueryHandler(delete_service_confirm, pattern=r'^delete_service_(yes|no)_\d+$'), group=2)
     application.add_handler(CallbackQueryHandler(admin_approve_renewal, pattern=r'^approve_renewal_'), group=3)
@@ -664,6 +675,10 @@ def build_application() -> Application:
     application.add_handler(CallbackQueryHandler(support_menu, pattern=r'^support_menu$'), group=3)
     application.add_handler(CallbackQueryHandler(show_specific_service_details, pattern=r'^view_service_\d+$'), group=3)
     application.add_handler(CallbackQueryHandler(check_service_status, pattern=r'^check_service_status_\d+$'), group=3)
+<<<<<<< HEAD
+=======
+    application.add_handler(CallbackQueryHandler(refresh_service_details, pattern=r'^refresh_service_\d+$'), group=3)
+>>>>>>> e44d1cb8d338f50559cb401d4e0f9381ec574ce9
     application.add_handler(CallbackQueryHandler(refresh_service_link, pattern=r'^refresh_service_link_\d+$'), group=3)
     application.add_handler(CallbackQueryHandler(view_service_qr, pattern=r'^view_service_qr_\d+$'), group=3)
     application.add_handler(CallbackQueryHandler(revoke_key, pattern=r'^revoke_key_'), group=3)
@@ -695,7 +710,10 @@ def build_application() -> Application:
     # Admin menu buttons (orders, users, payments)
     application.add_handler(CallbackQueryHandler(admin_orders_manage, pattern='^admin_orders_manage$'), group=3)
     application.add_handler(CallbackQueryHandler(lambda u, c: admin_orders_menu(u, c, int(u.callback_query.data.split('_')[-1])), pattern=r'^admin_orders_page_\d+$'), group=3)
+<<<<<<< HEAD
     application.add_handler(CallbackQueryHandler(admin_orders_pending, pattern='^admin_orders_pending$'), group=3)
+=======
+>>>>>>> e44d1cb8d338f50559cb401d4e0f9381ec574ce9
     application.add_handler(CallbackQueryHandler(admin_user_management, pattern='^admin_user_management$'), group=3)
     application.add_handler(CallbackQueryHandler(admin_payments_menu, pattern='^admin_payments_menu$'), group=3)
     application.add_handler(CallbackQueryHandler(admin_system_health, pattern='^admin_system_health$'), group=3)

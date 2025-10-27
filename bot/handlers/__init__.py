@@ -16,8 +16,12 @@ from .admin import (
     admin_set_trial_inbound_start,
     admin_set_trial_inbound_choose,
     backup_restore_start,
+<<<<<<< HEAD
     backup_restore_receive_file,
     admin_orders_pending
+=======
+    backup_restore_receive_file
+>>>>>>> e44d1cb8d338f50559cb401d4e0f9381ec574ce9
 )
 
 from .admin_users import (
@@ -73,6 +77,10 @@ __all__ = [
     'admin_users_show_wallet',
     'admin_users_show_refs',
     'admin_system_health',
+<<<<<<< HEAD
     'admin_clear_notifications',
     'admin_orders_pending'
+=======
+    'admin_clear_notifications'
+>>>>>>> e44d1cb8d338f50559cb401d4e0f9381ec574ce9
 ]

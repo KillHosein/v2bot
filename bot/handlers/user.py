@@ -11,9 +11,16 @@ def _with_name_fragment(uri: str, name: str) -> str:
         return uri
 from datetime import datetime
 import requests, base64
+<<<<<<< HEAD
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.constants import ParseMode
 from telegram.error import TelegramError, BadRequest
+=======
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, KeyboardButton
+from telegram.constants import ParseMode
+from telegram.error import TelegramError, BadRequest
+from ..helpers.cache import panel_cache
+>>>>>>> e44d1cb8d338f50559cb401d4e0f9381ec574ce9
 from telegram.ext import ContextTypes, ConversationHandler, CallbackQueryHandler, MessageHandler, filters
 
 from ..db import query_db, execute_db
@@ -375,6 +382,7 @@ async def my_services_handler(update: Update, context: ContextTypes.DEFAULT_TYPE
         else:
             status_icon = "❌"
         
+<<<<<<< HEAD
         # Check if volume is exhausted by trying to get user info from panel (with timeout)
         volume_indicator = ""
         if status in ('active', 'approved') and order.get('panel_id') and order.get('marzban_username'):
@@ -394,6 +402,25 @@ async def my_services_handler(update: Update, context: ContextTypes.DEFAULT_TYPE
                         volume_indicator = " ❌"
             except Exception:
                 pass  # Silently fail - just don't show indicator
+=======
+        # Check if volume is exhausted - use cache to avoid multiple panel calls
+        volume_indicator = ""
+        if status in ('active', 'approved') and order.get('panel_id') and order.get('marzban_username'):
+            # Try to get from cache first (same 4-hour TTL)
+            cache_key = f"panel_user_{order['panel_id']}_{order['marzban_username']}"
+            cached_data = panel_cache.get(cache_key, ttl_seconds=14400)
+            
+            if cached_data:
+                # Use cached data
+                user_info = cached_data.get('user_info')
+                if user_info:
+                    total_bytes = int(user_info.get('data_limit', 0) or 0)
+                    used_bytes = int(user_info.get('used_traffic', 0) or 0)
+                    if total_bytes > 0 and used_bytes >= total_bytes:
+                        volume_indicator = " 🚫"
+            # Skip panel call in list view - too expensive
+            # Users can view service details to get fresh data
+>>>>>>> e44d1cb8d338f50559cb401d4e0f9381ec574ce9
         
         label = f"{status_icon} {service_name}{volume_indicator}"
         keyboard.append([InlineKeyboardButton(label, callback_data=f"view_service_{order['id']}")])    
@@ -496,6 +523,7 @@ async def show_specific_service_details(update: Update, context: ContextTypes.DE
         )
         return
     
+<<<<<<< HEAD
     # Add timeout to prevent hanging
     try:
         import asyncio
@@ -521,6 +549,53 @@ async def show_specific_service_details(update: Update, context: ContextTypes.DE
             parse_mode=ParseMode.HTML
         )
         return
+=======
+    # Check cache first (4 hours TTL)
+    cache_key = f"panel_user_{panel_id}_{marzban_username}"
+    cached_data = panel_cache.get(cache_key, ttl_seconds=14400)  # 4 hours
+    
+    if cached_data:
+        logger.info(f"[view_service] Using cached data for {marzban_username}")
+        user_info = cached_data.get('user_info')
+        message = cached_data.get('message')
+    else:
+        # Add timeout to prevent hanging
+        try:
+            import asyncio
+            logger.info(f"[view_service] Calling get_user for {marzban_username} (cache miss)")
+            user_info, message = await asyncio.wait_for(
+                panel_api.get_user(marzban_username),
+                timeout=15.0
+            )
+            logger.info(f"[view_service] get_user returned: user_info={'OK' if user_info else 'None'}, message={message}")
+            
+            # Cache the result if successful
+            if user_info:
+                panel_cache.set(cache_key, {'user_info': user_info, 'message': message})
+                logger.info(f"[view_service] Cached data for {marzban_username}")
+        except asyncio.TimeoutError:
+            logger.error(f"[view_service] Timeout getting user {marzban_username} from panel {panel_id}")
+            await query.message.edit_text(
+                "⏱ <b>تایم اوت!</b>\n\nدرخواست به پنل طول کشید.\n\n🔄 لطفاً دوباره تلاش کنید.",
+                reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("📱 سرویس‌های من", callback_data='my_services')]]),
+                parse_mode=ParseMode.HTML
+            )
+            return
+        except Exception as e:
+            logger.error(f"[view_service] Exception getting user {marzban_username}: {type(e).__name__}: {e}", exc_info=True)
+            await query.message.edit_text(
+                f"❌ <b>خطای اتصال</b>\n\n<code>{type(e).__name__}</code>\n{str(e)[:100]}\n\n🔄 لطفاً دوباره تلاش کنید.",
+                reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("📱 سرویس‌های من", callback_data='my_services')]]),
+                parse_mode=ParseMode.HTML
+            )
+            return
+    
+    # Continue with user_info (from cache or fresh)
+    try:
+        pass  # Keep the structure intact
+    except Exception:
+        pass  # Already handled above
+>>>>>>> e44d1cb8d338f50559cb401d4e0f9381ec574ce9
 
     if not user_info:
         await query.message.edit_text(
@@ -623,10 +698,26 @@ async def show_specific_service_details(update: Update, context: ContextTypes.DE
             f"<b>{link_label}</b>\n{link_value}"
         )
 
+<<<<<<< HEAD
     keyboard = [
         [InlineKeyboardButton("\U0001F504 تمدید این سرویس", callback_data=f"renew_service_{order_id}")],
         [InlineKeyboardButton("\U0001F4CA وضعیت سرویس", callback_data=f"check_service_status_{order_id}")],
         [InlineKeyboardButton("\U0001F5D1 حذف این سرویس", callback_data=f"delete_service_{order_id}")],
+=======
+    # Add cache info to text if data was cached
+    cache_indicator = ""
+    if cached_data:
+        cache_indicator = "\n\n💾 <i>اطلاعات از حافظه موقت (تا 4 ساعت)</i>"
+        text += cache_indicator
+    
+    keyboard = [
+        [InlineKeyboardButton("\U0001F504 تمدید این سرویس", callback_data=f"renew_service_{order_id}")],
+        [InlineKeyboardButton("\U0001F4CA وضعیت سرویس", callback_data=f"check_service_status_{order_id}")],
+        [
+            InlineKeyboardButton("🔄 بروزرسانی اطلاعات", callback_data=f"refresh_service_{order_id}"),
+            InlineKeyboardButton("\U0001F5D1 حذف", callback_data=f"delete_service_{order_id}")
+        ],
+>>>>>>> e44d1cb8d338f50559cb401d4e0f9381ec574ce9
         [InlineKeyboardButton("\U0001F519 بازگشت", callback_data='my_services')],
     ]
     # Try to send QR image for the first config or sub link
@@ -665,6 +756,37 @@ async def show_specific_service_details(update: Update, context: ContextTypes.DE
     await query.message.edit_text(text, parse_mode=ParseMode.HTML, reply_markup=InlineKeyboardMarkup(keyboard))
 
 
+<<<<<<< HEAD
+=======
+async def refresh_service_details(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Refresh service details by clearing cache and refetching"""
+    query = update.callback_query
+    await query.answer("🔄 در حال بروزرسانی...", show_alert=False)
+    
+    try:
+        order_id = int(query.data.split('_')[-1])
+    except Exception:
+        await query.answer("❌ شناسه نامعتبر است", show_alert=True)
+        return
+    
+    order = query_db("SELECT * FROM orders WHERE id = ?", (order_id,), one=True)
+    if not order or order['user_id'] != query.from_user.id:
+        await query.answer("❌ سرویس یافت نشد", show_alert=True)
+        return
+    
+    # Clear cache for this user
+    marzban_username = order.get('marzban_username')
+    panel_id = order.get('panel_id')
+    if marzban_username and panel_id:
+        cache_key = f"panel_user_{panel_id}_{marzban_username}"
+        panel_cache.delete(cache_key)
+        logger.info(f"[refresh_service] Cache cleared for {marzban_username}")
+    
+    # Call show_specific_service_details to fetch fresh data
+    await show_specific_service_details(update, context)
+
+
+>>>>>>> e44d1cb8d338f50559cb401d4e0f9381ec574ce9
 async def view_service_qr(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     query = update.callback_query
     await query.answer()
@@ -1669,9 +1791,37 @@ async def ticket_receive_message(update: Update, context: ContextTypes.DEFAULT_T
     # Save threaded message
     execute_db("INSERT INTO ticket_messages (ticket_id, sender, content_type, text, file_id, created_at) VALUES (?, 'user', ?, ?, ?, ?)",
                (ticket_id, content_type, text, file_id, datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+<<<<<<< HEAD
     # Forward original message and controls to all admins
     admin_kb = [[InlineKeyboardButton("✉️ پاسخ", callback_data=f"ticket_reply_{ticket_id}"), InlineKeyboardButton("🗑 حذف", callback_data=f"ticket_delete_{ticket_id}")],[InlineKeyboardButton("📨 منوی تیکت‌ها", callback_data='admin_tickets_menu')]]
     summary = f"تیکت #{ticket_id}\nکاربر: `{user_id}`\nزمان: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+=======
+    # Forward original message and controls to all admins with complete info
+    admin_kb = [[InlineKeyboardButton("✉️ پاسخ", callback_data=f"ticket_reply_{ticket_id}"), InlineKeyboardButton("🗑 حذف", callback_data=f"ticket_delete_{ticket_id}")],[InlineKeyboardButton("📨 منوی تیکت‌ها", callback_data='admin_tickets_menu')]]
+    
+    # Get user info
+    user = update.effective_user
+    username = f"@{user.username}" if user.username else "-"
+    full_name = f"{user.first_name or ''} {user.last_name or ''}".strip() or "-"
+    user_mention = f"<a href='tg://user?id={user.id}'>{user.first_name or 'کاربر'}</a>"
+    
+    # Get user stats
+    orders_count = query_db("SELECT COUNT(*) as c FROM orders WHERE user_id = ?", (user_id,), one=True)
+    total_orders = orders_count.get('c') if orders_count else 0
+    
+    summary = (
+        f"🎫 <b>تیکت جدید #{ticket_id}</b>\n\n"
+        f"━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        f"👤 <b>کاربر:</b> {user_mention}\n"
+        f"🆔 <b>شناسه:</b> <code>{user_id}</code>\n"
+        f"📝 <b>نام:</b> {full_name}\n"
+        f"🔖 <b>یوزرنیم:</b> {username}\n"
+        f"📦 <b>تعداد سفارشات:</b> {total_orders}\n"
+        f"🕐 <b>زمان:</b> <code>{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</code>\n"
+        f"━━━━━━━━━━━━━━━━━━━━━━━━"
+    )
+    
+>>>>>>> e44d1cb8d338f50559cb401d4e0f9381ec574ce9
     from ..helpers.tg import get_all_admin_ids
     for aid in get_all_admin_ids():
         try:
@@ -1679,7 +1829,11 @@ async def ticket_receive_message(update: Update, context: ContextTypes.DEFAULT_T
         except Exception:
             pass
         try:
+<<<<<<< HEAD
             await context.bot.send_message(chat_id=aid, text=summary, parse_mode=ParseMode.MARKDOWN, reply_markup=InlineKeyboardMarkup(admin_kb))
+=======
+            await context.bot.send_message(chat_id=aid, text=summary, parse_mode=ParseMode.HTML, reply_markup=InlineKeyboardMarkup(admin_kb))
+>>>>>>> e44d1cb8d338f50559cb401d4e0f9381ec574ce9
         except Exception:
             pass
     await update.message.reply_text(
@@ -2430,6 +2584,7 @@ async def purchase_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     except Exception as e:
         logger.error(f"Critical error in purchase_start: {e}", exc_info=True)
         await query.edit_message_text("خطایی در نمایش پلن‌ها رخ داد. لطفا دوباره تلاش کنید.")
+<<<<<<< HEAD
         return ConversationHandler.END
 
 
@@ -2466,3 +2621,6 @@ async def alert_snooze_handler(update: Update, context: ContextTypes.DEFAULT_TYP
         pass
     
     return ConversationHandler.END
+=======
+        return ConversationHandler.END
+>>>>>>> e44d1cb8d338f50559cb401d4e0f9381ec574ce9

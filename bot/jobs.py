@@ -170,6 +170,10 @@ async def check_expirations(context: ContextTypes.DEFAULT_TYPE):
                                 [InlineKeyboardButton("📦 مشاهده سرویس", callback_data=f"view_service_{order['id']}")],
                                 [InlineKeyboardButton("🔁 تمدید سریع", callback_data=f"renew_service_{order['id']}")],
                                 [InlineKeyboardButton("🔗 دریافت لینک مجدد", callback_data=f"refresh_service_link_{order['id']}")],
+<<<<<<< HEAD
+=======
+                                [InlineKeyboardButton("🔐 تغییر کلید اتصال", callback_data=f"revoke_key_{order['id']}")],
+>>>>>>> e44d1cb8d338f50559cb401d4e0f9381ec574ce9
                                 [InlineKeyboardButton("🕘 یادآوری فردا", callback_data=f"alert_snooze_{order['id']}")],
                             ]
                             await context.bot.send_message(order['user_id'], final_msg, parse_mode=ParseMode.MARKDOWN, reply_markup=InlineKeyboardMarkup(kb))
@@ -200,6 +204,10 @@ async def check_expirations(context: ContextTypes.DEFAULT_TYPE):
                                         [InlineKeyboardButton("📦 مشاهده سرویس", callback_data=f"view_service_{order['id']}")],
                                         [InlineKeyboardButton("🔁 تمدید سریع", callback_data=f"renew_service_{order['id']}")],
                                         [InlineKeyboardButton("🔗 دریافت لینک مجدد", callback_data=f"refresh_service_link_{order['id']}")],
+<<<<<<< HEAD
+=======
+                                        [InlineKeyboardButton("🔐 تغییر کلید اتصال", callback_data=f"revoke_key_{order['id']}")],
+>>>>>>> e44d1cb8d338f50559cb401d4e0f9381ec574ce9
                                         [InlineKeyboardButton("🕘 یادآوری فردا", callback_data=f"alert_snooze_{order['id']}")],
                                     ]
                                     await context.bot.send_message(order['user_id'], final_msg, parse_mode=ParseMode.MARKDOWN, reply_markup=InlineKeyboardMarkup(kb))
@@ -275,6 +283,7 @@ async def backup_and_send_to_admins(context: ContextTypes.DEFAULT_TYPE):
             env_path = os.path.join(proj_root, '.env')
             if os.path.exists(env_path):
                 z.write(env_path, arcname='.env')
+<<<<<<< HEAD
             
             # Export all critical data as JSON files
             # Settings
@@ -320,6 +329,12 @@ async def backup_and_send_to_admins(context: ContextTypes.DEFAULT_TYPE):
             # Admins
             admins = query_db("SELECT * FROM admins") or []
             z.writestr('admins.json', data=json.dumps(admins, ensure_ascii=False, indent=2, default=str))
+=======
+            # Include settings dump
+            settings = query_db("SELECT key, value FROM settings") or []
+            dump = json.dumps(settings, ensure_ascii=False, indent=2)
+            z.writestr('settings.json', data=dump)
+>>>>>>> e44d1cb8d338f50559cb401d4e0f9381ec574ce9
         # Prepare recipients: primary admin + extra admins
         admins = [ADMIN_ID] if ADMIN_ID else []
         extra = query_db("SELECT user_id FROM admins") or []
