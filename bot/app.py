@@ -306,14 +306,20 @@ def build_application() -> Application:
         # Traffic and expiry notifications - run every 12 hours
         application.job_queue.run_repeating(check_low_traffic_and_expiry, interval=12*3600, first=300, name="notification_check")
         # Auto-backup scheduling
+        from .config import logger
         try:
             ab_enabled = (query_db("SELECT value FROM settings WHERE key='auto_backup_enabled'", one=True) or {}).get('value') == '1'
             ab_hours = int((query_db("SELECT value FROM settings WHERE key='auto_backup_hours'", one=True) or {}).get('value') or '3')
-        except Exception:
+        except Exception as e:
+            logger.warning(f"Auto-backup config error: {e}, using defaults")
             ab_enabled = False; ab_hours = 3
         if ab_enabled and ab_hours > 0:
+            interval_seconds = ab_hours * 3600
+            logger.info(f"Auto-backup enabled: every {ab_hours} hours ({interval_seconds} seconds)")
             from .jobs import backup_and_send_to_admins
-            application.job_queue.run_repeating(backup_and_send_to_admins, interval=ab_hours*3600, first=60, name="auto_backup_send")
+            application.job_queue.run_repeating(backup_and_send_to_admins, interval=interval_seconds, first=60, name="auto_backup_send")
+        else:
+            logger.info(f"Auto-backup disabled or invalid (enabled={ab_enabled}, hours={ab_hours})")
 
     application.add_handler(TypeHandler(Update, force_join_checker), group=-1)
     # Early debug logger for text messages
