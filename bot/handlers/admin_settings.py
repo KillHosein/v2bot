@@ -136,11 +136,25 @@ async def admin_settings_manage(update: Update, context: ContextTypes.DEFAULT_TY
     ]
     try:
         await _safe_edit_text(query.message, text, parse_mode=ParseMode.MARKDOWN, reply_markup=InlineKeyboardMarkup(keyboard))
-    except Exception:
+    except Exception as e:
+        # If edit fails (message too old, deleted, etc), send new message and delete old one
+        try:
+            await query.message.delete()
+        except Exception:
+            pass
         try:
             await query.message.reply_text(text, parse_mode=ParseMode.MARKDOWN, reply_markup=InlineKeyboardMarkup(keyboard))
         except Exception:
-            pass
+            # Last resort: send to chat directly
+            try:
+                await context.bot.send_message(
+                    chat_id=query.message.chat_id,
+                    text=text,
+                    parse_mode=ParseMode.MARKDOWN,
+                    reply_markup=InlineKeyboardMarkup(keyboard)
+                )
+            except Exception:
+                pass
     return SETTINGS_MENU
 
 
