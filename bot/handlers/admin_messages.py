@@ -52,11 +52,11 @@ async def admin_messages_menu(update: Update, context: ContextTypes.DEFAULT_TYPE
     rows = query_db("SELECT message_name FROM messages ORDER BY message_name LIMIT ? OFFSET ?", (PAGE_SIZE, offset))
 
     keyboard = []
-    if rows:
+    if rows and len(rows) > 0:
         for m in rows:
             keyboard.append([InlineKeyboardButton(m['message_name'], callback_data=f"msg_select_{m['message_name']}")])
     else:
-        keyboard.append([InlineKeyboardButton('پیامی وجود ندارد', callback_data='noop')])
+        keyboard.append([InlineKeyboardButton('❌ پیامی وجود ندارد', callback_data='noop')])
 
     nav = []
     if page > 0:
@@ -70,6 +70,11 @@ async def admin_messages_menu(update: Update, context: ContextTypes.DEFAULT_TYPE
     keyboard.append([InlineKeyboardButton("\U0001F519 بازگشت", callback_data="admin_main")])
 
     menu_text = get_message_text('admin_messages_menu', 'مدیریت پیام‌ها و صفحات:')
+    
+    # Debug: log keyboard info
+    from ..config import logger
+    logger.info(f"[admin_messages_menu] total={total}, rows={len(rows) if rows else 0}, keyboard_rows={len(keyboard)}")
+    
     try:
         await _safe_edit_text(query.message, menu_text, reply_markup=InlineKeyboardMarkup(keyboard))
     except Exception:
