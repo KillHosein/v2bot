@@ -416,11 +416,30 @@ async def admin_set_talert_value_save(update: Update, context: ContextTypes.DEFA
     elif mode == 'set_auto_backup_hours':
         try:
             hours = int(txt)
+            if hours <= 0:
+                raise ValueError("Hours must be positive")
         except Exception:
             await update.message.reply_text("❌ عدد صحیح نامعتبر است. لطفاً دوباره تلاش کنید:")
             return SETTINGS_AWAIT_TRAFFIC_ALERT_VALUE
         execute_db("INSERT OR REPLACE INTO settings (key, value) VALUES ('auto_backup_hours', ?)", (str(hours),))
-        await update.message.reply_text(f"✅ بازه بکاپ خودکار به هر {hours} ساعت تنظیم شد.\n\n🔄 بازگشت به منوی تنظیمات...")
+        # Reschedule the backup job with new interval
+        try:
+            jq = context.application.job_queue
+            # Cancel existing backup job
+            for j in jq.get_jobs_by_name("auto_backup_send"):
+                j.schedule_removal()
+            # Check if auto-backup is enabled
+            ab_enabled = (query_db("SELECT value FROM settings WHERE key='auto_backup_enabled'", one=True) or {}).get('value') == '1'
+            if ab_enabled:
+                from ..jobs import backup_and_send_to_admins
+                from ..config import logger
+                interval_seconds = hours * 3600
+                jq.run_repeating(backup_and_send_to_admins, interval=interval_seconds, first=60, name="auto_backup_send")
+                logger.info(f"Auto-backup rescheduled: every {hours} hours ({interval_seconds} seconds)")
+        except Exception as e:
+            from ..config import logger
+            logger.error(f"Failed to reschedule auto-backup: {e}")
+        await update.message.reply_text(f"✅ بازه بکاپ خودکار به هر {hours} ساعت تنظیم شد و job مجدداً برنامه‌ریزی شد.\n\n🔄 بازگشت به منوی تنظیمات...")
     else:
         await update.message.reply_text("❌ خطا: حالت ناشناخته")
         context.user_data.pop('awaiting_admin', None)
