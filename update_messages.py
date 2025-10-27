@@ -56,51 +56,55 @@ def update_messages():
     }
     
     try:
-        with sqlite3.connect(DB_NAME) as conn:
+        conn = sqlite3.connect(DB_NAME)
+        cursor = conn.cursor()
+        
+        # بررسی وجود جدول messages و ایجاد آن در صورت نیاز
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='messages'")
+        if not cursor.fetchone():
+            print("⚠️  جدول messages یافت نشد. در حال ایجاد...")
+            cursor.close()
+            conn.close()
+            if not initialize_messages_table():
+                return False
+            # اتصال مجدد بعد از ایجاد جدول
+            conn = sqlite3.connect(DB_NAME)
             cursor = conn.cursor()
+        
+        # اضافه کردن متن‌های جدید
+        added = 0
+        updated = 0
+        for message_name, text in new_messages.items():
+            cursor.execute(
+                "SELECT message_name FROM messages WHERE message_name = ?",
+                (message_name,)
+            )
+            exists = cursor.fetchone()
             
-            # بررسی وجود جدول messages و ایجاد آن در صورت نیاز
-            cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='messages'")
-            if not cursor.fetchone():
-                print("⚠️  جدول messages یافت نشد. در حال ایجاد...")
-                conn.close()
-                if not initialize_messages_table():
-                    return False
-                # اتصال مجدد بعد از ایجاد جدول
-                return update_messages()  # Call recursively after creating table
-            
-            # اضافه کردن متن‌های جدید
-            added = 0
-            updated = 0
-            for message_name, text in new_messages.items():
+            if exists:
+                # بروزرسانی متن موجود (اختیاری)
                 cursor.execute(
-                    "SELECT message_name FROM messages WHERE message_name = ?",
-                    (message_name,)
+                    "UPDATE messages SET text = ? WHERE message_name = ?",
+                    (text, message_name)
                 )
-                exists = cursor.fetchone()
-                
-                if exists:
-                    # بروزرسانی متن موجود (اختیاری)
-                    cursor.execute(
-                        "UPDATE messages SET text = ? WHERE message_name = ?",
-                        (text, message_name)
-                    )
-                    updated += 1
-                    print(f"✅ متن '{message_name}' بروزرسانی شد")
-                else:
-                    # اضافه کردن متن جدید
-                    cursor.execute(
-                        "INSERT INTO messages (message_name, text, file_id, file_type) VALUES (?, ?, NULL, NULL)",
-                        (message_name, text)
-                    )
-                    added += 1
-                    print(f"➕ متن '{message_name}' اضافه شد")
-            
-            conn.commit()
-            print(f"\n✅ بروزرسانی کامل شد!")
-            print(f"   - {added} متن جدید اضافه شد")
-            print(f"   - {updated} متن موجود بروزرسانی شد")
-            return True
+                updated += 1
+                print(f"✅ متن '{message_name}' بروزرسانی شد")
+            else:
+                # اضافه کردن متن جدید
+                cursor.execute(
+                    "INSERT INTO messages (message_name, text, file_id, file_type) VALUES (?, ?, NULL, NULL)",
+                    (message_name, text)
+                )
+                added += 1
+                print(f"➕ متن '{message_name}' اضافه شد")
+        
+        conn.commit()
+        cursor.close()
+        conn.close()
+        print(f"\n✅ بروزرسانی کامل شد!")
+        print(f"   - {added} متن جدید اضافه شد")
+        print(f"   - {updated} متن موجود بروزرسانی شد")
+        return True
             
     except sqlite3.Error as e:
         print(f"❌ خطا در بروزرسانی دیتابیس: {e}")
