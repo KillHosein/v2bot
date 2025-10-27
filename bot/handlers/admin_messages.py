@@ -211,7 +211,10 @@ async def admin_messages_delete(update: Update, context: ContextTypes.DEFAULT_TY
 async def admin_buttons_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     query = update.callback_query
     await query.answer()
-    message_name = context.user_data['editing_message_name']
+    message_name = context.user_data.get('editing_message_name')
+    if not message_name:
+        await query.answer("لطفاً ابتدا یک پیام را انتخاب کنید.", show_alert=True)
+        return await admin_messages_menu(update, context)
 
     # Ensure default buttons exist for start_main so they show up for editing
     if message_name == 'start_main':
