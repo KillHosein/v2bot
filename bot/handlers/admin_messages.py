@@ -38,6 +38,15 @@ def _md_escape(text: str) -> str:
 async def admin_messages_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     query = update.callback_query
     await query.answer()
+    
+    # Prevent duplicate execution
+    callback_id = f"{query.id}_{query.data}" if query else None
+    last_callback = context.user_data.get('last_messages_callback')
+    if callback_id and callback_id == last_callback:
+        return ADMIN_MESSAGES_MENU
+    if callback_id:
+        context.user_data['last_messages_callback'] = callback_id
+    
     page = 0
     if query and query.data.startswith('admin_messages_menu_page_'):
         try:
