@@ -6,18 +6,22 @@ from telegram.constants import ParseMode
 from ..db import query_db, execute_db
 from ..config import logger
 from ..panel import VpnPanelAPI
+import gc
 
 
 async def check_low_traffic_and_expiry(context):
     """
-    Check for services with low traffic or near expiry
-    Send notifications to users
+    Unified job: Check for low traffic AND time-based expiry alerts.
+    Grouped by panel to minimize API calls.
     """
     try:
         await check_low_traffic(context)
         await check_near_expiry(context)
     except Exception as e:
         logger.error(f"Error in check_low_traffic_and_expiry: {e}")
+    finally:
+        # Force garbage collection to free memory
+        gc.collect()
 
 
 async def check_low_traffic(context):
