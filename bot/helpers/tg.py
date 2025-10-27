@@ -32,6 +32,7 @@ async def safe_edit_message(query, text, reply_markup=None, parse_mode=None, ans
 async def safe_edit_text(message, text, reply_markup=None, parse_mode=None):
     # Log outgoing request details for troubleshooting
     try:
+        import traceback
         kb_summary = None
         try:
             if reply_markup and hasattr(reply_markup, 'inline_keyboard'):
@@ -43,8 +44,16 @@ async def safe_edit_text(message, text, reply_markup=None, parse_mode=None):
                 kb_summary = f"rows={len(rows)}"
         except Exception:
             kb_summary = "unknown"
+        
+        # Get caller info for debugging
+        stack = traceback.extract_stack()
+        caller_info = ""
+        if len(stack) >= 2:
+            caller = stack[-2]
+            caller_info = f" [CALLER: {caller.filename.split('/')[-1]}:{caller.lineno} in {caller.name}]"
+        
         logger.info(
-            f"TG API -> editMessageText chat_id={getattr(message, 'chat_id', None)} message_id={getattr(message, 'message_id', None)} parse_mode={parse_mode} text_len={len(text or '')} {kb_summary or ''}"
+            f"TG API -> editMessageText chat_id={getattr(message, 'chat_id', None)} message_id={getattr(message, 'message_id', None)} parse_mode={parse_mode} text_len={len(text or '')} {kb_summary or ''}{caller_info}"
         )
     except Exception:
         pass
