@@ -2957,6 +2957,55 @@ async def admin_generate_backup(update: Update, context: ContextTypes.DEFAULT_TY
     zip_buffer = _io.BytesIO()
     total_users_count = 0
     with _zipfile.ZipFile(zip_buffer, mode='w', compression=_zipfile.ZIP_DEFLATED) as zf:
+        # Add README with restore instructions
+        readme_content = f"""
+═══════════════════════════════════════════════════════════════
+                    📦 WingsBot Backup Package
+═══════════════════════════════════════════════════════════════
+
+📅 Backup Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+🗄️  Database: bot_db.sqlite (Complete backup - all tables)
+
+═══════════════════════════════════════════════════════════════
+                    📖 How to Restore
+═══════════════════════════════════════════════════════════════
+
+OPTION 1: Via Bot (Easiest)
+──────────────────────────
+1. Open bot → Admin Panel
+2. Click "📥 بازیابی از بکاپ"
+3. Send this ZIP or bot_db.sqlite file
+4. Bot will auto-backup current DB and restore
+
+OPTION 2: Manual Restore
+──────────────────────────
+cd ~/v2bot
+sudo systemctl stop wingsbot
+cp bot.db bot.db.backup
+unzip /path/to/backup.zip
+cp bot_db.sqlite bot.db
+chmod 644 bot.db
+sudo systemctl restart wingsbot
+
+═══════════════════════════════════════════════════════════════
+⚠️  IMPORTANT: bot_db.sqlite has EVERYTHING - complete backup!
+═══════════════════════════════════════════════════════════════
+"""
+        zf.writestr('README.txt', readme_content.encode('utf-8'))
+        
+        # Add quick restore script
+        restore_script = """#!/bin/bash
+set -e
+echo "🔄 Restoring WingsBot Database..."
+sudo systemctl stop wingsbot
+[ -f ~/v2bot/bot.db ] && cp ~/v2bot/bot.db ~/v2bot/bot.db.backup_$(date +%Y%m%d_%H%M%S)
+cp bot_db.sqlite ~/v2bot/bot.db
+chmod 644 ~/v2bot/bot.db
+sudo systemctl restart wingsbot
+echo "✅ Restore complete! Check: sudo systemctl status wingsbot"
+"""
+        zf.writestr('restore.sh', restore_script.encode('utf-8'))
+        
         # Include bot database
         try:
             with open(DB_NAME, 'rb') as fdb:
@@ -3143,6 +3192,55 @@ async def admin_quick_backup(update: Update, context: ContextTypes.DEFAULT_TYPE)
     total_users_count = 0
     
     with _zipfile.ZipFile(zip_buffer, mode='w', compression=_zipfile.ZIP_DEFLATED) as zf:
+        # Add README with restore instructions
+        readme_content = f"""
+═══════════════════════════════════════════════════════════════
+                    📦 WingsBot Backup Package
+═══════════════════════════════════════════════════════════════
+
+📅 Backup Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+🗄️  Database: bot_db.sqlite (Complete backup - all tables)
+
+═══════════════════════════════════════════════════════════════
+                    📖 How to Restore
+═══════════════════════════════════════════════════════════════
+
+OPTION 1: Via Bot (Easiest)
+──────────────────────────
+1. Open bot → Admin Panel
+2. Click "📥 بازیابی از بکاپ"
+3. Send this ZIP or bot_db.sqlite file
+4. Bot will auto-backup current DB and restore
+
+OPTION 2: Manual Restore
+──────────────────────────
+cd ~/v2bot
+sudo systemctl stop wingsbot
+cp bot.db bot.db.backup
+unzip /path/to/backup.zip
+cp bot_db.sqlite bot.db
+chmod 644 bot.db
+sudo systemctl restart wingsbot
+
+═══════════════════════════════════════════════════════════════
+⚠️  IMPORTANT: bot_db.sqlite has EVERYTHING - complete backup!
+═══════════════════════════════════════════════════════════════
+"""
+        zf.writestr('README.txt', readme_content.encode('utf-8'))
+        
+        # Add quick restore script
+        restore_script = """#!/bin/bash
+set -e
+echo "🔄 Restoring WingsBot Database..."
+sudo systemctl stop wingsbot
+[ -f ~/v2bot/bot.db ] && cp ~/v2bot/bot.db ~/v2bot/bot.db.backup_$(date +%Y%m%d_%H%M%S)
+cp bot_db.sqlite ~/v2bot/bot.db
+chmod 644 ~/v2bot/bot.db
+sudo systemctl restart wingsbot
+echo "✅ Restore complete! Check: sudo systemctl status wingsbot"
+"""
+        zf.writestr('restore.sh', restore_script.encode('utf-8'))
+        
         # Include bot database
         try:
             with open(DB_NAME, 'rb') as fdb:
