@@ -2,6 +2,7 @@ from datetime import time
 import asyncio
 import os
 import requests
+import warnings
 from telegram import Update
 from telegram.constants import ParseMode
 from telegram.ext import (
@@ -14,6 +15,11 @@ from telegram.ext import (
     TypeHandler,
     filters,
 )
+from telegram.warnings import PTBUserWarning
+
+# Suppress per_message ConversationHandler warnings (expected behavior for our bot)
+warnings.filterwarnings('ignore', message='.*per_message.*', category=PTBUserWarning)
+
 from .handlers.admin_settings import (
     admin_wallet_adjust_menu,
     admin_toggle_join_logs,
