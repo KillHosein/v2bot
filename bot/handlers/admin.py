@@ -3153,23 +3153,83 @@ async def admin_quick_backup(update: Update, context: ContextTypes.DEFAULT_TYPE)
     await query.answer()
     await query.message.edit_text("⏳ <b>در حال آماده‌سازی فایل بکاپ...</b>\n\nلطفاً صبر کنید، این کار ممکن است چند لحظه طول بکشد.", parse_mode=ParseMode.HTML)
     
-    # Create a fake update with modified callback_data
-    class FakeCallbackQuery:
-        def __init__(self, original_query):
-            self.data = 'backup_panel_all'
-            self.message = original_query.message
-            self.from_user = original_query.from_user
-            self.id = original_query.id
+    # Get all panels for backup
+    panel_ids = [p['id'] for p in query_db("SELECT id FROM panels")]
+    
+    if not panel_ids:
+        await query.message.edit_text("❌ هیچ پنلی برای بکاپ‌گیری یافت نشد.")
+        return await send_admin_panel(update, context)
+    
+    import io as _io
+    import json as _json
+    import zipfile as _zipfile
+    from ..config import DB_NAME
+    
+    zip_buffer = _io.BytesIO()
+    total_users_count = 0
+    
+    with _zipfile.ZipFile(zip_buffer, mode='w', compression=_zipfile.ZIP_DEFLATED) as zf:
+        # Include bot database
+        try:
+            with open(DB_NAME, 'rb') as fdb:
+                zf.writestr('bot_db.sqlite', fdb.read())
+        except Exception as e:
+            logger.error(f"Could not include bot DB in backup: {e}")
         
-        async def answer(self, *args, **kwargs):
-            pass
+        # Add per-panel snapshots
+        for panel_id in panel_ids:
+            try:
+                panel_row = query_db("SELECT * FROM panels WHERE id = ?", (panel_id,), one=True) or {}
+                base_dir = f"panel_{panel_id}"
+                safe_info = dict(panel_row)
+                if safe_info.get('password'):
+                    safe_info['password'] = '***'
+                zf.writestr(f"{base_dir}/panel_info.json", _json.dumps(safe_info, ensure_ascii=False, indent=2))
+                
+                inbounds = query_db("SELECT id, protocol, tag FROM panel_inbounds WHERE panel_id = ? ORDER BY id", (panel_id,)) or []
+                zf.writestr(f"{base_dir}/panel_inbounds.json", _json.dumps(inbounds, ensure_ascii=False, indent=2))
+                
+                api = VpnPanelAPI(panel_id=panel_id)
+                users_payload = []
+                try:
+                    users, msg = await api.get_all_users()
+                except Exception as e:
+                    users, msg = None, str(e)
+                if users:
+                    users_payload = users
+                    total_users_count += len(users)
+                zf.writestr(f"{base_dir}/clients_or_users.json", _json.dumps(users_payload, ensure_ascii=False, indent=2))
+            except Exception as e:
+                logger.error(f"Error adding panel {panel_id} to backup ZIP: {e}")
+        
+        # Bot-wide snapshots
+        try:
+            users_tbl = query_db("SELECT user_id, first_name, join_date, referrer_id FROM users ORDER BY user_id") or []
+            zf.writestr("users.json", _json.dumps(users_tbl, ensure_ascii=False, indent=2))
+        except Exception as e:
+            logger.error(f"Could not add users.json: {e}")
+        
+        try:
+            orders_tbl = query_db("SELECT id, user_id, plan_id, status, marzban_username, timestamp, final_price, panel_id, panel_type, last_link, is_trial FROM orders ORDER BY id") or []
+            zf.writestr("services.json", _json.dumps(orders_tbl, ensure_ascii=False, indent=2))
+        except Exception as e:
+            logger.error(f"Could not add services.json: {e}")
     
-    fake_query = FakeCallbackQuery(query)
-    fake_update = Update(update.update_id)
-    fake_update._callback_query = fake_query
+    zip_buffer.seek(0)
+    filename = f"panel_backup_{datetime.now().strftime('%Y%m%d_%H%M%S')}.zip"
+    file_to_send = InputFile(zip_buffer, filename=filename)
     
-    # Call the main backup generator with fake update
-    return await admin_generate_backup(fake_update, context)
+    try:
+        await context.bot.send_document(chat_id=query.message.chat_id, document=file_to_send, caption=f"✅ فایل بکاپ آماده شد. مجموع کاربران پنل: {total_users_count}")
+    except TelegramError:
+        await context.bot.send_document(chat_id=ADMIN_ID, document=file_to_send, caption=f"✅ فایل بکاپ آماده شد. مجموع کاربران پنل: {total_users_count}")
+    
+    try:
+        await query.message.delete()
+    except Exception:
+        pass
+    
+    return await send_admin_panel(update, context)
 
 
 # --- Admin fallback ---
