@@ -362,6 +362,33 @@ async def my_services_handler(update: Update, context: ContextTypes.DEFAULT_TYPE
     pending_count = sum(1 for o in orders if (o.get('status') or '').lower() in ('pending', 'awaiting', 'processing'))
     expired_count = len(orders) - active_count - pending_count
     
+    # Pre-fetch user info grouped by panel to avoid multiple logins
+    panel_users_cache = {}
+    for order in page_orders:
+        if (order.get('status') or '').lower() in ('active', 'approved') and order.get('panel_id') and order.get('marzban_username'):
+            panel_id = order['panel_id']
+            if panel_id not in panel_users_cache:
+                panel_users_cache[panel_id] = {}
+    
+    # Fetch all users for each panel once
+    import asyncio
+    for panel_id in panel_users_cache.keys():
+        try:
+            panel_api = VpnPanelAPI(panel_id=panel_id)
+            # Get all users from this panel with timeout
+            users_list, _ = await asyncio.wait_for(
+                panel_api.get_all_users(limit=1000),
+                timeout=5.0
+            )
+            if users_list:
+                # Index by username for quick lookup
+                for user_info in users_list:
+                    username = user_info.get('username')
+                    if username:
+                        panel_users_cache[panel_id][username] = user_info
+        except Exception:
+            pass  # Silently fail - panel might be down
+    
     for order in page_orders:
         # Show custom service name if user set one, otherwise show plan name
         service_name = order.get('desired_username') or order.get('plan_name') or f"سرویس #{order['id']}"
@@ -375,17 +402,14 @@ async def my_services_handler(update: Update, context: ContextTypes.DEFAULT_TYPE
         else:
             status_icon = "❌"
         
-        # Check if volume is exhausted by trying to get user info from panel (with timeout)
+        # Check if volume is exhausted using cached user info
         volume_indicator = ""
         if status in ('active', 'approved') and order.get('panel_id') and order.get('marzban_username'):
             try:
-                import asyncio
-                panel_api = VpnPanelAPI(panel_id=order['panel_id'])
-                # Use short timeout to avoid slowing down the list
-                user_info, _ = await asyncio.wait_for(
-                    panel_api.get_user(order['marzban_username']),
-                    timeout=2.0
-                )
+                panel_id = order['panel_id']
+                username = order['marzban_username']
+                user_info = panel_users_cache.get(panel_id, {}).get(username)
+                
                 if user_info:
                     total_bytes = int(user_info.get('data_limit', 0) or 0)
                     used_bytes = int(user_info.get('used_traffic', 0) or 0)
