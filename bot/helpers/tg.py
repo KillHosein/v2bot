@@ -49,6 +49,21 @@ async def safe_edit_text(message, text, reply_markup=None, parse_mode=None):
     except Exception:
         pass
     try:
+        # Check if message has media (photo, video, etc) - if so, delete and send new text message
+        has_media = hasattr(message, 'photo') and message.photo
+        has_media = has_media or (hasattr(message, 'video') and message.video)
+        has_media = has_media or (hasattr(message, 'document') and message.document)
+        has_media = has_media or (hasattr(message, 'animation') and message.animation)
+        
+        if has_media:
+            # Message has media, can't edit text - delete and send new
+            try:
+                await message.delete()
+            except Exception:
+                pass
+            bot = message.get_bot()
+            return await bot.send_message(chat_id=getattr(message, 'chat_id', None), text=text, reply_markup=reply_markup, parse_mode=parse_mode)
+        
         resp = await message.edit_text(text, reply_markup=reply_markup, parse_mode=parse_mode)
         try:
             logger.info(
