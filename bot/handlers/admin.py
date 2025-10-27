@@ -3305,7 +3305,7 @@ echo "✅ Restore complete! Check: sudo systemctl status wingsbot"
             logger.error(f"Could not add panels.json: {e}")
         
         try:
-            cards_tbl = query_db("SELECT number, holder FROM cards ORDER BY id") or []
+            cards_tbl = query_db("SELECT card_number, holder_name FROM cards ORDER BY id") or []
             zf.writestr("cards.json", _json.dumps(cards_tbl, ensure_ascii=False, indent=2))
         except Exception as e:
             logger.error(f"Could not add cards.json: {e}")

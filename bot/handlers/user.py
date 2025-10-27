@@ -2462,7 +2462,7 @@ async def card_to_card_info(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await query.answer()
     
     # Get card information from database
-    cards = query_db("SELECT number, holder FROM cards")
+    cards = query_db("SELECT card_number, holder_name FROM cards")
     
     if not cards:
         text = (
@@ -2476,8 +2476,8 @@ async def card_to_card_info(update: Update, context: ContextTypes.DEFAULT_TYPE):
             text += (
                 f"━━━━━━━━━━━━━━━━━━━━━━━━\n"
                 f"🔹 <b>کارت {idx}:</b>\n"
-                f"📇 شماره کارت: <code>{card['number']}</code>\n"
-                f"👤 به نام: {card['holder']}\n\n"
+                f"📇 شماره کارت: <code>{card['card_number']}</code>\n"
+                f"👤 به نام: {card['holder_name']}\n\n"
             )
         text += (
             "━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
