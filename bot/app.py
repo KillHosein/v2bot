@@ -720,7 +720,7 @@ def build_application() -> Application:
     application.add_handler(CallbackQueryHandler(admin_clear_notifications, pattern='^admin_clear_notifications$'), group=3)
     application.add_handler(CallbackQueryHandler(admin_quick_backup, pattern='^admin_quick_backup$'), group=3)
     application.add_handler(CallbackQueryHandler(admin_discount_menu, pattern='^admin_discount_menu$'), group=3)
-    application.add_handler(CallbackQueryHandler(admin_messages_menu, pattern='^admin_messages_menu$'), group=3)
+    # admin_messages_menu is handled by ConversationHandler, no need for global handler
     application.add_handler(CallbackQueryHandler(admin_tickets_menu, pattern='^admin_tickets_menu$'), group=3)
     application.add_handler(CallbackQueryHandler(admin_run_alerts_now, pattern='^run_alerts_now$'), group=3)
     # Reseller approvals (global)
