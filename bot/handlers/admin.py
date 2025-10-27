@@ -3153,17 +3153,23 @@ async def admin_quick_backup(update: Update, context: ContextTypes.DEFAULT_TYPE)
     await query.answer()
     await query.message.edit_text("⏳ <b>در حال آماده‌سازی فایل بکاپ...</b>\n\nلطفاً صبر کنید، این کار ممکن است چند لحظه طول بکشد.", parse_mode=ParseMode.HTML)
     
-    # Temporarily change callback data to match expected format
-    original_data = query.data
-    query.data = 'backup_panel_all'
+    # Create a fake update with modified callback_data
+    class FakeCallbackQuery:
+        def __init__(self, original_query):
+            self.data = 'backup_panel_all'
+            self.message = original_query.message
+            self.from_user = original_query.from_user
+            self.id = original_query.id
+        
+        async def answer(self, *args, **kwargs):
+            pass
     
-    # Call the main backup generator
-    result = await admin_generate_backup(update, context)
+    fake_query = FakeCallbackQuery(query)
+    fake_update = Update(update.update_id)
+    fake_update._callback_query = fake_query
     
-    # Restore original data
-    query.data = original_data
-    
-    return result
+    # Call the main backup generator with fake update
+    return await admin_generate_backup(fake_update, context)
 
 
 # --- Admin fallback ---
