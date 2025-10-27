@@ -30,8 +30,9 @@ def generate_username(user_id: int, desired_username: str = None) -> str:
 
 
 # Cache API instances per panel for reuse (cookies/tokens kept in requests.Session)
+# Each instance caches its own token, so we can keep instances longer
 _PANEL_API_CACHE: dict[tuple, tuple] = {}
-_PANEL_API_TTL_SECONDS = 3600  # 1 hour
+_PANEL_API_TTL_SECONDS = 14400  # 4 hours (tokens refresh automatically within instance)
 
 
 class BasePanelAPI:
@@ -59,10 +60,49 @@ class MarzbanAPI(BasePanelAPI):
         self.password = panel_row['password']
         self.session = requests.Session()
         self.access_token = None
+        self.token_expire_time = None
 
     def get_token(self):
+        """Get or refresh access token with caching"""
         if not all([self.base_url, self.username, self.password]):
             logger.error("Marzban panel credentials are not set for this panel.")
+            return False
+        
+        # Check if cached token is still valid (cache for 55 minutes)
+        if self.access_token and self.token_expire_time:
+            if _time.time() < self.token_expire_time:
+                return True
+        
+        # Login to get new token
+        try:
+            login_data = {
+                'username': self.username,
+                'password': self.password
+            }
+            headers = {
+                'accept': 'application/json',
+                'Content-Type': 'application/x-www-form-urlencoded'
+            }
+            
+            resp = self.session.post(
+                f"{self.base_url}/api/admin/token",
+                data=login_data,
+                headers=headers,
+                timeout=15
+            )
+            
+            if resp.status_code == 200:
+                token_data = resp.json()
+                self.access_token = token_data.get('access_token')
+                # Cache token for 55 minutes (tokens usually valid for 60min)
+                self.token_expire_time = _time.time() + (55 * 60)
+                logger.info(f"Successfully authenticated to Marzban panel {self.panel_id}")
+                return True
+            else:
+                logger.error(f"Marzban login failed for panel {self.panel_id}: {resp.status_code}")
+                return False
+        except Exception as e:
+            logger.error(f"Error authenticating to Marzban panel {self.panel_id}: {e}")
             return False
 
     def delete_user_on_inbound(self, inbound_id: int, username: str, client_id: str | None = None):
@@ -533,8 +573,16 @@ class XuiAPI(BasePanelAPI):
             'Accept': 'application/json',
             'Content-Type': 'application/json',
         }
+        self._logged_in = False
+        self._login_time = None
 
     def get_token(self):
+        """Get or refresh session with caching to prevent repeated logins"""
+        # Check if already logged in recently (cache for 50 minutes)
+        if self._logged_in and self._login_time:
+            if _time.time() - self._login_time < (50 * 60):
+                return True
+        
         # Try form login first (more compatible across versions)
         try:
             try:
@@ -554,6 +602,9 @@ class XuiAPI(BasePanelAPI):
                 timeout=12,
             )
             if resp.status_code in (200, 204, 302, 303):
+                self._logged_in = True
+                self._login_time = _time.time()
+                logger.info(f"Successfully logged in to X-UI panel {self.panel_id}")
                 return True
         except requests.RequestException:
             pass
@@ -566,6 +617,9 @@ class XuiAPI(BasePanelAPI):
                 timeout=12,
             )
             if resp.status_code in (200, 204, 302, 303):
+                self._logged_in = True
+                self._login_time = _time.time()
+                logger.info(f"Successfully logged in to X-UI panel {self.panel_id}")
                 return True
         except requests.RequestException as e:
             logger.error(f"X-UI login error: {e}")
