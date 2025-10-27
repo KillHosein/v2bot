@@ -505,7 +505,11 @@ def build_application() -> Application:
                 CallbackQueryHandler(admin_wallets_menu, pattern='^admin_wallets_menu$'),
                 CallbackQueryHandler(admin_wallet_tx_menu, pattern='^admin_wallet_tx_menu$'),
                 CallbackQueryHandler(admin_set_usd_rate_start, pattern='^set_usd_rate_start$'),
+                CallbackQueryHandler(admin_set_trial_panel_start, pattern='^set_trial_panel_start$'),
+                CallbackQueryHandler(admin_set_trial_panel_choose, pattern=r'^set_trial_panel_\d+$'),
                 CallbackQueryHandler(admin_set_trial_inbound_start, pattern='^set_trial_inbound_start$'),
+                CallbackQueryHandler(admin_set_ref_percent_start, pattern='^set_ref_percent_start$'),
+                CallbackQueryHandler(admin_set_config_footer_start, pattern='^set_config_footer_start$'),
                 CallbackQueryHandler(admin_toggle_usd_mode, pattern=r'^toggle_usd_mode_(manual|api)$'),
                 CallbackQueryHandler(admin_toggle_pay_card, pattern=r'^toggle_pay_card_(0|1)$'),
                 CallbackQueryHandler(admin_toggle_pay_crypto, pattern=r'^toggle_pay_crypto_(0|1)$'),
@@ -527,6 +531,7 @@ def build_application() -> Application:
                 # Test log buttons
                 CallbackQueryHandler(admin_settings_send_test_join_log, pattern='^test_join_log$'),
                 CallbackQueryHandler(admin_settings_send_test_purchase_log, pattern='^test_purchase_log$'),
+                CallbackQueryHandler(admin_settings_manage, pattern='^admin_settings_manage$'),
                 CallbackQueryHandler(admin_command, pattern='^admin_main$'),
                 # Reseller settings
                 CallbackQueryHandler(admin_reseller_menu, pattern='^admin_reseller_menu$'),
