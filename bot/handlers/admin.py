@@ -325,7 +325,8 @@ async def send_admin_panel(update: Update, context: ContextTypes.DEFAULT_TYPE) -
         [InlineKeyboardButton("\U0001F4BB پنل‌ها", callback_data='admin_panels_menu'), InlineKeyboardButton("\U0001F551 کرون", callback_data='admin_cron_menu')],
         [InlineKeyboardButton("\U0001F4AC تیکت‌ها", callback_data='admin_tickets_menu'), InlineKeyboardButton("\U0001F4D6 آموزش‌ها", callback_data='admin_tutorials_menu')],
         [InlineKeyboardButton("\U0001F6E0\uFE0F وضعیت سیستم", callback_data='admin_system_health')],
-        [InlineKeyboardButton("\U0001F4BE بکاپ", callback_data='backup_start'), InlineKeyboardButton("👑 افزودن ادمین", callback_data='admin_admins_menu')],
+        [InlineKeyboardButton("💾 دریافت سریع بکاپ", callback_data='admin_quick_backup'), InlineKeyboardButton("\U0001F4BE بکاپ پیشرفته", callback_data='backup_start')],
+        [InlineKeyboardButton("📥 بازیابی از بکاپ", callback_data='backup_restore_start'), InlineKeyboardButton("👑 افزودن ادمین", callback_data='admin_admins_menu')],
         [InlineKeyboardButton("\U0001F514 تست یادآوری", callback_data='admin_test_reminder')],
         [InlineKeyboardButton("\u274C خروج", callback_data='admin_exit')],
     ]
