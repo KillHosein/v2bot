@@ -568,7 +568,7 @@ def build_application() -> Application:
             CallbackQueryHandler(admin_command, pattern='^admin_main$'),
         ],
         allow_reentry=True,
-        per_message=False,
+        per_message=True,
     )
 
     purchase_conv = ConversationHandler(
@@ -594,7 +594,7 @@ def build_application() -> Application:
         },
         fallbacks=[],
         allow_reentry=True,
-        per_message=False,
+        per_message=True,
     )
 
     renewal_conv = ConversationHandler(
@@ -616,7 +616,7 @@ def build_application() -> Application:
         },
         fallbacks=[CallbackQueryHandler(show_specific_service_details, pattern=r'^view_service_')],
         allow_reentry=True,
-        per_message=False,
+        per_message=True,
     )
 
     application.add_handler(admin_conv, group=1)
@@ -903,7 +903,7 @@ def build_application() -> Application:
         },
         fallbacks=[CallbackQueryHandler(admin_tickets_menu, pattern='^admin_tickets_menu$')],
         allow_reentry=True,
-        per_message=False,
+        per_message=True,
     )
     application.add_handler(admin_reply_conv, group=1)
 
@@ -937,7 +937,7 @@ def build_application() -> Application:
         },
         fallbacks=[CallbackQueryHandler(wallet_menu, pattern='^wallet_menu$')],
         allow_reentry=True,
-        per_message=False,
+        per_message=True,
     )
     application.add_handler(wallet_conv, group=1)
 
@@ -948,7 +948,7 @@ def build_application() -> Application:
         },
         fallbacks=[],
         allow_reentry=True,
-        per_message=False,
+        per_message=True,
     )
 
     application.add_handler(support_conv, group=1)
