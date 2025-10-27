@@ -152,8 +152,6 @@ async def check_expirations(context: ContextTypes.DEFAULT_TYPE):
                                 [InlineKeyboardButton("📦 مشاهده سرویس", callback_data=f"view_service_{order['id']}")],
                                 [InlineKeyboardButton("🔁 تمدید سریع", callback_data=f"renew_service_{order['id']}")],
                                 [InlineKeyboardButton("🔗 دریافت لینک مجدد", callback_data=f"refresh_service_link_{order['id']}")],
-                                [InlineKeyboardButton("🔐 تغییر کلید اتصال", callback_data=f"revoke_key_{order['id']}")],
-                                [InlineKeyboardButton("🕘 یادآوری فردا", callback_data=f"alert_snooze_{order['id']}")],
                             ]
                             await context.bot.send_message(order['user_id'], final_msg, parse_mode=ParseMode.MARKDOWN, reply_markup=InlineKeyboardMarkup(kb))
                             execute_db("UPDATE orders SET last_reminder_date = ? WHERE id = ?", (today_str, order['id']))
@@ -183,8 +181,6 @@ async def check_expirations(context: ContextTypes.DEFAULT_TYPE):
                                         [InlineKeyboardButton("📦 مشاهده سرویس", callback_data=f"view_service_{order['id']}")],
                                         [InlineKeyboardButton("🔁 تمدید سریع", callback_data=f"renew_service_{order['id']}")],
                                         [InlineKeyboardButton("🔗 دریافت لینک مجدد", callback_data=f"refresh_service_link_{order['id']}")],
-                                        [InlineKeyboardButton("🔐 تغییر کلید اتصال", callback_data=f"revoke_key_{order['id']}")],
-                                        [InlineKeyboardButton("🕘 یادآوری فردا", callback_data=f"alert_snooze_{order['id']}")],
                                     ]
                                     await context.bot.send_message(order['user_id'], final_msg, parse_mode=ParseMode.MARKDOWN, reply_markup=InlineKeyboardMarkup(kb))
                                     execute_db("UPDATE orders SET last_traffic_alert_date = ? WHERE id = ?", (today_str, order['id']))
