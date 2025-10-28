@@ -397,7 +397,7 @@ def build_application() -> Application:
             ADMIN_MESSAGES_MENU: [
                 CallbackQueryHandler(admin_messages_select, pattern=r'^msg_select_.+'),
                 CallbackQueryHandler(msg_add_start, pattern=r'^msg_add_start$'),
-                # admin_messages_menu removed from here to prevent double execution when transitioning from ADMIN_MAIN_MENU
+                # Pagination only - do NOT handle admin_messages_menu here to avoid double execution
                 CallbackQueryHandler(admin_messages_menu, pattern=r'^admin_messages_menu_page_\d+$'),
                 CallbackQueryHandler(admin_command, pattern='^admin_main$'),
             ],
@@ -594,7 +594,7 @@ def build_application() -> Application:
             CallbackQueryHandler(admin_command, pattern='^admin_main$'),
         ],
         allow_reentry=True,
-        per_message=False,
+        per_message=True,
     )
 
     purchase_conv = ConversationHandler(
@@ -698,8 +698,7 @@ def build_application() -> Application:
     # Cancel flow handlers - work from anywhere
     application.add_handler(CallbackQueryHandler(cancel_flow, pattern='^cancel_flow$'), group=3)
     application.add_handler(CallbackQueryHandler(cancel_admin_flow, pattern='^cancel_admin_flow$'), group=3)
-    # Ensure Admin Stats button works globally even if conversation state dropped
-    application.add_handler(CallbackQueryHandler(admin_command, pattern='^admin_main$'), group=3)
+    # admin_command is handled by ConversationHandler only - do NOT add global handler to prevent conflicts
     application.add_handler(CallbackQueryHandler(admin_stats_menu, pattern='^admin_stats$'), group=3)
     application.add_handler(CallbackQueryHandler(admin_stats_refresh, pattern='^stats_refresh$'), group=3)
     application.add_handler(CallbackQueryHandler(admin_xui_choose_inbound, pattern=r'^xui_inbound_'), group=3)
