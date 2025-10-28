@@ -119,23 +119,24 @@ async def admin_card_add_receive_number(update: Update, context: ContextTypes.DE
         context.user_data.pop('editing_card_field', None)
         context.user_data.pop('prompt_message_id', None)
         logger.info(f"[CARDS_RECEIVE_NUMBER] Card number updated: {new_number[:4]}****")
-        # Set success message and return to cards menu in same conversation
-        context.user_data['success_message'] = "✅ شماره کارت بروزرسانی شد."
-        # Create fake update to call admin_cards_menu
-        class FakeMessage:
-            def __init__(self, msg):
-                self.message_id = msg.message_id
-                self.chat_id = msg.chat_id
-                self.chat = msg.chat
-            async def reply_text(self, *args, **kwargs):
-                return await update.message.reply_text(*args, **kwargs)
-        fake_update = type('obj', (object,), {
-            'callback_query': None,
-            'message': FakeMessage(update.message),
-            'effective_chat': update.effective_chat,
-            'effective_user': update.effective_user
-        })()
-        return await admin_cards_menu(fake_update, context)
+        # Build and send cards menu directly in conversation context
+        cards = query_db("SELECT id, card_number, holder_name FROM cards")
+        keyboard = []
+        text = "\U0001F4B3 **مدیریت کارت‌های بانکی**\n\n✅ شماره کارت بروزرسانی شد.\n\n"
+        if cards:
+            text += "لیست کارت‌های فعلی:"
+            for card in cards:
+                keyboard.append([
+                    InlineKeyboardButton(f"{card['card_number']}", callback_data=f"noop_{card['id']}"),
+                    InlineKeyboardButton("\u270F\uFE0F ویرایش", callback_data=f"card_edit_{card['id']}"),
+                    InlineKeyboardButton("\u274C حذف", callback_data=f"card_delete_{card['id']}")
+                ])
+        else:
+            text += "هیچ کارتی ثبت نشده است."
+        keyboard.append([InlineKeyboardButton("\u2795 افزودن کارت جدید", callback_data="card_add_start")])
+        keyboard.append([InlineKeyboardButton("\U0001F519 بازگشت به تنظیمات", callback_data="back_to_settings")])
+        await context.bot.send_message(chat_id=update.effective_chat.id, text=text, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode=ParseMode.MARKDOWN)
+        return ADMIN_CARDS_MENU
     # Else creation flow
     context.user_data['new_card'] = context.user_data.get('new_card') or {}
     context.user_data['new_card']['number'] = update.message.text.strip()
@@ -166,43 +167,47 @@ async def admin_card_add_save(update: Update, context: ContextTypes.DEFAULT_TYPE
         context.user_data.pop('editing_card_id', None)
         context.user_data.pop('editing_card_field', None)
         context.user_data.pop('prompt_message_id', None)
-        # Set success message and return to cards menu
-        context.user_data['success_message'] = "✅ نام دارنده بروزرسانی شد."
-        class FakeMessage:
-            def __init__(self, msg):
-                self.message_id = msg.message_id
-                self.chat_id = msg.chat_id
-                self.chat = msg.chat
-            async def reply_text(self, *args, **kwargs):
-                return await update.message.reply_text(*args, **kwargs)
-        fake_update = type('obj', (object,), {
-            'callback_query': None,
-            'message': FakeMessage(update.message),
-            'effective_chat': update.effective_chat,
-            'effective_user': update.effective_user
-        })()
-        return await admin_cards_menu(fake_update, context)
+        # Build and send cards menu directly
+        cards = query_db("SELECT id, card_number, holder_name FROM cards")
+        keyboard = []
+        text = "\U0001F4B3 **مدیریت کارت‌های بانکی**\n\n✅ نام دارنده بروزرسانی شد.\n\n"
+        if cards:
+            text += "لیست کارت‌های فعلی:"
+            for card in cards:
+                keyboard.append([
+                    InlineKeyboardButton(f"{card['card_number']}", callback_data=f"noop_{card['id']}"),
+                    InlineKeyboardButton("\u270F\uFE0F ویرایش", callback_data=f"card_edit_{card['id']}"),
+                    InlineKeyboardButton("\u274C حذف", callback_data=f"card_delete_{card['id']}")
+                ])
+        else:
+            text += "هیچ کارتی ثبت نشده است."
+        keyboard.append([InlineKeyboardButton("\u2795 افزودن کارت جدید", callback_data="card_add_start")])
+        keyboard.append([InlineKeyboardButton("\U0001F519 بازگشت به تنظیمات", callback_data="back_to_settings")])
+        await context.bot.send_message(chat_id=update.effective_chat.id, text=text, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode=ParseMode.MARKDOWN)
+        return ADMIN_CARDS_MENU
     # Else creation flow
     card_number = context.user_data['new_card']['number']
     holder_name = update.message.text.strip()
     execute_db("INSERT INTO cards (card_number, holder_name) VALUES (?, ?)", (card_number, holder_name))
     context.user_data.clear()
-    # Set success message and return to cards menu
-    context.user_data['success_message'] = "✅ کارت جدید با موفقیت ثبت شد."
-    class FakeMessage:
-        def __init__(self, msg):
-            self.message_id = msg.message_id
-            self.chat_id = msg.chat_id
-            self.chat = msg.chat
-        async def reply_text(self, *args, **kwargs):
-            return await update.message.reply_text(*args, **kwargs)
-    fake_update = type('obj', (object,), {
-        'callback_query': None,
-        'message': FakeMessage(update.message),
-        'effective_chat': update.effective_chat,
-        'effective_user': update.effective_user
-    })()
-    return await admin_cards_menu(fake_update, context)
+    # Build and send cards menu directly
+    cards = query_db("SELECT id, card_number, holder_name FROM cards")
+    keyboard = []
+    text = "\U0001F4B3 **مدیریت کارت‌های بانکی**\n\n✅ کارت جدید با موفقیت ثبت شد.\n\n"
+    if cards:
+        text += "لیست کارت‌های فعلی:"
+        for card in cards:
+            keyboard.append([
+                InlineKeyboardButton(f"{card['card_number']}", callback_data=f"noop_{card['id']}"),
+                InlineKeyboardButton("\u270F\uFE0F ویرایش", callback_data=f"card_edit_{card['id']}"),
+                InlineKeyboardButton("\u274C حذف", callback_data=f"card_delete_{card['id']}")
+            ])
+    else:
+        text += "هیچ کارتی ثبت نشده است."
+    keyboard.append([InlineKeyboardButton("\u2795 افزودن کارت جدید", callback_data="card_add_start")])
+    keyboard.append([InlineKeyboardButton("\U0001F519 بازگشت به تنظیمات", callback_data="back_to_settings")])
+    await context.bot.send_message(chat_id=update.effective_chat.id, text=text, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode=ParseMode.MARKDOWN)
+    return ADMIN_CARDS_MENU
 
 
 async def admin_card_edit_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:

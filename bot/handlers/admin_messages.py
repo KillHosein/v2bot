@@ -282,23 +282,11 @@ async def admin_messages_edit_text_save(update: Update, context: ContextTypes.DE
         return ADMIN_MESSAGES_MENU
     execute_db("UPDATE messages SET text = ? WHERE message_name = ?", (update.message.text, message_name))
     
-    # Clear editing state and set success message
-    context.user_data['success_message'] = f"\u2705 \u0645\u062a\u0646 \u067e\u06cc\u0627\u0645 `{message_name}` \u0628\u0631\u0648\u0632\u0631\u0633\u0627\u0646\u06cc \u0634\u062f."
+    # Clear editing state and build select menu inline
     context.user_data['editing_message_name'] = message_name
-    # Return to select view using proper function call
-    class FakeQuery:
-        def __init__(self, msg):
-            self.data = f'msg_select_{message_name}'
-            self.message = msg
-        async def answer(self, *args, **kwargs):
-            pass
-    fake_update = type('obj', (object,), {
-        'callback_query': FakeQuery(update.message),
-        'message': update.message,
-        'effective_chat': update.effective_chat,
-        'effective_user': update.effective_user
-    })()
-    return await admin_messages_select(fake_update, context)
+    row = query_db("SELECT text, file_id, file_type FROM messages WHERE message_name = ?", (message_name,), one=True) or {}
+    preview = _md_escape((row.get('text') or '')[:500]) or '\u0645\u062a\u0646 \u062e\u0627\u0644\u06cc'
+    text = f"\u2705 **\u0645\u062a\u0646 \u0628\u0631\u0648\u0632\u0631\u0633\u0627\u0646\u06cc \u0634\u062f**\\n\\n\u067e\u06cc\u0627\u0645: `{message_name}`\\n\\n\u067e\u06cc\u0634\u200c\u0646\u0645\u0627\u06cc\u0634:\\n{preview}"\n    keyboard = [\n        [InlineKeyboardButton(\"\u270f\ufe0f \u0648\u06cc\u0631\u0627\u06cc\u0634 \u0645\u062a\u0646\", callback_data=\"msg_action_edit_text\")],\n        [InlineKeyboardButton(\"\ud83d\udd17 \u0648\u06cc\u0631\u0627\u06cc\u0634 \u062f\u06a9\u0645\u0647\u200c\u0647\u0627\", callback_data=\"msg_action_edit_buttons\")],\n        [InlineKeyboardButton(\"\ud83d\uddd1 \u062d\u0630\u0641 \u067e\u06cc\u0627\u0645\", callback_data=\"msg_delete_current\")],\n        [InlineKeyboardButton(\"\\U0001F519 \u0628\u0627\u0632\u06af\u0634\u062a\", callback_data=f\"admin_messages_menu_page_{context.user_data.get('msg_page', 0)}\")],\n    ]\n    await context.bot.send_message(\n        chat_id=update.effective_chat.id,\n        text=text,\n        reply_markup=InlineKeyboardMarkup(keyboard),\n        parse_mode=ParseMode.MARKDOWN\n    )\n    return ADMIN_MESSAGES_SELECT
 
 
 async def admin_messages_delete(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
