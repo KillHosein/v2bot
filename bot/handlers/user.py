@@ -16,7 +16,7 @@ from telegram.constants import ParseMode
 from telegram.error import TelegramError, BadRequest
 from telegram.ext import ContextTypes, ConversationHandler, CallbackQueryHandler, MessageHandler, filters
 
-from ..db import query_db, execute_db
+from ..db import query_db, execute_db, get_message_text
 from ..utils import register_new_user
 from ..helpers.flow import set_flow, clear_flow
 from ..helpers.keyboards import build_start_menu_keyboard
