@@ -5,17 +5,22 @@ from telegram.ext import ContextTypes, ConversationHandler
 from ..db import query_db, execute_db
 from ..states import ADMIN_CARDS_MENU, ADMIN_CARDS_AWAIT_NUMBER, ADMIN_CARDS_AWAIT_HOLDER
 from ..helpers.tg import safe_edit_text as _safe_edit_text
+from ..config import logger
 
 
 async def admin_cards_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    logger.info(f"[CARDS_MENU] Called - update.callback_query={update.callback_query is not None}, update.message={update.message is not None}")
     message_sender = None
     query = update.callback_query
     if query:
         await query.answer()
         message_sender = 'edit'
+        logger.info(f"[CARDS_MENU] Using edit mode - query.data={query.data}")
     elif update.message:
         message_sender = 'reply'
+        logger.info(f"[CARDS_MENU] Using reply mode - message_id={update.message.message_id}")
     if not message_sender:
+        logger.warning("[CARDS_MENU] No message_sender detected, returning ADMIN_CARDS_MENU")
         return ADMIN_CARDS_MENU
 
     cards = query_db("SELECT id, card_number, holder_name FROM cards")
@@ -43,16 +48,22 @@ async def admin_cards_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -
     if message_sender == 'edit':
         try:
             await _safe_edit_text(query.message, text, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode=ParseMode.MARKDOWN)
-        except Exception:
+            logger.info(f"[CARDS_MENU] Edited message successfully - message_id={query.message.message_id}")
+        except Exception as e:
+            logger.error(f"[CARDS_MENU] Edit failed: {e}, trying reply")
             try:
-                await query.message.reply_text(text, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode=ParseMode.MARKDOWN)
-            except Exception:
-                pass
+                msg = await query.message.reply_text(text, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode=ParseMode.MARKDOWN)
+                logger.info(f"[CARDS_MENU] Replied with new message - message_id={msg.message_id}")
+            except Exception as e2:
+                logger.error(f"[CARDS_MENU] Reply also failed: {e2}")
     else:
         try:
-            await update.message.reply_text(text, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode=ParseMode.MARKDOWN)
-        except Exception:
-            pass
+            msg = await update.message.reply_text(text, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode=ParseMode.MARKDOWN)
+            logger.info(f"[CARDS_MENU] Sent new message in reply mode - message_id={msg.message_id}")
+        except Exception as e:
+            logger.error(f"[CARDS_MENU] Send failed: {e}")
+    
+    logger.info(f"[CARDS_MENU] Returning state ADMIN_CARDS_MENU")
     return ADMIN_CARDS_MENU
 
 
@@ -83,16 +94,19 @@ async def admin_card_add_start(update: Update, context: ContextTypes.DEFAULT_TYP
 
 
 async def admin_card_add_receive_number(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    logger.info(f"[CARDS_RECEIVE_NUMBER] User input: {update.message.text[:20]}... - message_id={update.message.message_id}")
     # Clean up messages
     try:
         # Delete prompt message if exists
         prompt_msg_id = context.user_data.pop('prompt_message_id', None)
         if prompt_msg_id:
             await context.bot.delete_message(chat_id=update.effective_chat.id, message_id=prompt_msg_id)
+            logger.info(f"[CARDS_RECEIVE_NUMBER] Deleted prompt message {prompt_msg_id}")
         # Delete user's input message
         await update.message.delete()
-    except Exception:
-        pass
+        logger.info(f"[CARDS_RECEIVE_NUMBER] Deleted user input message {update.message.message_id}")
+    except Exception as e:
+        logger.error(f"[CARDS_RECEIVE_NUMBER] Cleanup failed: {e}")
     
     # If editing number
     editing_id = context.user_data.get('editing_card_id')
@@ -102,11 +116,13 @@ async def admin_card_add_receive_number(update: Update, context: ContextTypes.DE
         execute_db("UPDATE cards SET card_number = ? WHERE id = ?", (new_number, editing_id))
         # Clear ALL user data to prevent stale state
         context.user_data.clear()
+        logger.info(f"[CARDS_RECEIVE_NUMBER] Card number updated: {new_number[:4]}****")
         # Send success and return to cards menu
-        await context.bot.send_message(
+        msg = await context.bot.send_message(
             chat_id=update.effective_chat.id,
             text="✅ شماره کارت بروزرسانی شد.\n\nبرای بازگشت به مدیریت کارت‌ها، دستور /admin را وارد کنید و سپس تنظیمات → مدیریت کارت‌ها را انتخاب کنید."
         )
+        logger.info(f"[CARDS_RECEIVE_NUMBER] Sent success message - message_id={msg.message_id}, returning ConversationHandler.END")
         return ConversationHandler.END
     # Else creation flow
     context.user_data['new_card'] = context.user_data.get('new_card') or {}
