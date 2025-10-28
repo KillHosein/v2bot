@@ -282,13 +282,15 @@ async def admin_messages_edit_text_save(update: Update, context: ContextTypes.DE
         return ADMIN_MESSAGES_MENU
     execute_db("UPDATE messages SET text = ? WHERE message_name = ?", (update.message.text, message_name))
     
-    # Clear ALL user data to prevent stale state (except editing_message_name for menu)
-    msg_name_backup = message_name
+    # Clear ALL user data to prevent stale state
     context.user_data.clear()
-    context.user_data['editing_message_name'] = msg_name_backup
-    context.user_data['success_message'] = "\u2705 \u0645\u062a\u0646 \u0628\u0631\u0648\u0632\u0631\u0633\u0627\u0646\u06cc \u0634\u062f."
-    # Call admin_messages_select to properly display menu with conversation state  
-    return await admin_messages_select(update, context)
+    # Send success and end conversation
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text=f"\u2705 \u0645\u062a\u0646 \u067e\u06cc\u0627\u0645 `{message_name}` \u0628\u0631\u0648\u0632\u0631\u0633\u0627\u0646\u06cc \u0634\u062f.\\n\\n\u0628\u0631\u0627\u06cc \u0628\u0627\u0632\u06af\u0634\u062a \u0628\u0647 \u0645\u062f\u06cc\u0631\u06cc\u062a \u067e\u06cc\u0627\u0645\u200c\u0647\u0627\u060c \u062f\u0633\u062a\u0648\u0631 /admin \u0631\u0627 \u0648\u0627\u0631\u062f \u06a9\u0646\u06cc\u062f.",
+        parse_mode=ParseMode.MARKDOWN
+    )
+    return ConversationHandler.END
 
 
 async def admin_messages_delete(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:

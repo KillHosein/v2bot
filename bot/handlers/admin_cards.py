@@ -102,10 +102,12 @@ async def admin_card_add_receive_number(update: Update, context: ContextTypes.DE
         execute_db("UPDATE cards SET card_number = ? WHERE id = ?", (new_number, editing_id))
         # Clear ALL user data to prevent stale state
         context.user_data.clear()
-        # Set success message for display
-        context.user_data['success_message'] = "✅ شماره کارت بروزرسانی شد."
-        # Call admin_cards_menu to properly display menu with conversation state
-        return await admin_cards_menu(update, context)
+        # Send success and return to cards menu
+        await context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text="✅ شماره کارت بروزرسانی شد.\n\nبرای بازگشت به مدیریت کارت‌ها، دستور /admin را وارد کنید و سپس تنظیمات → مدیریت کارت‌ها را انتخاب کنید."
+        )
+        return ConversationHandler.END
     # Else creation flow
     context.user_data['new_card'] = context.user_data.get('new_card') or {}
     context.user_data['new_card']['number'] = update.message.text.strip()
@@ -134,19 +136,23 @@ async def admin_card_add_save(update: Update, context: ContextTypes.DEFAULT_TYPE
         execute_db("UPDATE cards SET holder_name = ? WHERE id = ?", (holder_name, editing_id))
         # Clear ALL user data to prevent stale state
         context.user_data.clear()
-        # Set success message for display
-        context.user_data['success_message'] = "✅ نام دارنده بروزرسانی شد."
-        # Call admin_cards_menu to properly display menu with conversation state
-        return await admin_cards_menu(update, context)
+        # Send success and end conversation
+        await context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text="✅ نام دارنده بروزرسانی شد.\n\nبرای بازگشت به مدیریت کارت‌ها، دستور /admin را وارد کنید و سپس تنظیمات → مدیریت کارت‌ها را انتخاب کنید."
+        )
+        return ConversationHandler.END
     # Else creation flow
     card_number = context.user_data['new_card']['number']
     holder_name = update.message.text.strip()
     execute_db("INSERT INTO cards (card_number, holder_name) VALUES (?, ?)", (card_number, holder_name))
     context.user_data.clear()
-    # Set success message for display
-    context.user_data['success_message'] = "✅ کارت جدید با موفقیت ثبت شد."
-    # Call admin_cards_menu to properly display menu with conversation state
-    return await admin_cards_menu(update, context)
+    # Send success and end conversation
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text="✅ کارت جدید با موفقیت ثبت شد.\n\nبرای بازگشت به مدیریت کارت‌ها، دستور /admin را وارد کنید و سپس تنظیمات → مدیریت کارت‌ها را انتخاب کنید."
+    )
+    return ConversationHandler.END
 
 
 async def admin_card_edit_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
