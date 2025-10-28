@@ -30,13 +30,33 @@ def execute_db(query: str, args=()):
         return None
 
 
+def get_message_text(message_name: str, default: str = '') -> str:
+    """دریافت متن پیام از دیتابیس با fallback به متن پیش‌فرض"""
+    try:
+        row = query_db("SELECT text FROM messages WHERE message_name = ?", (message_name,), one=True)
+        if row and row.get('text'):
+            return row['text']
+        return default
+    except Exception:
+        return default
+
+
 def initialize_default_content(cursor: sqlite3.Cursor, conn: sqlite3.Connection):
     default_messages = {
         'start_main': ('\U0001F44B سلام! به ربات فروش کانفیگ ما خوش آمدید.\nبرای شروع از دکمه‌های زیر استفاده کنید.', None, None),
         'admin_panel_main': ('\U0001F5A5\uFE0F پنل مدیریت ربات. لطفا یک گزینه را انتخاب کنید.', None, None),
         'buy_config_main': ('\U0001F4E1 **خرید کانفیگ**\n\nلطفا یکی از پلن‌های زیر را انتخاب کنید:', None, None),
         'payment_info_text': ('\U0001F4B3 **اطلاعات پرداخت** \U0001F4B3\n\nمبلغ پلن انتخابی را به یکی از کارت‌های زیر واریز کرده و سپس اسکرین‌شات رسید را در همین صفحه ارسال نمایید.', None, None),
-        'renewal_reminder_text': ('\u26A0\uFE0F **یادآوری تمدید سرویس**\n\nکاربر گرامی، اعتبار سرویس شما رو به اتمام است.\n\n{details}\n\nبرای جلوگیری از قطع شدن سرویس، لطفاً از طریق دکمه "سرویس من" در منوی اصلی ربات اقدام به تمدید نمایید.', None, None)
+        'renewal_reminder_text': ('\u26A0\uFE0F **یادآوری تمدید سرویس**\n\nکاربر گرامی، اعتبار سرویس شما رو به اتمام است.\n\n{details}\n\nبرای جلوگیری از قطع شدن سرویس، لطفاً از طریق دکمه "سرویس من" در منوی اصلی ربات اقدام به تمدید نمایید.', None, None),
+        'admin_messages_menu': ('مدیریت پیام‌ها و صفحات:', None, None),
+        'admin_users_menu': ('👥 مدیریت کاربران', None, None),
+        'admin_stats_title': ('\U0001F4C8 **آمار ربات**', None, None),
+        'admin_panels_menu': ('\U0001F5A5\uFE0F مدیریت پنل‌ها', None, None),
+        'admin_plans_menu': ('\U0001F4CB مدیریت پلن‌ها', None, None),
+        'admin_cards_menu': ('\U0001F4B3 مدیریت کارت‌های بانکی', None, None),
+        'admin_settings_menu': ('\u2699\uFE0F **تنظیمات کلی ربات**', None, None),
+        'trial_panel_select': ('پنل ساخت تست را انتخاب کنید:', None, None),
+        'trial_inbound_select': ('اینباند کانفیگ تست را انتخاب کنید:', None, None)
     }
 
     for name, (text, f_id, f_type) in default_messages.items():

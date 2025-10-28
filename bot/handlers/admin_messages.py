@@ -2,7 +2,7 @@ from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.constants import ParseMode
 from telegram.ext import ContextTypes
 
-from ..db import query_db, execute_db
+from ..db import query_db, execute_db, get_message_text
 from ..states import (
     ADMIN_MESSAGES_MENU,
     ADMIN_MESSAGES_SELECT,
@@ -36,8 +36,24 @@ def _md_escape(text: str) -> str:
 
 
 async def admin_messages_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    from ..config import logger
+    import time
+    
     query = update.callback_query
     await query.answer()
+    
+    start_time = time.time()
+    logger.info(f"[admin_messages_menu] START - callback_id={query.id}, data={query.data}")
+    
+    # Prevent duplicate execution
+    callback_id = f"{query.id}_{query.data}" if query else None
+    last_callback = context.user_data.get('last_messages_callback')
+    if callback_id and callback_id == last_callback:
+        logger.warning(f"[admin_messages_menu] DUPLICATE PREVENTED - same callback_id={callback_id}")
+        return ADMIN_MESSAGES_MENU
+    if callback_id:
+        context.user_data['last_messages_callback'] = callback_id
+    
     page = 0
     if query and query.data.startswith('admin_messages_menu_page_'):
         try:
@@ -52,11 +68,11 @@ async def admin_messages_menu(update: Update, context: ContextTypes.DEFAULT_TYPE
     rows = query_db("SELECT message_name FROM messages ORDER BY message_name LIMIT ? OFFSET ?", (PAGE_SIZE, offset))
 
     keyboard = []
-    if rows:
+    if rows and len(rows) > 0:
         for m in rows:
             keyboard.append([InlineKeyboardButton(m['message_name'], callback_data=f"msg_select_{m['message_name']}")])
     else:
-        keyboard.append([InlineKeyboardButton('پیامی وجود ندارد', callback_data='noop')])
+        keyboard.append([InlineKeyboardButton('❌ پیامی وجود ندارد', callback_data='noop')])
 
     nav = []
     if page > 0:
@@ -69,13 +85,24 @@ async def admin_messages_menu(update: Update, context: ContextTypes.DEFAULT_TYPE
     keyboard.append([InlineKeyboardButton("➕ افزودن پیام جدید", callback_data="msg_add_start")])
     keyboard.append([InlineKeyboardButton("\U0001F519 بازگشت", callback_data="admin_main")])
 
+    menu_text = get_message_text('admin_messages_menu', 'مدیریت پیام‌ها و صفحات:')
+    
+    logger.info(f"[admin_messages_menu] DATA - total={total}, rows={len(rows) if rows else 0}, keyboard_rows={len(keyboard)}")
+    
     try:
-        await _safe_edit_text(query.message, "مدیریت پیام‌ها و صفحات:", reply_markup=InlineKeyboardMarkup(keyboard))
-    except Exception:
+        logger.info(f"[admin_messages_menu] EDITING MESSAGE - message_id={query.message.message_id}")
+        result = await _safe_edit_text(query.message, menu_text, reply_markup=InlineKeyboardMarkup(keyboard))
+        logger.info(f"[admin_messages_menu] EDIT SUCCESS - result={result is not None}")
+    except Exception as e:
+        logger.error(f"[admin_messages_menu] EDIT FAILED - error={e}")
         try:
-            await query.message.reply_text("مدیریت پیام‌ها و صفحات:", reply_markup=InlineKeyboardMarkup(keyboard))
-        except Exception:
-            pass
+            result = await query.message.reply_text(menu_text, reply_markup=InlineKeyboardMarkup(keyboard))
+            logger.info(f"[admin_messages_menu] REPLY SUCCESS")
+        except Exception as e2:
+            logger.error(f"[admin_messages_menu] REPLY FAILED - error={e2}")
+    
+    elapsed = time.time() - start_time
+    logger.info(f"[admin_messages_menu] END - elapsed={elapsed:.3f}s, returning ADMIN_MESSAGES_MENU")
     return ADMIN_MESSAGES_MENU
 
 
@@ -210,7 +237,10 @@ async def admin_messages_delete(update: Update, context: ContextTypes.DEFAULT_TY
 async def admin_buttons_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     query = update.callback_query
     await query.answer()
-    message_name = context.user_data['editing_message_name']
+    message_name = context.user_data.get('editing_message_name')
+    if not message_name:
+        await query.answer("لطفاً ابتدا یک پیام را انتخاب کنید.", show_alert=True)
+        return await admin_messages_menu(update, context)
 
     # Ensure default buttons exist for start_main so they show up for editing
     if message_name == 'start_main':

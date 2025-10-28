@@ -19,7 +19,7 @@ import time
 from uuid import uuid4
 
 from ..config import ADMIN_ID, logger
-from ..db import query_db, execute_db
+from ..db import query_db, execute_db, get_message_text
 from ..panel import VpnPanelAPI
 from ..utils import register_new_user
 from ..states import *
@@ -61,7 +61,8 @@ async def admin_set_trial_inbound_start(update: Update, context: ContextTypes.DE
     query = update.callback_query
     await query.answer()
     # Explain feature and list inbounds for XUI-like panels only
-    msg = (
+    msg = get_message_text(
+        'trial_inbound_select',
         "انتخاب اینباند کانفیگ تست\n\n"
         "این گزینه فقط برای پنل‌های XUI/3xUI/Alireza/TX-UI کاربرد دارد.\n"
         "اینباندی را انتخاب کنید تا کانفیگ‌های تست روی همان اینباند ساخته شوند."
@@ -2513,18 +2514,13 @@ async def admin_panel_inbound_receive_tag(update: Update, context: ContextTypes.
 
 
 # --- Messages & Buttons Editor ---
-async def admin_messages_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    query = update.callback_query
-    await query.answer()
-    messages = query_db("SELECT message_name FROM messages")
-    keyboard = [[InlineKeyboardButton(m['message_name'], callback_data=f"msg_select_{m['message_name']}")] for m in messages]
-    keyboard.append([InlineKeyboardButton("\u2795 افزودن پیام جدید", callback_data="msg_add_start")])
-    keyboard.append([InlineKeyboardButton("\U0001F519 بازگشت", callback_data="admin_main")])
-    if message_sender is query.message.edit_text:
-        await _safe_edit_text(query.message, "مدیریت پیام‌ها و صفحات:", reply_markup=InlineKeyboardMarkup(keyboard))
-    else:
-        await update.message.reply_text("مدیریت پیام‌ها و صفحات:", reply_markup=InlineKeyboardMarkup(keyboard))
-    return ADMIN_MESSAGES_MENU
+# NOTE: این تابع قدیمی است - تابع جدید در admin_messages.py است
+# این تابع را حذف نمی‌کنیم چون ممکن است جاهایی به آن وابسته باشند
+# اما نامش را تغییر می‌دهیم تا conflict نداشته باشد
+async def admin_messages_menu_OLD_DEPRECATED(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    # این تابع deprecated شده - از admin_messages.admin_messages_menu استفاده کنید
+    from .admin_messages import admin_messages_menu as new_admin_messages_menu
+    return await new_admin_messages_menu(update, context)
 
 
 async def msg_add_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
@@ -4365,7 +4361,14 @@ async def admin_set_trial_panel_start(update: Update, context: ContextTypes.DEFA
     keyboard.insert(0, [InlineKeyboardButton("پیش‌فرض", callback_data="set_trial_panel_0")])
     keyboard.append([InlineKeyboardButton("\U0001F519 بازگشت", callback_data="admin_settings_manage")])
     target = query.message if query else update.message
-    await target.reply_text("پنل ساخت تست را انتخاب کنید:", reply_markup=InlineKeyboardMarkup(keyboard))
+    select_text = get_message_text('trial_panel_select', 'پنل ساخت تست را انتخاب کنید:')
+    try:
+        await _safe_edit_text(target, select_text, reply_markup=InlineKeyboardMarkup(keyboard))
+    except Exception:
+        try:
+            await target.reply_text(select_text, reply_markup=InlineKeyboardMarkup(keyboard))
+        except Exception:
+            pass
     return SETTINGS_MENU
 
 
