@@ -682,7 +682,7 @@ def build_application() -> Application:
     # Noop handler for display-only buttons
     async def noop_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.callback_query.answer()
-    application.add_handler(CallbackQueryHandler(noop_handler, pattern=r'^noop$'), group=3)
+    application.add_handler(CallbackQueryHandler(noop_handler, pattern=r'^noop'), group=3)
     application.add_handler(CallbackQueryHandler(my_services_handler, pattern=r'^my_services(_page_\d+)?$'), group=3)
     application.add_handler(CallbackQueryHandler(wallet_menu, pattern=r'^wallet_menu$'), group=3)
     application.add_handler(CallbackQueryHandler(support_menu, pattern=r'^support_menu$'), group=3)
@@ -702,6 +702,7 @@ def build_application() -> Application:
     application.add_handler(CallbackQueryHandler(admin_stats_menu, pattern='^admin_stats$'), group=3)
     application.add_handler(CallbackQueryHandler(admin_stats_refresh, pattern='^stats_refresh$'), group=3)
     application.add_handler(CallbackQueryHandler(admin_xui_choose_inbound, pattern=r'^xui_inbound_'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_cards_menu, pattern='^admin_cards_menu$'), group=3)
     application.add_handler(CallbackQueryHandler(admin_wallets_menu, pattern='^admin_wallets_menu$'), group=3)
     application.add_handler(CallbackQueryHandler(admin_settings_manage, pattern='^admin_settings_manage$'), group=3)
     # admin_toggle_bot_active is handled in ConversationHandler only - removed duplicate to prevent double execution

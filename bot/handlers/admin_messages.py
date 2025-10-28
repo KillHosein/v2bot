@@ -45,15 +45,6 @@ async def admin_messages_menu(update: Update, context: ContextTypes.DEFAULT_TYPE
     start_time = time.time()
     logger.info(f"[admin_messages_menu] START - callback_id={query.id}, data={query.data}")
     
-    # Prevent duplicate execution
-    callback_id = f"{query.id}_{query.data}" if query else None
-    last_callback = context.user_data.get('last_messages_callback')
-    if callback_id and callback_id == last_callback:
-        logger.warning(f"[admin_messages_menu] DUPLICATE PREVENTED - same callback_id={callback_id}")
-        return ADMIN_MESSAGES_MENU
-    if callback_id:
-        context.user_data['last_messages_callback'] = callback_id
-    
     page = 0
     if query and query.data.startswith('admin_messages_menu_page_'):
         try:
