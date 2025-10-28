@@ -108,33 +108,57 @@ async def admin_messages_menu(update: Update, context: ContextTypes.DEFAULT_TYPE
 
 async def msg_add_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     query = update.callback_query
+    await query.answer()
     try:
         await _safe_edit_text(query.message, "نام انگلیسی و منحصر به فرد برای پیام جدید وارد کنید (مثال: `about_us`):", parse_mode=ParseMode.MARKDOWN)
+        context.user_data['prompt_message_id'] = query.message.message_id
     except Exception:
         try:
-            await query.message.reply_text("نام انگلیسی و منحصر به فرد برای پیام جدید وارد کنید (مثال: `about_us`):", parse_mode=ParseMode.MARKDOWN)
+            msg = await query.message.reply_text("نام انگلیسی و منحصر به فرد برای پیام جدید وارد کنید (مثال: `about_us`):", parse_mode=ParseMode.MARKDOWN)
+            context.user_data['prompt_message_id'] = msg.message_id
         except Exception:
             pass
     return ADMIN_MESSAGES_ADD_AWAIT_NAME
 
 
 async def msg_add_receive_name(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    # Clean up previous prompt
+    try:
+        prompt_msg_id = context.user_data.pop('prompt_message_id', None)
+        if prompt_msg_id:
+            await context.bot.delete_message(chat_id=update.effective_chat.id, message_id=prompt_msg_id)
+        await update.message.delete()
+    except Exception:
+        pass
+    
     message_name = (update.message.text or '').strip()
     if not message_name.isascii() or ' ' in message_name:
-        await update.message.reply_text("خطا: نام باید انگلیسی و بدون فاصله باشد.")
+        msg = await context.bot.send_message(chat_id=update.effective_chat.id, text="❌ خطا: نام باید انگلیسی و بدون فاصله باشد.")
+        context.user_data['prompt_message_id'] = msg.message_id
         return ADMIN_MESSAGES_ADD_AWAIT_NAME
     if query_db("SELECT 1 FROM messages WHERE message_name = ?", (message_name,), one=True):
-        await update.message.reply_text("این نام قبلا وجود دارد. نام دیگری وارد کنید.")
+        msg = await context.bot.send_message(chat_id=update.effective_chat.id, text="❌ این نام قبلا وجود دارد. نام دیگری وارد کنید.")
+        context.user_data['prompt_message_id'] = msg.message_id
         return ADMIN_MESSAGES_ADD_AWAIT_NAME
     context.user_data['new_message_name'] = message_name
-    await update.message.reply_text("محتوای پیام را ارسال کنید (متن/عکس/ویدیو/سند/صدا):")
+    msg = await context.bot.send_message(chat_id=update.effective_chat.id, text="✅ نام ثبت شد.\n\nمحتوای پیام را ارسال کنید (متن/عکس/ویدیو/سند/صدا):")
+    context.user_data['prompt_message_id'] = msg.message_id
     return ADMIN_MESSAGES_ADD_AWAIT_CONTENT
 
 
 async def msg_add_receive_content(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    # Clean up previous messages
+    try:
+        prompt_msg_id = context.user_data.pop('prompt_message_id', None)
+        if prompt_msg_id:
+            await context.bot.delete_message(chat_id=update.effective_chat.id, message_id=prompt_msg_id)
+        await update.message.delete()
+    except Exception:
+        pass
+    
     message_name = context.user_data.get('new_message_name')
     if not message_name:
-        await update.message.reply_text("ابتدا نام پیام را وارد کنید.")
+        await context.bot.send_message(chat_id=update.effective_chat.id, text="ابتدا نام پیام را وارد کنید.")
         return ADMIN_MESSAGES_ADD_AWAIT_NAME
     file_id = None
     file_type = None
@@ -198,28 +222,51 @@ async def admin_messages_select(update: Update, context: ContextTypes.DEFAULT_TY
 
 async def admin_messages_edit_text_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     query = update.callback_query
+    await query.answer()
     message_name = context.user_data['editing_message_name']
     try:
-        await _safe_edit_text(query.message, f"لطفا متن جدید برای پیام `{message_name}` را ارسال کنید.", parse_mode=ParseMode.MARKDOWN)
+        await _safe_edit_text(query.message, f"✏️ **ویرایش متن پیام `{message_name}`**\n\nمتن جدید را ارسال کنید:", parse_mode=ParseMode.MARKDOWN)
+        context.user_data['prompt_message_id'] = query.message.message_id
     except Exception:
         try:
-            await query.message.reply_text(f"لطفا متن جدید برای پیام `{message_name}` را ارسال کنید.", parse_mode=ParseMode.MARKDOWN)
+            msg = await query.message.reply_text(f"✏️ **ویرایش متن پیام `{message_name}`**\n\nمتن جدید را ارسال کنید:", parse_mode=ParseMode.MARKDOWN)
+            context.user_data['prompt_message_id'] = msg.message_id
         except Exception:
             pass
     return ADMIN_MESSAGES_EDIT_TEXT
 
 
 async def admin_messages_edit_text_save(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    # Clean up messages
+    try:
+        prompt_msg_id = context.user_data.pop('prompt_message_id', None)
+        if prompt_msg_id:
+            await context.bot.delete_message(chat_id=update.effective_chat.id, message_id=prompt_msg_id)
+        await update.message.delete()
+    except Exception:
+        pass
+    
     message_name = context.user_data.get('editing_message_name')
     if not message_name:
-        await update.message.reply_text("ابتدا یک پیام را انتخاب کنید.")
+        await context.bot.send_message(chat_id=update.effective_chat.id, text="ابتدا یک پیام را انتخاب کنید.")
         return ADMIN_MESSAGES_MENU
     execute_db("UPDATE messages SET text = ? WHERE message_name = ?", (update.message.text, message_name))
-    await update.message.reply_text("✅ متن پیام بروزرسانی شد.")
-    # Back to select view
-    fake_query = type('obj', (object,), {'data': f"msg_select_{message_name}", 'message': update.message, 'answer': (lambda *args, **kwargs: None)})
-    fake_update = type('obj', (object,), {'callback_query': fake_query})
-    return await admin_messages_select(fake_update, context)
+    # Send success message and return to select view
+    row = query_db("SELECT text, file_id, file_type FROM messages WHERE message_name = ?", (message_name,), one=True) or {}
+    preview = _md_escape((row.get('text') or '')[:500]) or 'متن خالی'
+    keyboard = [
+        [InlineKeyboardButton("✏️ ویرایش متن", callback_data="msg_action_edit_text")],
+        [InlineKeyboardButton("🔗 ویرایش دکمه‌ها", callback_data="msg_action_edit_buttons")],
+        [InlineKeyboardButton("🗑 حذف پیام", callback_data="msg_delete_current")],
+        [InlineKeyboardButton("\U0001F519 بازگشت", callback_data=f"admin_messages_menu_page_{context.user_data.get('msg_page', 0)}")],
+    ]
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text=f"✅ **متن بروزرسانی شد**\n\nپیام: `{message_name}`\n\nپیش‌نمایش:\n{preview}",
+        reply_markup=InlineKeyboardMarkup(keyboard),
+        parse_mode=ParseMode.MARKDOWN
+    )
+    return ADMIN_MESSAGES_SELECT
 
 
 async def admin_messages_delete(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
