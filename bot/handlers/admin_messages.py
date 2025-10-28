@@ -256,8 +256,10 @@ async def admin_messages_edit_text_save(update: Update, context: ContextTypes.DE
         return ADMIN_MESSAGES_MENU
     execute_db("UPDATE messages SET text = ? WHERE message_name = ?", (update.message.text, message_name))
     
-    # Clear any remaining state
-    context.user_data.pop('prompt_message_id', None)
+    # Clear ALL user data to prevent stale state (except editing_message_name for menu)
+    msg_name_backup = message_name
+    context.user_data.clear()
+    context.user_data['editing_message_name'] = msg_name_backup
     
     # Build and send the updated message select menu inline
     row = query_db("SELECT text, file_id, file_type FROM messages WHERE message_name = ?", (message_name,), one=True) or {}

@@ -94,9 +94,8 @@ async def admin_card_add_receive_number(update: Update, context: ContextTypes.DE
     if editing_id and editing_field == 'number':
         new_number = update.message.text.strip()
         execute_db("UPDATE cards SET card_number = ? WHERE id = ?", (new_number, editing_id))
-        context.user_data.pop('editing_card_id', None)
-        context.user_data.pop('editing_card_field', None)
-        context.user_data.pop('prompt_message_id', None)
+        # Clear ALL user data to prevent stale state
+        context.user_data.clear()
         
         # Build and send the updated cards menu inline
         cards = query_db("SELECT id, card_number, holder_name FROM cards")
@@ -143,9 +142,8 @@ async def admin_card_add_save(update: Update, context: ContextTypes.DEFAULT_TYPE
     if editing_id and editing_field == 'holder':
         holder_name = (update.message.text or '').strip()
         execute_db("UPDATE cards SET holder_name = ? WHERE id = ?", (holder_name, editing_id))
-        context.user_data.pop('editing_card_id', None)
-        context.user_data.pop('editing_card_field', None)
-        context.user_data.pop('prompt_message_id', None)
+        # Clear ALL user data to prevent stale state
+        context.user_data.clear()
         
         # Build and send the updated cards menu inline
         cards = query_db("SELECT id, card_number, holder_name FROM cards")
