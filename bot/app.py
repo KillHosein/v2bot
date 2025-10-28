@@ -599,7 +599,8 @@ def build_application() -> Application:
         fallbacks=[
             CommandHandler('cancel', cancel_admin_conversation),
             CallbackQueryHandler(exit_admin_panel, pattern='^admin_exit$'),
-            CallbackQueryHandler(admin_command, pattern='^admin_main$'),
+            # Removed admin_command from fallbacks - it was causing double execution
+            # If user clicks admin_main, it should be handled by state handlers, not fallback
         ],
         allow_reentry=True,
         per_message=False,
