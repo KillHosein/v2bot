@@ -1619,19 +1619,9 @@ async def support_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
     
-    text = (
-        "💬 <b>پشتیبانی و راهنمایی</b>\n\n"
-        "━━━━━━━━━━━━━━━━━━━━━━━━\n"
-        "👋 سلام! چگونه می‌توانیم کمکتان کنیم؟\n\n"
-        "📝 <b>ثبت تیکت پشتیبانی:</b>\n"
-        "   • پیام یا سوال خود را ارسال کنید\n"
-        "   • پاسخ سریع کارشناسان را دریافت کنید\n\n"
-        "📚 <b>مرکز آموزش:</b>\n"
-        "   • راهنمای گام به گام\n"
-        "   • ویدیوهای آموزشی\n\n"
-        "━━━━━━━━━━━━━━━━━━━━━━━━\n"
-        "⏰ <b>ساعات پاسخگویی:</b> همه روزه 9 صبح - 12 شب\n\n"
-        "💡 <i>پیش از ثبت تیکت، لطفاً آموزش‌ها را بررسی کنید.</i>"
+    text = get_message_text(
+        'support_menu',
+        "💬 <b>پشتیبانی و راهنمایی</b>\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n👋 سلام! چگونه می‌توانیم کمکتان کنیم؟\n\n📝 <b>ثبت تیکت پشتیبانی:</b>\n   • پیام یا سوال خود را ارسال کنید\n   • پاسخ سریع کارشناسان را دریافت کنید\n\n📚 <b>مرکز آموزش:</b>\n   • راهنمای گام به گام\n   • ویدیوهای آموزشی\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n⏰ <b>ساعات پاسخگویی:</b> همه روزه 9 صبح - 12 شب\n\n💡 <i>پیش از ثبت تیکت، لطفاً آموزش‌ها را بررسی کنید.</i>"
     )
     
     kb = [
@@ -1651,13 +1641,14 @@ async def support_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def ticket_create_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
+    text = get_message_text(
+        'support_ticket_create',
+        "📝 <b>ثبت تیکت جدید</b>\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n👋 لطفاً پیام، سوال یا مشکل خود را ارسال کنید.\n\n✅ هر نوع پیامی (متن، عکس، فایل) پذیرفته می‌شود.\n━━━━━━━━━━━━━━━━━━━━━━━━"
+    )
     await query.message.edit_text(
-        "📝 <b>ثبت تیکت جدید</b>\n\n"
-        "━━━━━━━━━━━━━━━━━━━━━━━━\n"
-        "👋 لطفاً پیام، سوال یا مشکل خود را ارسال کنید.\n\n"
-        "✅ هر نوع پیامی (متن، عکس، فایل) پذیرفته می‌شود.\n"
-        "⏱ پاسخ شما در کمترین زمان ارسال خواهد شد.",
-        parse_mode=ParseMode.HTML
+        text,
+        parse_mode=ParseMode.HTML,
+        reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔙 بازگشت", callback_data='support_menu')]])
     )
     return SUPPORT_AWAIT_TICKET
 
