@@ -60,12 +60,14 @@ async def admin_card_delete(update: Update, context: ContextTypes.DEFAULT_TYPE) 
 
 async def admin_card_add_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     query = update.callback_query
+    await query.answer()
     context.user_data['new_card'] = {}
+    text = "➕ **افزودن کارت جدید**\n\nلطفا شماره کارت ۱۶ رقمی را وارد کنید:"
     try:
-        await _safe_edit_text(query.message, "لطفا **شماره کارت** ۱۶ رقمی را وارد کنید:")
+        await _safe_edit_text(query.message, text, parse_mode=ParseMode.MARKDOWN)
     except Exception:
         try:
-            await query.message.reply_text("لطفا **شماره کارت** ۱۶ رقمی را وارد کنید:")
+            await query.message.reply_text(text, parse_mode=ParseMode.MARKDOWN)
         except Exception:
             pass
     return ADMIN_CARDS_AWAIT_NUMBER
@@ -102,8 +104,8 @@ async def admin_card_add_receive_number(update: Update, context: ContextTypes.DE
         return ADMIN_CARDS_MENU
     # Else creation flow
     context.user_data['new_card'] = context.user_data.get('new_card') or {}
-    context.user_data['new_card']['number'] = update.message.text
-    await update.message.reply_text("لطفا **نام و نام خانوادگی** صاحب کارت را وارد کنید:")
+    context.user_data['new_card']['number'] = update.message.text.strip()
+    await update.message.reply_text("✅ شماره کارت ثبت شد.\n\nحالا **نام و نام خانوادگی** صاحب کارت را وارد کنید:", parse_mode=ParseMode.MARKDOWN)
     return ADMIN_CARDS_AWAIT_HOLDER
 
 
@@ -201,20 +203,22 @@ async def admin_card_edit_ask_value(update: Update, context: ContextTypes.DEFAUL
         return ADMIN_CARDS_MENU
     context.user_data['editing_card_field'] = field
     if field == 'number':
+        text = "✏️ **ویرایش شماره کارت**\n\nشماره کارت جدید (۱۶ رقمی) را وارد کنید:"
         try:
-            await _safe_edit_text(query.message, "شماره کارت جدید (۱۶ رقمی) را وارد کنید:")
+            await _safe_edit_text(query.message, text, parse_mode=ParseMode.MARKDOWN)
         except Exception:
             try:
-                await query.message.reply_text("شماره کارت جدید (۱۶ رقمی) را وارد کنید:")
+                await query.message.reply_text(text, parse_mode=ParseMode.MARKDOWN)
             except Exception:
                 pass
         return ADMIN_CARDS_AWAIT_NUMBER
     else:
+        text = "✏️ **ویرایش نام دارنده**\n\nنام و نام خانوادگی جدید صاحب کارت را وارد کنید:"
         try:
-            await _safe_edit_text(query.message, "نام و نام خانوادگی جدید صاحب کارت را وارد کنید:")
+            await _safe_edit_text(query.message, text, parse_mode=ParseMode.MARKDOWN)
         except Exception:
             try:
-                await query.message.reply_text("نام و نام خانوادگی جدید صاحب کارت را وارد کنید:")
+                await query.message.reply_text(text, parse_mode=ParseMode.MARKDOWN)
             except Exception:
                 pass
         return ADMIN_CARDS_AWAIT_HOLDER
