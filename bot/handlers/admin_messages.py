@@ -190,9 +190,13 @@ async def msg_add_receive_content(update: Update, context: ContextTypes.DEFAULT_
         (message_name, text, file_id, file_type),
     )
     context.user_data.pop('new_message_name', None)
+    
+    # Send success message
+    await context.bot.send_message(chat_id=update.effective_chat.id, text=f"✅ پیام `{message_name}` با موفقیت ثبت شد.", parse_mode=ParseMode.MARKDOWN)
+    
     # Return to paginated list
     fake_query = type('obj', (object,), {'data': f"admin_messages_menu_page_{context.user_data.get('msg_page', 0)}", 'message': update.message, 'answer': (lambda *args, **kwargs: None)})
-    fake_update = type('obj', (object,), {'callback_query': fake_query})
+    fake_update = type('obj', (object,), {'callback_query': fake_query, 'message': update.message})
     return await admin_messages_menu(fake_update, context)
 
 
@@ -255,22 +259,13 @@ async def admin_messages_edit_text_save(update: Update, context: ContextTypes.DE
     # Clear any remaining state
     context.user_data.pop('prompt_message_id', None)
     
-    # Send success message and return to select view
-    row = query_db("SELECT text, file_id, file_type FROM messages WHERE message_name = ?", (message_name,), one=True) or {}
-    preview = _md_escape((row.get('text') or '')[:500]) or 'متن خالی'
-    keyboard = [
-        [InlineKeyboardButton("✏️ ویرایش متن", callback_data="msg_action_edit_text")],
-        [InlineKeyboardButton("🔗 ویرایش دکمه‌ها", callback_data="msg_action_edit_buttons")],
-        [InlineKeyboardButton("🗑 حذف پیام", callback_data="msg_delete_current")],
-        [InlineKeyboardButton("\U0001F519 بازگشت", callback_data=f"admin_messages_menu_page_{context.user_data.get('msg_page', 0)}")],
-    ]
-    await context.bot.send_message(
-        chat_id=update.effective_chat.id,
-        text=f"✅ **متن بروزرسانی شد**\n\nپیام: `{message_name}`\n\nپیش‌نمایش:\n{preview}",
-        reply_markup=InlineKeyboardMarkup(keyboard),
-        parse_mode=ParseMode.MARKDOWN
-    )
-    return ADMIN_MESSAGES_SELECT
+    # Send success message
+    await context.bot.send_message(chat_id=update.effective_chat.id, text="✅ متن بروزرسانی شد.", parse_mode=ParseMode.MARKDOWN)
+    
+    # Return to select view using the proper function
+    fake_query = type('obj', (object,), {'data': f'msg_select_{message_name}', 'message': update.message, 'answer': lambda *a, **k: None})
+    fake_update = type('obj', (object,), {'callback_query': fake_query, 'message': update.message})
+    return await admin_messages_select(fake_update, context)
 
 
 async def admin_messages_delete(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
