@@ -552,7 +552,7 @@ def build_application() -> Application:
                  CallbackQueryHandler(admin_card_delete, pattern=r'^card_delete_'),
                  CallbackQueryHandler(admin_card_edit_start, pattern=r'^card_edit_\d+$'),
                  CallbackQueryHandler(admin_card_edit_ask_value, pattern=r'^card_edit_field_(number|holder)$'),
-                 CallbackQueryHandler(admin_settings_manage, pattern='^admin_settings_manage$'),
+                 CallbackQueryHandler(admin_settings_manage, pattern='^(admin_settings_manage|back_to_settings)$'),
              ],
             ADMIN_CARDS_AWAIT_NUMBER: [MessageHandler(filters.TEXT & ~filters.COMMAND, admin_card_add_receive_number)],
             ADMIN_CARDS_AWAIT_HOLDER: [MessageHandler(filters.TEXT & ~filters.COMMAND, admin_card_add_save)],

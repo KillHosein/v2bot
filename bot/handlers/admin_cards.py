@@ -38,7 +38,7 @@ async def admin_cards_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -
     else:
         text += "هیچ کارتی ثبت نشده است."
     keyboard.append([InlineKeyboardButton("\u2795 افزودن کارت جدید", callback_data="card_add_start")])
-    keyboard.append([InlineKeyboardButton("\U0001F519 بازگشت به تنظیمات", callback_data="admin_settings_manage")])
+    keyboard.append([InlineKeyboardButton("\U0001F519 بازگشت به تنظیمات", callback_data="back_to_settings")])
 
     if message_sender == 'edit':
         try:
