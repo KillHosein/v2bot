@@ -241,11 +241,11 @@ async def admin_card_edit_start(update: Update, context: ContextTypes.DEFAULT_TY
 
 async def admin_card_edit_ask_value(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     query = update.callback_query
-    await query.answer()
     field = query.data.split('_')[-1]  # number|holder
     if 'editing_card_id' not in context.user_data:
         await query.answer("جلسه ویرایش منقضی شده است.", show_alert=True)
         return ADMIN_CARDS_MENU
+    await query.answer()
     context.user_data['editing_card_field'] = field
     if field == 'number':
         text = "✏️ **ویرایش شماره کارت**\n\nشماره کارت جدید (۱۶ رقمی) را وارد کنید:"

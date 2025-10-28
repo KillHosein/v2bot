@@ -307,11 +307,11 @@ async def admin_messages_delete(update: Update, context: ContextTypes.DEFAULT_TY
 
 async def admin_buttons_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     query = update.callback_query
-    await query.answer()
     message_name = context.user_data.get('editing_message_name')
     if not message_name:
         await query.answer("لطفاً ابتدا یک پیام را انتخاب کنید.", show_alert=True)
         return await admin_messages_menu(update, context)
+    await query.answer()
 
     # Ensure default buttons exist for start_main so they show up for editing
     if message_name == 'start_main':
@@ -411,12 +411,12 @@ async def admin_button_delete(update: Update, context: ContextTypes.DEFAULT_TYPE
 
 async def admin_button_edit_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     query = update.callback_query
-    await query.answer()
     button_id = int(query.data.replace("btn_edit_", ""))
     b = query_db("SELECT id, text, target, is_url, row, col, menu_name FROM buttons WHERE id = ?", (button_id,), one=True)
     if not b:
         await query.answer("دکمه یافت نشد", show_alert=True)
         return await admin_buttons_menu(update, context)
+    await query.answer()
     context.user_data['editing_button_id'] = button_id
     context.user_data['editing_button_menu'] = b['menu_name']
     text = (
@@ -484,7 +484,6 @@ async def admin_button_edit_ask_value(update: Update, context: ContextTypes.DEFA
 
 async def admin_button_edit_set_is_url(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     query = update.callback_query
-    await query.answer()
     try:
         _, _, _, bid, val = query.data.split('_')
         button_id = int(bid)
