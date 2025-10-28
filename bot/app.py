@@ -702,7 +702,8 @@ def build_application() -> Application:
     application.add_handler(CallbackQueryHandler(admin_stats_menu, pattern='^admin_stats$'), group=3)
     application.add_handler(CallbackQueryHandler(admin_stats_refresh, pattern='^stats_refresh$'), group=3)
     application.add_handler(CallbackQueryHandler(admin_xui_choose_inbound, pattern=r'^xui_inbound_'), group=3)
-    application.add_handler(CallbackQueryHandler(admin_cards_menu, pattern='^admin_cards_menu$'), group=3)
+    # admin_cards_menu and admin_messages_menu are handled in ConversationHandler only
+    # Do NOT add global handlers to prevent double execution
     application.add_handler(CallbackQueryHandler(admin_wallets_menu, pattern='^admin_wallets_menu$'), group=3)
     application.add_handler(CallbackQueryHandler(admin_settings_manage, pattern='^admin_settings_manage$'), group=3)
     # admin_toggle_bot_active is handled in ConversationHandler only - removed duplicate to prevent double execution
@@ -728,7 +729,7 @@ def build_application() -> Application:
     application.add_handler(CallbackQueryHandler(admin_clear_notifications, pattern='^admin_clear_notifications$'), group=3)
     application.add_handler(CallbackQueryHandler(admin_quick_backup, pattern='^admin_quick_backup$'), group=3)
     application.add_handler(CallbackQueryHandler(admin_discount_menu, pattern='^admin_discount_menu$'), group=3)
-    application.add_handler(CallbackQueryHandler(admin_messages_menu, pattern='^admin_messages_menu$'), group=3)
+    # admin_messages_menu is handled in ConversationHandler - do NOT add global handler
     application.add_handler(CallbackQueryHandler(admin_tickets_menu, pattern='^admin_tickets_menu$'), group=3)
     application.add_handler(CallbackQueryHandler(admin_run_alerts_now, pattern='^run_alerts_now$'), group=3)
     # Reseller approvals (global)
