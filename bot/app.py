@@ -999,6 +999,17 @@ def run(token: str | None = None):
         from .config import BOT_TOKEN as _TB
         token = _TB
 
+    # فعال کردن سیستم Override خودکار پیام‌ها
+    try:
+        from .message_override import patch_telegram_methods
+        if patch_telegram_methods():
+            from .config import logger
+            logger.info("🎯 Message Override System: ENABLED")
+            logger.info("📝 All hardcoded texts will be replaced with database versions automatically")
+    except Exception as e:
+        from .config import logger
+        logger.warning(f"⚠️ Message Override System failed to start: {e}")
+
     use_webhook = (os.getenv('USE_WEBHOOK') or '').lower() in ('1', 'true', 'yes')
 
     # Proactively clear old webhook to avoid event-loop race and drop stale updates
