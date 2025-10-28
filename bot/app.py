@@ -706,8 +706,8 @@ def build_application() -> Application:
     # Cancel flow handlers - work from anywhere
     application.add_handler(CallbackQueryHandler(cancel_flow, pattern='^cancel_flow$'), group=3)
     application.add_handler(CallbackQueryHandler(cancel_admin_flow, pattern='^cancel_admin_flow$'), group=3)
-    # Global admin_command handler for when conversation state is lost (higher group to avoid conflict)
-    application.add_handler(CallbackQueryHandler(admin_command, pattern='^admin_main$'), group=4)
+    # admin_command is handled by ConversationHandler states and fallbacks - NO global handler needed
+    # Global handler was causing double execution and menu disappearing
     application.add_handler(CallbackQueryHandler(admin_stats_menu, pattern='^admin_stats$'), group=3)
     application.add_handler(CallbackQueryHandler(admin_stats_refresh, pattern='^stats_refresh$'), group=3)
     application.add_handler(CallbackQueryHandler(admin_xui_choose_inbound, pattern=r'^xui_inbound_'), group=3)
