@@ -324,6 +324,13 @@ def build_application() -> Application:
     application.add_handler(TypeHandler(Update, force_join_checker), group=-1)
     # Early debug logger for text messages
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, debug_text_logger), group=-1)
+    
+    # Global callback query logger to debug disappearing messages
+    async def debug_callback_logger(update: Update, context: ContextTypes.DEFAULT_TYPE):
+        if update.callback_query:
+            logger.info(f"[CALLBACK_DEBUG] data={update.callback_query.data}, message_id={update.callback_query.message.message_id if update.callback_query.message else 'None'}, user_id={update.effective_user.id}")
+    application.add_handler(CallbackQueryHandler(debug_callback_logger), group=-2)
+    
     # Route master text handler AFTER conversations so stateful flows (e.g., add panel URL/user/pass) capture inputs first
     application.add_handler(MessageHandler(filters.ALL & ~filters.COMMAND, master_message_handler), group=2)
 
