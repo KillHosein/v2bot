@@ -114,16 +114,28 @@ async def admin_card_add_receive_number(update: Update, context: ContextTypes.DE
     if editing_id and editing_field == 'number':
         new_number = update.message.text.strip()
         execute_db("UPDATE cards SET card_number = ? WHERE id = ?", (new_number, editing_id))
-        # Clear ALL user data to prevent stale state
-        context.user_data.clear()
+        # Clear editing state
+        context.user_data.pop('editing_card_id', None)
+        context.user_data.pop('editing_card_field', None)
+        context.user_data.pop('prompt_message_id', None)
         logger.info(f"[CARDS_RECEIVE_NUMBER] Card number updated: {new_number[:4]}****")
-        # Send success and return to cards menu
-        msg = await context.bot.send_message(
-            chat_id=update.effective_chat.id,
-            text="✅ شماره کارت بروزرسانی شد.\n\nبرای بازگشت به مدیریت کارت‌ها، دستور /admin را وارد کنید و سپس تنظیمات → مدیریت کارت‌ها را انتخاب کنید."
-        )
-        logger.info(f"[CARDS_RECEIVE_NUMBER] Sent success message - message_id={msg.message_id}, returning ConversationHandler.END")
-        return ConversationHandler.END
+        # Set success message and return to cards menu in same conversation
+        context.user_data['success_message'] = "✅ شماره کارت بروزرسانی شد."
+        # Create fake update to call admin_cards_menu
+        class FakeMessage:
+            def __init__(self, msg):
+                self.message_id = msg.message_id
+                self.chat_id = msg.chat_id
+                self.chat = msg.chat
+            async def reply_text(self, *args, **kwargs):
+                return await update.message.reply_text(*args, **kwargs)
+        fake_update = type('obj', (object,), {
+            'callback_query': None,
+            'message': FakeMessage(update.message),
+            'effective_chat': update.effective_chat,
+            'effective_user': update.effective_user
+        })()
+        return await admin_cards_menu(fake_update, context)
     # Else creation flow
     context.user_data['new_card'] = context.user_data.get('new_card') or {}
     context.user_data['new_card']['number'] = update.message.text.strip()
@@ -150,25 +162,47 @@ async def admin_card_add_save(update: Update, context: ContextTypes.DEFAULT_TYPE
     if editing_id and editing_field == 'holder':
         holder_name = (update.message.text or '').strip()
         execute_db("UPDATE cards SET holder_name = ? WHERE id = ?", (holder_name, editing_id))
-        # Clear ALL user data to prevent stale state
-        context.user_data.clear()
-        # Send success and end conversation
-        await context.bot.send_message(
-            chat_id=update.effective_chat.id,
-            text="✅ نام دارنده بروزرسانی شد.\n\nبرای بازگشت به مدیریت کارت‌ها، دستور /admin را وارد کنید و سپس تنظیمات → مدیریت کارت‌ها را انتخاب کنید."
-        )
-        return ConversationHandler.END
+        # Clear editing state
+        context.user_data.pop('editing_card_id', None)
+        context.user_data.pop('editing_card_field', None)
+        context.user_data.pop('prompt_message_id', None)
+        # Set success message and return to cards menu
+        context.user_data['success_message'] = "✅ نام دارنده بروزرسانی شد."
+        class FakeMessage:
+            def __init__(self, msg):
+                self.message_id = msg.message_id
+                self.chat_id = msg.chat_id
+                self.chat = msg.chat
+            async def reply_text(self, *args, **kwargs):
+                return await update.message.reply_text(*args, **kwargs)
+        fake_update = type('obj', (object,), {
+            'callback_query': None,
+            'message': FakeMessage(update.message),
+            'effective_chat': update.effective_chat,
+            'effective_user': update.effective_user
+        })()
+        return await admin_cards_menu(fake_update, context)
     # Else creation flow
     card_number = context.user_data['new_card']['number']
     holder_name = update.message.text.strip()
     execute_db("INSERT INTO cards (card_number, holder_name) VALUES (?, ?)", (card_number, holder_name))
     context.user_data.clear()
-    # Send success and end conversation
-    await context.bot.send_message(
-        chat_id=update.effective_chat.id,
-        text="✅ کارت جدید با موفقیت ثبت شد.\n\nبرای بازگشت به مدیریت کارت‌ها، دستور /admin را وارد کنید و سپس تنظیمات → مدیریت کارت‌ها را انتخاب کنید."
-    )
-    return ConversationHandler.END
+    # Set success message and return to cards menu
+    context.user_data['success_message'] = "✅ کارت جدید با موفقیت ثبت شد."
+    class FakeMessage:
+        def __init__(self, msg):
+            self.message_id = msg.message_id
+            self.chat_id = msg.chat_id
+            self.chat = msg.chat
+        async def reply_text(self, *args, **kwargs):
+            return await update.message.reply_text(*args, **kwargs)
+    fake_update = type('obj', (object,), {
+        'callback_query': None,
+        'message': FakeMessage(update.message),
+        'effective_chat': update.effective_chat,
+        'effective_user': update.effective_user
+    })()
+    return await admin_cards_menu(fake_update, context)
 
 
 async def admin_card_edit_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
