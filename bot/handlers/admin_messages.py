@@ -35,6 +35,10 @@ def _md_escape(text: str) -> str:
     )
 
 
+def _is_admin_message(name: str) -> bool:
+    return bool(name) and name.startswith('admin_')
+
+
 async def admin_messages_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     from ..config import logger
     import time
@@ -53,10 +57,10 @@ async def admin_messages_menu(update: Update, context: ContextTypes.DEFAULT_TYPE
             page = 0
     context.user_data['msg_page'] = page
 
-    total = query_db("SELECT COUNT(*) AS c FROM messages", one=True) or {'c': 0}
+    total = query_db("SELECT COUNT(*) AS c FROM messages WHERE message_name NOT LIKE 'admin_%'", one=True) or {'c': 0}
     total = int(total.get('c') or 0)
     offset = page * PAGE_SIZE
-    rows = query_db("SELECT message_name FROM messages ORDER BY message_name LIMIT ? OFFSET ?", (PAGE_SIZE, offset))
+    rows = query_db("SELECT message_name FROM messages WHERE message_name NOT LIKE 'admin_%' ORDER BY message_name LIMIT ? OFFSET ?", (PAGE_SIZE, offset))
 
     keyboard = []
     if rows and len(rows) > 0:
@@ -129,6 +133,10 @@ async def msg_add_receive_name(update: Update, context: ContextTypes.DEFAULT_TYP
         return ADMIN_MESSAGES_ADD_AWAIT_NAME
     if query_db("SELECT 1 FROM messages WHERE message_name = ?", (message_name,), one=True):
         msg = await context.bot.send_message(chat_id=update.effective_chat.id, text="❌ این نام قبلا وجود دارد. نام دیگری وارد کنید.")
+        context.user_data['prompt_message_id'] = msg.message_id
+        return ADMIN_MESSAGES_ADD_AWAIT_NAME
+    if _is_admin_message(message_name):
+        msg = await context.bot.send_message(chat_id=update.effective_chat.id, text="❌ ایجاد پیام‌های سیستمی (admin_*) مجاز نیست. نام دیگری وارد کنید.")
         context.user_data['prompt_message_id'] = msg.message_id
         return ADMIN_MESSAGES_ADD_AWAIT_NAME
     context.user_data['new_message_name'] = message_name
@@ -205,6 +213,10 @@ async def admin_messages_select(update: Update, context: ContextTypes.DEFAULT_TY
     else:
         return ADMIN_MESSAGES_SELECT
         
+    if _is_admin_message(message_name):
+        if query:
+            await query.answer("این پیام سیستمی است و قابل تغییر نیست.", show_alert=True)
+        return await admin_messages_menu(update, context)
     context.user_data['editing_message_name'] = message_name
     # Load preview
     row = query_db("SELECT text, file_id, file_type FROM messages WHERE message_name = ?", (message_name,), one=True) or {}
@@ -245,6 +257,9 @@ async def admin_messages_edit_text_start(update: Update, context: ContextTypes.D
     query = update.callback_query
     await query.answer()
     message_name = context.user_data['editing_message_name']
+    if _is_admin_message(message_name):
+        await query.answer("این پیام سیستمی است و قابل تغییر نیست.", show_alert=True)
+        return await admin_messages_menu(update, context)
     try:
         await _safe_edit_text(query.message, f"✏️ **ویرایش متن پیام `{message_name}`**\n\nمتن جدید را ارسال کنید:", parse_mode=ParseMode.MARKDOWN)
         context.user_data['prompt_message_id'] = query.message.message_id
@@ -270,6 +285,9 @@ async def admin_messages_edit_text_save(update: Update, context: ContextTypes.DE
     message_name = context.user_data.get('editing_message_name')
     if not message_name:
         await context.bot.send_message(chat_id=update.effective_chat.id, text="ابتدا یک پیام را انتخاب کنید.")
+        return ADMIN_MESSAGES_MENU
+    if _is_admin_message(message_name):
+        await context.bot.send_message(chat_id=update.effective_chat.id, text="این پیام سیستمی است و قابل تغییر نیست.")
         return ADMIN_MESSAGES_MENU
     execute_db("UPDATE messages SET text = ? WHERE message_name = ?", (update.message.text, message_name))
     
@@ -299,6 +317,9 @@ async def admin_messages_delete(update: Update, context: ContextTypes.DEFAULT_TY
     message_name = context.user_data.get('editing_message_name')
     if not message_name:
         return await admin_messages_menu(update, context)
+    if _is_admin_message(message_name):
+        await query.answer("این پیام سیستمی است و قابل حذف نیست.", show_alert=True)
+        return await admin_messages_menu(update, context)
     execute_db("DELETE FROM messages WHERE message_name = ?", (message_name,))
     await _safe_edit_text(query.message, "✅ پیام حذف شد.")
     # Go back to list
@@ -310,6 +331,9 @@ async def admin_buttons_menu(update: Update, context: ContextTypes.DEFAULT_TYPE)
     message_name = context.user_data.get('editing_message_name')
     if not message_name:
         await query.answer("لطفاً ابتدا یک پیام را انتخاب کنید.", show_alert=True)
+        return await admin_messages_menu(update, context)
+    if _is_admin_message(message_name):
+        await query.answer("این پیام سیستمی است و دکمه‌های آن قابل ویرایش نیست.", show_alert=True)
         return await admin_messages_menu(update, context)
     await query.answer()
 
