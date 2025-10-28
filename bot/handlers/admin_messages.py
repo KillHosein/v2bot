@@ -201,26 +201,52 @@ async def msg_add_receive_content(update: Update, context: ContextTypes.DEFAULT_
 
 
 async def admin_messages_select(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    # Handle both callback_query and message updates
+    message_sender = None
     query = update.callback_query
-    await query.answer()
-    message_name = query.data.replace('msg_select_', '')
+    if query:
+        await query.answer()
+        message_name = query.data.replace('msg_select_', '')
+        message_sender = 'edit'
+    elif update.message:
+        message_name = context.user_data.get('editing_message_name')
+        message_sender = 'reply'
+    else:
+        return ADMIN_MESSAGES_SELECT
+        
     context.user_data['editing_message_name'] = message_name
     # Load preview
     row = query_db("SELECT text, file_id, file_type FROM messages WHERE message_name = ?", (message_name,), one=True) or {}
     preview = _md_escape((row.get('text') or '')[:500]) or 'متن خالی'
+    
+    # Display success message if exists
+    success_msg = context.user_data.pop('success_message', None)
+    text = f"پیام: `{message_name}`\n\n"
+    if success_msg:
+        text += f"{success_msg}\n\n"
+    text += f"پیش‌نمایش:\n{preview}"
+    
     keyboard = [
         [InlineKeyboardButton("✏️ ویرایش متن", callback_data="msg_action_edit_text")],
         [InlineKeyboardButton("🔗 ویرایش دکمه‌ها", callback_data="msg_action_edit_buttons")],
         [InlineKeyboardButton("🗑 حذف پیام", callback_data="msg_delete_current")],
         [InlineKeyboardButton("\U0001F519 بازگشت", callback_data=f"admin_messages_menu_page_{context.user_data.get('msg_page', 0)}")],
     ]
-    try:
-        await _safe_edit_text(query.message, f"پیام: `{message_name}`\n\nپیش‌نمایش:\n{preview}", reply_markup=InlineKeyboardMarkup(keyboard), parse_mode=ParseMode.MARKDOWN)
-    except Exception:
+    
+    if message_sender == 'edit':
         try:
-            await query.message.reply_text(f"پیام: `{message_name}`\n\nپیش‌نمایش:\n{preview}", reply_markup=InlineKeyboardMarkup(keyboard), parse_mode=ParseMode.MARKDOWN)
+            await _safe_edit_text(query.message, text, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode=ParseMode.MARKDOWN)
+        except Exception:
+            try:
+                await query.message.reply_text(text, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode=ParseMode.MARKDOWN)
+            except Exception:
+                pass
+    else:
+        try:
+            await update.message.reply_text(text, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode=ParseMode.MARKDOWN)
         except Exception:
             pass
+    
     return ADMIN_MESSAGES_SELECT
 
 
@@ -260,23 +286,9 @@ async def admin_messages_edit_text_save(update: Update, context: ContextTypes.DE
     msg_name_backup = message_name
     context.user_data.clear()
     context.user_data['editing_message_name'] = msg_name_backup
-    
-    # Build and send the updated message select menu inline
-    row = query_db("SELECT text, file_id, file_type FROM messages WHERE message_name = ?", (message_name,), one=True) or {}
-    preview = _md_escape((row.get('text') or '')[:500]) or '\u0645\u062a\u0646 \u062e\u0627\u0644\u06cc'
-    keyboard = [
-        [InlineKeyboardButton("\u270f\ufe0f \u0648\u06cc\u0631\u0627\u06cc\u0634 \u0645\u062a\u0646", callback_data="msg_action_edit_text")],
-        [InlineKeyboardButton("\ud83d\udd17 \u0648\u06cc\u0631\u0627\u06cc\u0634 \u062f\u06a9\u0645\u0647\u200c\u0647\u0627", callback_data="msg_action_edit_buttons")],
-        [InlineKeyboardButton("\ud83d\uddd1 \u062d\u0630\u0641 \u067e\u06cc\u0627\u0645", callback_data="msg_delete_current")],
-        [InlineKeyboardButton("\\U0001F519 \u0628\u0627\u0632\u06af\u0634\u062a", callback_data=f"admin_messages_menu_page_{context.user_data.get('msg_page', 0)}")],
-    ]
-    await context.bot.send_message(
-        chat_id=update.effective_chat.id,
-        text=f"\u2705 **\u0645\u062a\u0646 \u0628\u0631\u0648\u0632\u0631\u0633\u0627\u0646\u06cc \u0634\u062f**\n\n\u067e\u06cc\u0627\u0645: `{message_name}`\n\n\u067e\u06cc\u0634\u200c\u0646\u0645\u0627\u06cc\u0634:\n{preview}",
-        reply_markup=InlineKeyboardMarkup(keyboard),
-        parse_mode=ParseMode.MARKDOWN
-    )
-    return ADMIN_MESSAGES_SELECT
+    context.user_data['success_message'] = "\u2705 \u0645\u062a\u0646 \u0628\u0631\u0648\u0632\u0631\u0633\u0627\u0646\u06cc \u0634\u062f."
+    # Call admin_messages_select to properly display menu with conversation state  
+    return await admin_messages_select(update, context)
 
 
 async def admin_messages_delete(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
