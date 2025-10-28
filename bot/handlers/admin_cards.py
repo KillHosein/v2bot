@@ -96,6 +96,7 @@ async def admin_card_add_receive_number(update: Update, context: ContextTypes.DE
         execute_db("UPDATE cards SET card_number = ? WHERE id = ?", (new_number, editing_id))
         context.user_data.pop('editing_card_id', None)
         context.user_data.pop('editing_card_field', None)
+        context.user_data.pop('prompt_message_id', None)
         
         # Build and send the updated cards menu
         cards = query_db("SELECT id, card_number, holder_name FROM cards")
@@ -144,6 +145,7 @@ async def admin_card_add_save(update: Update, context: ContextTypes.DEFAULT_TYPE
         execute_db("UPDATE cards SET holder_name = ? WHERE id = ?", (holder_name, editing_id))
         context.user_data.pop('editing_card_id', None)
         context.user_data.pop('editing_card_field', None)
+        context.user_data.pop('prompt_message_id', None)
         
         # Build and send the updated cards menu
         cards = query_db("SELECT id, card_number, holder_name FROM cards")

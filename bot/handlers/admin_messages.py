@@ -251,6 +251,10 @@ async def admin_messages_edit_text_save(update: Update, context: ContextTypes.DE
         await context.bot.send_message(chat_id=update.effective_chat.id, text="ابتدا یک پیام را انتخاب کنید.")
         return ADMIN_MESSAGES_MENU
     execute_db("UPDATE messages SET text = ? WHERE message_name = ?", (update.message.text, message_name))
+    
+    # Clear any remaining state
+    context.user_data.pop('prompt_message_id', None)
+    
     # Send success message and return to select view
     row = query_db("SELECT text, file_id, file_type FROM messages WHERE message_name = ?", (message_name,), one=True) or {}
     preview = _md_escape((row.get('text') or '')[:500]) or 'متن خالی'
