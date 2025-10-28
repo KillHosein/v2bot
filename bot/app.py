@@ -322,14 +322,21 @@ def build_application() -> Application:
             logger.info(f"Auto-backup disabled or invalid (enabled={ab_enabled}, hours={ab_hours})")
 
     application.add_handler(TypeHandler(Update, force_join_checker), group=-1)
-    # Early debug logger for text messages
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, debug_text_logger), group=-1)
+    # Early debug logger    # Suppress per_message ConversationHandler warnings (expected behavior for our bot)
+    warnings.filterwarnings('ignore', message='.*per_message.*', category=PTBUserWarning)
     
     # Global callback query logger to debug disappearing messages
     async def debug_callback_logger(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if update.callback_query:
             logger.info(f"[CALLBACK_DEBUG] data={update.callback_query.data}, message_id={update.callback_query.message.message_id if update.callback_query.message else 'None'}, user_id={update.effective_user.id}")
     application.add_handler(CallbackQueryHandler(debug_callback_logger), group=-2)
+    
+    # Noop handler to consume callback query without doing anything
+    async def noop_consume_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+        """Consumes callback query to prevent it from bubbling up to other handlers"""
+        if update.callback_query:
+            await update.callback_query.answer()
+        return ADMIN_MESSAGES_MENU
     
     # Route master text handler AFTER conversations so stateful flows (e.g., add panel URL/user/pass) capture inputs first
     application.add_handler(MessageHandler(filters.ALL & ~filters.COMMAND, master_message_handler), group=2)
@@ -398,6 +405,8 @@ def build_application() -> Application:
                 CallbackQueryHandler(admin_messages_select, pattern=r'^msg_select_.+'),
                 CallbackQueryHandler(msg_add_start, pattern=r'^msg_add_start$'),
                 CallbackQueryHandler(admin_messages_menu, pattern=r'^admin_messages_menu_page_\d+$'),
+                # Noop handler to consume duplicate callback when transitioning from ADMIN_MAIN_MENU
+                CallbackQueryHandler(noop_consume_callback, pattern=r'^admin_messages_menu$'),
                 CallbackQueryHandler(admin_command, pattern='^admin_main$'),
             ],
             ADMIN_MESSAGES_SELECT: [
