@@ -397,7 +397,7 @@ def build_application() -> Application:
             ADMIN_MESSAGES_MENU: [
                 CallbackQueryHandler(admin_messages_select, pattern=r'^msg_select_.+'),
                 CallbackQueryHandler(msg_add_start, pattern=r'^msg_add_start$'),
-                CallbackQueryHandler(admin_messages_menu, pattern=r'^admin_messages_menu$'),
+                # admin_messages_menu removed from here to prevent double execution when transitioning from ADMIN_MAIN_MENU
                 CallbackQueryHandler(admin_messages_menu, pattern=r'^admin_messages_menu_page_\d+$'),
                 CallbackQueryHandler(admin_command, pattern='^admin_main$'),
             ],
