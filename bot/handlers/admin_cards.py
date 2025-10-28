@@ -43,7 +43,7 @@ async def admin_cards_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -
     else:
         text += "هیچ کارتی ثبت نشده است."
     keyboard.append([InlineKeyboardButton("\u2795 افزودن کارت جدید", callback_data="card_add_start")])
-    keyboard.append([InlineKeyboardButton("\U0001F519 بازگشت به تنظیمات", callback_data="back_to_settings")])
+    keyboard.append([InlineKeyboardButton("\U0001F519 بازگشت", callback_data="admin_main")])
 
     if message_sender == 'edit':
         try:
@@ -134,7 +134,7 @@ async def admin_card_add_receive_number(update: Update, context: ContextTypes.DE
         else:
             text += "هیچ کارتی ثبت نشده است."
         keyboard.append([InlineKeyboardButton("\u2795 افزودن کارت جدید", callback_data="card_add_start")])
-        keyboard.append([InlineKeyboardButton("\U0001F519 بازگشت به تنظیمات", callback_data="back_to_settings")])
+        keyboard.append([InlineKeyboardButton("\U0001F519 بازگشت", callback_data="admin_main")])
         await context.bot.send_message(chat_id=update.effective_chat.id, text=text, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode=ParseMode.MARKDOWN)
         return ADMIN_CARDS_MENU
     # Else creation flow
@@ -182,7 +182,7 @@ async def admin_card_add_save(update: Update, context: ContextTypes.DEFAULT_TYPE
         else:
             text += "هیچ کارتی ثبت نشده است."
         keyboard.append([InlineKeyboardButton("\u2795 افزودن کارت جدید", callback_data="card_add_start")])
-        keyboard.append([InlineKeyboardButton("\U0001F519 بازگشت به تنظیمات", callback_data="back_to_settings")])
+        keyboard.append([InlineKeyboardButton("\U0001F519 بازگشت", callback_data="admin_main")])
         await context.bot.send_message(chat_id=update.effective_chat.id, text=text, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode=ParseMode.MARKDOWN)
         return ADMIN_CARDS_MENU
     # Else creation flow
@@ -205,7 +205,7 @@ async def admin_card_add_save(update: Update, context: ContextTypes.DEFAULT_TYPE
     else:
         text += "هیچ کارتی ثبت نشده است."
     keyboard.append([InlineKeyboardButton("\u2795 افزودن کارت جدید", callback_data="card_add_start")])
-    keyboard.append([InlineKeyboardButton("\U0001F519 بازگشت به تنظیمات", callback_data="back_to_settings")])
+    keyboard.append([InlineKeyboardButton("\U0001F519 بازگشت", callback_data="admin_main")])
     await context.bot.send_message(chat_id=update.effective_chat.id, text=text, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode=ParseMode.MARKDOWN)
     return ADMIN_CARDS_MENU
 
@@ -227,7 +227,7 @@ async def admin_card_edit_start(update: Update, context: ContextTypes.DEFAULT_TY
     )
     kb = [
         [InlineKeyboardButton("شماره کارت", callback_data="card_edit_field_number"), InlineKeyboardButton("نام دارنده", callback_data="card_edit_field_holder")],
-        [InlineKeyboardButton("\U0001F519 بازگشت", callback_data="admin_cards_menu")],
+        [InlineKeyboardButton("\U0001F519 بازگشت", callback_data="admin_main")],
     ]
     try:
         await _safe_edit_text(query.message, text, reply_markup=InlineKeyboardMarkup(kb))
