@@ -7,6 +7,7 @@ from telegram.constants import ParseMode
 from telegram.ext import ContextTypes
 from ..monitoring import get_monitor
 from ..config import logger
+from ..helpers.back_buttons import BackButtons
 
 
 async def admin_monitoring_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -69,8 +70,8 @@ async def admin_monitoring_menu(update: Update, context: ContextTypes.DEFAULT_TY
             InlineKeyboardButton("💾 وضعیت Cache", callback_data='admin_cache_stats')
         ],
         [
-            InlineKeyboardButton("🔄 بروزرسانی", callback_data='admin_monitoring_menu'),
-            InlineKeyboardButton("🔙 بازگشت به پنل ادمین", callback_data='admin_main')
+            BackButtons.refresh('admin_monitoring_menu'),
+            BackButtons.to_admin_main()
         ]
     ]
     
@@ -109,7 +110,7 @@ async def admin_perf_details(update: Update, context: ContextTypes.DEFAULT_TYPE)
     
     message += "\n━━━━━━━━━━━━━━━━━━━━━━━━"
     
-    keyboard = [[InlineKeyboardButton("🔙 بازگشت", callback_data='admin_monitoring_menu')]]
+    keyboard = [[BackButtons.to_monitoring()]]
     
     await query.message.edit_text(
         message,
@@ -144,7 +145,7 @@ async def admin_error_logs(update: Update, context: ContextTypes.DEFAULT_TYPE):
         message += f"<i>نمایش {len(errors[:5])} خطای اخیر</i>\n"
         message += "━━━━━━━━━━━━━━━━━━━━━━━━"
     
-    keyboard = [[InlineKeyboardButton("🔙 بازگشت", callback_data='admin_monitoring_menu')]]
+    keyboard = [[BackButtons.to_monitoring()]]
     
     await query.message.edit_text(
         message,
@@ -183,7 +184,7 @@ async def admin_check_panels(update: Update, context: ContextTypes.DEFAULT_TYPE)
         
         message += "━━━━━━━━━━━━━━━━━━━━━━━━"
         
-        keyboard = [[InlineKeyboardButton("🔙 بازگشت", callback_data='admin_monitoring_menu')]]
+        keyboard = [[BackButtons.to_monitoring()]]
         
         await query.message.reply_text(
             message,

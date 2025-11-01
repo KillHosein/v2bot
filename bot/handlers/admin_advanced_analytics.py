@@ -139,7 +139,7 @@ async def admin_cohort_analysis(update: Update, context: ContextTypes.DEFAULT_TY
         
         message += "━━━━━━━━━━━━━━━━━━━━━━━━"
         
-        keyboard = [[InlineKeyboardButton("🔙 بازگشت", callback_data='admin_advanced_stats')]]
+        keyboard = [[BackButtons.to_advanced_stats()]]
         
         await query.message.reply_text(
             message,
@@ -181,7 +181,7 @@ async def admin_traffic_sources(update: Update, context: ContextTypes.DEFAULT_TY
         message += f"📦 <b>جمع کل:</b> <code>{total}</code> کاربر\n"
         message += "━━━━━━━━━━━━━━━━━━━━━━━━"
         
-        keyboard = [[InlineKeyboardButton("🔙 بازگشت", callback_data='admin_advanced_stats')]]
+        keyboard = [[BackButtons.to_advanced_stats()]]
         
         await query.message.reply_text(
             message,
@@ -218,7 +218,7 @@ async def admin_revenue_prediction(update: Update, context: ContextTypes.DEFAULT
         message += "━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
         message += "⚠️ <i>این پیش‌بینی بر اساس روند فعلی است</i>"
         
-        keyboard = [[InlineKeyboardButton("🔙 بازگشت", callback_data='admin_advanced_stats')]]
+        keyboard = [[BackButtons.to_advanced_stats()]]
         
         await query.message.reply_text(
             message,
@@ -258,7 +258,7 @@ async def admin_cache_stats(update: Update, context: ContextTypes.DEFAULT_TYPE):
         
         keyboard = [
             [InlineKeyboardButton("🗑️ پاک کردن Cache", callback_data='admin_clear_cache')],
-            [InlineKeyboardButton("🔙 بازگشت", callback_data='admin_advanced_stats')]
+            [BackButtons.to_advanced_stats()]
         ]
         
         await query.message.edit_text(
@@ -286,7 +286,7 @@ async def admin_clear_cache(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "تمام داده‌های کش شده حذف شدند.",
             parse_mode=ParseMode.HTML,
             reply_markup=InlineKeyboardMarkup([[
-                InlineKeyboardButton("🔙 بازگشت", callback_data='admin_cache_stats')
+                BackButtons.custom("🔙 بازگشت", 'admin_cache_stats')
             ]])
         )
         
