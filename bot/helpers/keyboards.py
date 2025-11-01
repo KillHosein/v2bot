@@ -64,9 +64,5 @@ def build_start_menu_keyboard() -> InlineKeyboardMarkup:
         ('reseller_menu', "\U0001F4B5 دریافت نمایندگی"),
         ('get_free_config', "\U0001F381 دریافت تست"),
     ])
-    # Advanced Features v2.0 - Settings
-    add_pair([
-        ('preferences_menu', "⚙️ تنظیمات"),
-    ])
 
     return InlineKeyboardMarkup(keyboard) if keyboard else None

@@ -131,9 +131,6 @@ from .handlers.admin_advanced_analytics import (
 from .handlers.admin_monitoring import (
     admin_monitoring_menu, admin_perf_details, admin_error_logs, admin_check_panels
 )
-from .handlers.user_language import (
-    language_menu, set_language, preferences_menu
-)
 from .handlers.purchase import (
     start_purchase_flow as start_purchase_flow,
     show_plan_confirmation as show_plan_confirmation,
@@ -1027,11 +1024,6 @@ def build_application() -> Application:
     application.add_handler(CallbackQueryHandler(admin_perf_details, pattern=r'^admin_perf_details$'), group=3)
     application.add_handler(CallbackQueryHandler(admin_error_logs, pattern=r'^admin_error_logs$'), group=3)
     application.add_handler(CallbackQueryHandler(admin_check_panels, pattern=r'^admin_check_panels$'), group=3)
-    
-    # Language & Preferences (User)
-    application.add_handler(CallbackQueryHandler(language_menu, pattern=r'^language_menu$'), group=3)
-    application.add_handler(CallbackQueryHandler(set_language, pattern=r'^set_lang_\w+$'), group=3)
-    application.add_handler(CallbackQueryHandler(preferences_menu, pattern=r'^preferences_menu$'), group=3)
     
     # Initialize advanced systems
     try:
