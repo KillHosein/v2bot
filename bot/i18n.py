@@ -158,7 +158,6 @@ class I18n:
         except Exception:
             pass  # Table might not exist yet
     
-    @cached(ttl=600, key_prefix="i18n")
     def get_user_lang(self, user_id: int) -> str:
         """Get user's preferred language"""
         try:
@@ -167,7 +166,11 @@ class I18n:
                 (user_id,),
                 one=True
             )
-            return result['language'] if result else self.default_lang
+            if result and isinstance(result, dict):
+                lang = result.get('language', self.default_lang)
+                # Ensure we return a string, not a dict
+                return lang if isinstance(lang, str) else self.default_lang
+            return self.default_lang
         except Exception:
             return self.default_lang
     
@@ -189,6 +192,10 @@ class I18n:
     def t(self, key: str, lang: Optional[str] = None, **kwargs) -> str:
         """Translate a key"""
         if lang is None:
+            lang = self.default_lang
+        
+        # Ensure lang is a string
+        if not isinstance(lang, str):
             lang = self.default_lang
         
         # Try to get translation for the language
