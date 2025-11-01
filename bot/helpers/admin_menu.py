@@ -62,6 +62,10 @@ def get_main_menu_keyboard():
             InlineKeyboardButton("📊 آمار", callback_data="admin_stats")
         ],
         [
+            InlineKeyboardButton("🎯 آمار پیشرفته", callback_data="admin_advanced_stats"),
+            InlineKeyboardButton("📡 مانیتورینگ", callback_data="admin_monitoring_menu")
+        ],
+        [
             InlineKeyboardButton("💳 پرداخت‌ها", callback_data="admin_payments_menu"),
             InlineKeyboardButton("🎁 کد تخفیف", callback_data="admin_discount_menu")
         ],
