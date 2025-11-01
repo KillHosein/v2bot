@@ -3,3 +3,6 @@ requests==2.32.3
 qrcode[pil]==7.4.2
 python-dotenv==1.0.1
 psutil==5.9.8
+redis==5.0.1
+matplotlib==3.8.2
+numpy==1.26.3
