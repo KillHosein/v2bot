@@ -7,6 +7,7 @@ import csv
 from ..db import query_db, execute_db
 from ..states import ADMIN_USERS_MENU, ADMIN_USERS_AWAIT_SEARCH
 from ..helpers.tg import safe_edit_text as _safe_edit_text
+from ..helpers.back_buttons import BackButtons
 
 PAGE_SIZE = 10
 
@@ -67,7 +68,7 @@ async def admin_users_page(update: Update, context: ContextTypes.DEFAULT_TYPE) -
         kb.append(nav)
     kb.append([InlineKeyboardButton("🔎 جستجو", callback_data="admin_users_search"), InlineKeyboardButton("📤 خروجی CSV", callback_data="admin_users_export")])
     kb.append([InlineKeyboardButton("👁️‍🗨️ مشاهده کاربر (با آیدی)", callback_data=f"admin_user_view_prompt"), InlineKeyboardButton("🔁 تغییر وضعیت بن کاربر (با آیدی)", callback_data=f"admin_user_toggle_0")])
-    kb.append([InlineKeyboardButton("🔙 بازگشت", callback_data="admin_main")])
+    kb.append([BackButtons.to_admin_main()])
     await _safe_edit_text(query.message, text, parse_mode=ParseMode.MARKDOWN, reply_markup=InlineKeyboardMarkup(kb))
     return ADMIN_USERS_MENU
 
@@ -236,7 +237,7 @@ async def admin_users_show_services(update: Update, context: ContextTypes.DEFAUL
         kb = [
             [InlineKeyboardButton("🔄 تلاش مجدد", callback_data=f"admin_user_services_{uid}")],
             [InlineKeyboardButton("🔙 بازگشت به کاربر", callback_data=f"admin_user_view_{uid}")],
-            [InlineKeyboardButton("🏠 منوی ادمین", callback_data="admin_main")]
+            [BackButtons.to_admin_main("🏠 منوی ادمین")]
         ]
         await _safe_edit_text(
             query.message,
