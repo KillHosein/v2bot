@@ -137,8 +137,8 @@ class AdvancedAnalytics:
         try:
             cohorts = query_db(
                 """SELECT 
-                    strftime('%Y-%m', join_date) as cohort_month,
-                    COUNT(DISTINCT user_id) as users,
+                    strftime('%Y-%m', u.join_date) as cohort_month,
+                    COUNT(DISTINCT u.user_id) as users,
                     COUNT(DISTINCT CASE WHEN o.status = 'approved' THEN u.user_id END) as converted
                    FROM users u
                    LEFT JOIN orders o ON u.user_id = o.user_id
