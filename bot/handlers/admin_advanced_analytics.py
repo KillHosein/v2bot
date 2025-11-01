@@ -7,6 +7,7 @@ from telegram.ext import ContextTypes
 from ..analytics import AdvancedAnalytics, format_stats_message
 from ..cache_manager import get_cache
 from ..config import logger
+from ..helpers.back_buttons import BackButtons
 
 
 async def admin_advanced_stats(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -25,9 +26,7 @@ async def admin_advanced_stats(update: Update, context: ContextTypes.DEFAULT_TYP
     if not stats:
         await query.message.edit_text(
             "❌ خطا در دریافت آمار",
-            reply_markup=InlineKeyboardMarkup([[
-                InlineKeyboardButton("🔙 بازگشت به پنل ادمین", callback_data='admin_main')
-            ]])
+            reply_markup=InlineKeyboardMarkup([[BackButtons.to_admin_main()]])
         )
         return
     
@@ -47,8 +46,8 @@ async def admin_advanced_stats(update: Update, context: ContextTypes.DEFAULT_TYP
             InlineKeyboardButton("💾 وضعیت Cache", callback_data='admin_cache_stats')
         ],
         [
-            InlineKeyboardButton("🔄 بروزرسانی", callback_data='admin_advanced_stats'),
-            InlineKeyboardButton("🔙 بازگشت به پنل ادمین", callback_data='admin_main')
+            BackButtons.refresh('admin_advanced_stats'),
+            BackButtons.to_admin_main()
         ]
     ]
     
