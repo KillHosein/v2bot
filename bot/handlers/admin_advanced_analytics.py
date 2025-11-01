@@ -26,7 +26,7 @@ async def admin_advanced_stats(update: Update, context: ContextTypes.DEFAULT_TYP
         await query.message.edit_text(
             "❌ خطا در دریافت آمار",
             reply_markup=InlineKeyboardMarkup([[
-                InlineKeyboardButton("🔙 بازگشت", callback_data='admin_stats_menu')
+                InlineKeyboardButton("🔙 بازگشت به پنل ادمین", callback_data='admin_main')
             ]])
         )
         return
@@ -48,7 +48,7 @@ async def admin_advanced_stats(update: Update, context: ContextTypes.DEFAULT_TYP
         ],
         [
             InlineKeyboardButton("🔄 بروزرسانی", callback_data='admin_advanced_stats'),
-            InlineKeyboardButton("🔙 بازگشت", callback_data='admin_stats_menu')
+            InlineKeyboardButton("🔙 بازگشت به پنل ادمین", callback_data='admin_main')
         ]
     ]
     

@@ -4,7 +4,7 @@ Language Selection and Preferences Handlers
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.constants import ParseMode
 from telegram.ext import ContextTypes
-from ..i18n import get_i18n, t
+from ..i18n import get_i18n, t, TRANSLATIONS
 
 
 async def language_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):

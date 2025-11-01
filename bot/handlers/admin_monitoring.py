@@ -70,7 +70,7 @@ async def admin_monitoring_menu(update: Update, context: ContextTypes.DEFAULT_TY
         ],
         [
             InlineKeyboardButton("🔄 بروزرسانی", callback_data='admin_monitoring_menu'),
-            InlineKeyboardButton("🔙 بازگشت", callback_data='admin_main')
+            InlineKeyboardButton("🔙 بازگشت به پنل ادمین", callback_data='admin_main')
         ]
     ]
     

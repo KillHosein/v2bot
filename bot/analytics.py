@@ -269,31 +269,39 @@ class AdvancedAnalytics:
 def format_stats_message(stats: Dict) -> str:
     """Format stats into beautiful Telegram message"""
     try:
+        # Check if stats is empty or invalid
+        if not stats or not isinstance(stats, dict):
+            return "❌ خطا در دریافت آمار"
+        
         msg = "📊 <b>آمار پیشرفته ربات</b>\n\n"
         msg += "━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
         
         # Users
-        msg += "👥 <b>کاربران:</b>\n"
-        msg += f"   • کل: <code>{stats['users']['total']:,}</code>\n"
-        msg += f"   • امروز: <code>{stats['users']['new_today']:,}</code>\n"
-        msg += f"   • این هفته: <code>{stats['users']['new_week']:,}</code>\n\n"
+        if 'users' in stats:
+            msg += "👥 <b>کاربران:</b>\n"
+            msg += f"   • کل: <code>{stats['users'].get('total', 0):,}</code>\n"
+            msg += f"   • امروز: <code>{stats['users'].get('new_today', 0):,}</code>\n"
+            msg += f"   • این هفته: <code>{stats['users'].get('new_week', 0):,}</code>\n\n"
         
         # Orders
-        msg += "📦 <b>سفارشات:</b>\n"
-        msg += f"   • کل: <code>{stats['orders']['total']:,}</code>\n"
-        msg += f"   • فعال: <code>{stats['orders']['active']:,}</code> ✅\n"
-        msg += f"   • در انتظار: <code>{stats['orders']['pending']:,}</code> ⏳\n\n"
+        if 'orders' in stats:
+            msg += "📦 <b>سفارشات:</b>\n"
+            msg += f"   • کل: <code>{stats['orders'].get('total', 0):,}</code>\n"
+            msg += f"   • فعال: <code>{stats['orders'].get('active', 0):,}</code> ✅\n"
+            msg += f"   • در انتظار: <code>{stats['orders'].get('pending', 0):,}</code> ⏳\n\n"
         
         # Revenue
-        msg += "💰 <b>درآمد:</b>\n"
-        msg += f"   • امروز: <code>{stats['revenue']['today']:,}</code> تومان\n"
-        msg += f"   • هفته: <code>{stats['revenue']['week']:,}</code> تومان\n"
-        msg += f"   • ماه: <code>{stats['revenue']['month']:,}</code> تومان\n\n"
+        if 'revenue' in stats:
+            msg += "💰 <b>درآمد:</b>\n"
+            msg += f"   • امروز: <code>{stats['revenue'].get('today', 0):,}</code> تومان\n"
+            msg += f"   • هفته: <code>{stats['revenue'].get('week', 0):,}</code> تومان\n"
+            msg += f"   • ماه: <code>{stats['revenue'].get('month', 0):,}</code> تومان\n\n"
         
         # Metrics
-        msg += "📈 <b>متریک‌ها:</b>\n"
-        msg += f"   • نرخ تبدیل: <code>{stats['metrics']['conversion_rate']}%</code>\n"
-        msg += f"   • میانگین سفارش: <code>{stats['metrics']['avg_order_value']:,}</code> تومان\n\n"
+        if 'metrics' in stats:
+            msg += "📈 <b>متریک‌ها:</b>\n"
+            msg += f"   • نرخ تبدیل: <code>{stats['metrics'].get('conversion_rate', 0)}%</code>\n"
+            msg += f"   • میانگین سفارش: <code>{stats['metrics'].get('avg_order_value', 0):,}</code> تومان\n\n"
         
         # Top plans
         if stats.get('top_plans'):
