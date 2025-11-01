@@ -122,6 +122,18 @@ from .handlers.user import (
     reseller_pay_card, reseller_pay_crypto, reseller_pay_gateway, reseller_verify_gateway,
     reseller_upload_start_card, reseller_upload_start_crypto, reseller_upload_router
 )
+# Advanced Features v2.0
+from .handlers.admin_advanced_analytics import (
+    admin_advanced_stats, admin_chart_users, admin_chart_revenue,
+    admin_cohort_analysis, admin_traffic_sources, admin_revenue_prediction,
+    admin_cache_stats, admin_clear_cache
+)
+from .handlers.admin_monitoring import (
+    admin_monitoring_menu, admin_perf_details, admin_error_logs, admin_check_panels
+)
+from .handlers.user_language import (
+    language_menu, set_language, preferences_menu
+)
 from .handlers.purchase import (
     start_purchase_flow as start_purchase_flow,
     show_plan_confirmation as show_plan_confirmation,
@@ -984,12 +996,49 @@ def build_application() -> Application:
         states={
             SUPPORT_AWAIT_TICKET: [MessageHandler(filters.ALL & ~filters.COMMAND, ticket_receive_message)],
         },
-        fallbacks=[],
+        fallbacks=[
+            CallbackQueryHandler(support_menu, pattern='^support_menu$'),
+            CallbackQueryHandler(start_command, pattern='^start_main$'),
+            CallbackQueryHandler(cancel_flow, pattern='^cancel_flow$'),
+        ],
         allow_reentry=True,
         per_message=False,
     )
 
     application.add_handler(support_conv, group=1)
+    
+    # ========== Advanced Features v2.0 Handlers ==========
+    
+    # Advanced Analytics (Admin)
+    application.add_handler(CallbackQueryHandler(admin_advanced_stats, pattern=r'^admin_advanced_stats$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_chart_users, pattern=r'^admin_chart_users$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_chart_revenue, pattern=r'^admin_chart_revenue$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_cohort_analysis, pattern=r'^admin_cohort_analysis$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_traffic_sources, pattern=r'^admin_traffic_sources$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_revenue_prediction, pattern=r'^admin_revenue_prediction$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_cache_stats, pattern=r'^admin_cache_stats$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_clear_cache, pattern=r'^admin_clear_cache$'), group=3)
+    
+    # Monitoring (Admin)
+    application.add_handler(CallbackQueryHandler(admin_monitoring_menu, pattern=r'^admin_monitoring_menu$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_perf_details, pattern=r'^admin_perf_details$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_error_logs, pattern=r'^admin_error_logs$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_check_panels, pattern=r'^admin_check_panels$'), group=3)
+    
+    # Language & Preferences (User)
+    application.add_handler(CallbackQueryHandler(language_menu, pattern=r'^language_menu$'), group=3)
+    application.add_handler(CallbackQueryHandler(set_language, pattern=r'^set_lang_\w+$'), group=3)
+    application.add_handler(CallbackQueryHandler(preferences_menu, pattern=r'^preferences_menu$'), group=3)
+    
+    # Initialize advanced systems
+    try:
+        from .i18n import setup_i18n_tables
+        setup_i18n_tables()
+        from .config import logger
+        logger.info("✅ Advanced features initialized (v2.0)")
+    except Exception as e:
+        from .config import logger
+        logger.warning(f"⚠️ Advanced features initialization failed: {e}")
 
     return application
 
