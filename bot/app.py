@@ -379,6 +379,9 @@ def build_application() -> Application:
                 CallbackQueryHandler(admin_clear_notifications, pattern='^admin_clear_notifications$'),
                 CallbackQueryHandler(admin_wallet_tx_menu, pattern='^admin_wallet_tx_menu$'),
                 CallbackQueryHandler(admin_orders_menu, pattern='^admin_orders_menu$'),
+                # Advanced Features v2.0
+                CallbackQueryHandler(admin_advanced_stats, pattern='^admin_advanced_stats$'),
+                CallbackQueryHandler(admin_monitoring_menu, pattern='^admin_monitoring_menu$'),
             ],
             ADMIN_USERS_MENU: [
                 CallbackQueryHandler(admin_users_page, pattern=r'^admin_users_page_\d+$'),
