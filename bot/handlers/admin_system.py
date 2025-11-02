@@ -12,6 +12,7 @@ from ..db import query_db, execute_db
 from ..panel import VpnPanelAPI
 from ..states import ADMIN_MAIN_MENU
 from ..helpers.tg import safe_edit_text as _safe_edit_text
+from ..helpers.back_buttons import BackButtons
 
 async def admin_system_health(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Show system health and status"""
@@ -118,7 +119,7 @@ async def admin_system_health(update: Update, context: ContextTypes.DEFAULT_TYPE
         keyboard = [
             [InlineKeyboardButton("🔄 بروزرسانی", callback_data="admin_system_health")],
             [InlineKeyboardButton("🔔 پاک‌سازی اعلان‌های هشدار", callback_data="admin_clear_notifications")],
-            [InlineKeyboardButton("🔙 بازگشت", callback_data="admin_main")]
+            [BackButtons.to_admin_main()]
         ]
         
         if query:
