@@ -333,11 +333,14 @@ async def dynamic_button_handler(update: Update, context: ContextTypes.DEFAULT_T
 	if message_name in ('buy_config_main', 'admin_stats'):
 		return
 
+<<<<<<< HEAD
 	# Skip all admin callbacks to avoid overriding admin menus (e.g., admin_messages_menu, admin_cards_menu)
 	# These are handled by ConversationHandler states; processing them here re-edits the message and causes flicker
 	if message_name.startswith('admin_'):
 		return
 
+=======
+>>>>>>> origin/master
 	# First, check if the callback data corresponds to a dynamic message.
 	# This is safer than a blacklist of prefixes.
 	if query_db("SELECT 1 FROM messages WHERE message_name = ?", (message_name,), one=True):

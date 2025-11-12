@@ -35,10 +35,13 @@ def _md_escape(text: str) -> str:
     )
 
 
+<<<<<<< HEAD
 def _is_admin_message(name: str) -> bool:
     return bool(name) and name.startswith('admin_')
 
 
+=======
+>>>>>>> origin/master
 async def admin_messages_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     from ..config import logger
     import time
@@ -49,6 +52,18 @@ async def admin_messages_menu(update: Update, context: ContextTypes.DEFAULT_TYPE
     start_time = time.time()
     logger.info(f"[admin_messages_menu] START - callback_id={query.id}, data={query.data}")
     
+<<<<<<< HEAD
+=======
+    # Prevent duplicate execution
+    callback_id = f"{query.id}_{query.data}" if query else None
+    last_callback = context.user_data.get('last_messages_callback')
+    if callback_id and callback_id == last_callback:
+        logger.warning(f"[admin_messages_menu] DUPLICATE PREVENTED - same callback_id={callback_id}")
+        return ADMIN_MESSAGES_MENU
+    if callback_id:
+        context.user_data['last_messages_callback'] = callback_id
+    
+>>>>>>> origin/master
     page = 0
     if query and query.data.startswith('admin_messages_menu_page_'):
         try:
@@ -57,10 +72,17 @@ async def admin_messages_menu(update: Update, context: ContextTypes.DEFAULT_TYPE
             page = 0
     context.user_data['msg_page'] = page
 
+<<<<<<< HEAD
     total = query_db("SELECT COUNT(*) AS c FROM messages WHERE message_name NOT LIKE 'admin_%'", one=True) or {'c': 0}
     total = int(total.get('c') or 0)
     offset = page * PAGE_SIZE
     rows = query_db("SELECT message_name FROM messages WHERE message_name NOT LIKE 'admin_%' ORDER BY message_name LIMIT ? OFFSET ?", (PAGE_SIZE, offset))
+=======
+    total = query_db("SELECT COUNT(*) AS c FROM messages", one=True) or {'c': 0}
+    total = int(total.get('c') or 0)
+    offset = page * PAGE_SIZE
+    rows = query_db("SELECT message_name FROM messages ORDER BY message_name LIMIT ? OFFSET ?", (PAGE_SIZE, offset))
+>>>>>>> origin/master
 
     keyboard = []
     if rows and len(rows) > 0:
@@ -103,6 +125,7 @@ async def admin_messages_menu(update: Update, context: ContextTypes.DEFAULT_TYPE
 
 async def msg_add_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     query = update.callback_query
+<<<<<<< HEAD
     await query.answer()
     try:
         await _safe_edit_text(query.message, "نام انگلیسی و منحصر به فرد برای پیام جدید وارد کنید (مثال: `about_us`):", parse_mode=ParseMode.MARKDOWN)
@@ -111,12 +134,20 @@ async def msg_add_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
         try:
             msg = await query.message.reply_text("نام انگلیسی و منحصر به فرد برای پیام جدید وارد کنید (مثال: `about_us`):", parse_mode=ParseMode.MARKDOWN)
             context.user_data['prompt_message_id'] = msg.message_id
+=======
+    try:
+        await _safe_edit_text(query.message, "نام انگلیسی و منحصر به فرد برای پیام جدید وارد کنید (مثال: `about_us`):", parse_mode=ParseMode.MARKDOWN)
+    except Exception:
+        try:
+            await query.message.reply_text("نام انگلیسی و منحصر به فرد برای پیام جدید وارد کنید (مثال: `about_us`):", parse_mode=ParseMode.MARKDOWN)
+>>>>>>> origin/master
         except Exception:
             pass
     return ADMIN_MESSAGES_ADD_AWAIT_NAME
 
 
 async def msg_add_receive_name(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+<<<<<<< HEAD
     # Clean up previous prompt
     try:
         prompt_msg_id = context.user_data.pop('prompt_message_id', None)
@@ -142,10 +173,22 @@ async def msg_add_receive_name(update: Update, context: ContextTypes.DEFAULT_TYP
     context.user_data['new_message_name'] = message_name
     msg = await context.bot.send_message(chat_id=update.effective_chat.id, text="✅ نام ثبت شد.\n\nمحتوای پیام را ارسال کنید (متن/عکس/ویدیو/سند/صدا):")
     context.user_data['prompt_message_id'] = msg.message_id
+=======
+    message_name = (update.message.text or '').strip()
+    if not message_name.isascii() or ' ' in message_name:
+        await update.message.reply_text("خطا: نام باید انگلیسی و بدون فاصله باشد.")
+        return ADMIN_MESSAGES_ADD_AWAIT_NAME
+    if query_db("SELECT 1 FROM messages WHERE message_name = ?", (message_name,), one=True):
+        await update.message.reply_text("این نام قبلا وجود دارد. نام دیگری وارد کنید.")
+        return ADMIN_MESSAGES_ADD_AWAIT_NAME
+    context.user_data['new_message_name'] = message_name
+    await update.message.reply_text("محتوای پیام را ارسال کنید (متن/عکس/ویدیو/سند/صدا):")
+>>>>>>> origin/master
     return ADMIN_MESSAGES_ADD_AWAIT_CONTENT
 
 
 async def msg_add_receive_content(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+<<<<<<< HEAD
     # Clean up previous messages
     try:
         prompt_msg_id = context.user_data.pop('prompt_message_id', None)
@@ -158,6 +201,11 @@ async def msg_add_receive_content(update: Update, context: ContextTypes.DEFAULT_
     message_name = context.user_data.get('new_message_name')
     if not message_name:
         await context.bot.send_message(chat_id=update.effective_chat.id, text="ابتدا نام پیام را وارد کنید.")
+=======
+    message_name = context.user_data.get('new_message_name')
+    if not message_name:
+        await update.message.reply_text("ابتدا نام پیام را وارد کنید.")
+>>>>>>> origin/master
         return ADMIN_MESSAGES_ADD_AWAIT_NAME
     file_id = None
     file_type = None
@@ -189,6 +237,7 @@ async def msg_add_receive_content(update: Update, context: ContextTypes.DEFAULT_
         (message_name, text, file_id, file_type),
     )
     context.user_data.pop('new_message_name', None)
+<<<<<<< HEAD
     
     # Send success message
     await context.bot.send_message(chat_id=update.effective_chat.id, text=f"✅ پیام `{message_name}` با موفقیت ثبت شد.", parse_mode=ParseMode.MARKDOWN)
@@ -196,10 +245,16 @@ async def msg_add_receive_content(update: Update, context: ContextTypes.DEFAULT_
     # Return to paginated list
     fake_query = type('obj', (object,), {'data': f"admin_messages_menu_page_{context.user_data.get('msg_page', 0)}", 'message': update.message, 'answer': (lambda *args, **kwargs: None)})
     fake_update = type('obj', (object,), {'callback_query': fake_query, 'message': update.message})
+=======
+    # Return to paginated list
+    fake_query = type('obj', (object,), {'data': f"admin_messages_menu_page_{context.user_data.get('msg_page', 0)}", 'message': update.message, 'answer': (lambda *args, **kwargs: None)})
+    fake_update = type('obj', (object,), {'callback_query': fake_query})
+>>>>>>> origin/master
     return await admin_messages_menu(fake_update, context)
 
 
 async def admin_messages_select(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+<<<<<<< HEAD
     # Handle both callback_query and message updates
     message_sender = None
     query = update.callback_query
@@ -217,10 +272,16 @@ async def admin_messages_select(update: Update, context: ContextTypes.DEFAULT_TY
         if query:
             await query.answer("این پیام سیستمی است و قابل تغییر نیست.", show_alert=True)
         return await admin_messages_menu(update, context)
+=======
+    query = update.callback_query
+    await query.answer()
+    message_name = query.data.replace('msg_select_', '')
+>>>>>>> origin/master
     context.user_data['editing_message_name'] = message_name
     # Load preview
     row = query_db("SELECT text, file_id, file_type FROM messages WHERE message_name = ?", (message_name,), one=True) or {}
     preview = _md_escape((row.get('text') or '')[:500]) or 'متن خالی'
+<<<<<<< HEAD
     
     # Display success message if exists
     success_msg = context.user_data.pop('success_message', None)
@@ -229,12 +290,15 @@ async def admin_messages_select(update: Update, context: ContextTypes.DEFAULT_TY
         text += f"{success_msg}\n\n"
     text += f"پیش‌نمایش:\n{preview}"
     
+=======
+>>>>>>> origin/master
     keyboard = [
         [InlineKeyboardButton("✏️ ویرایش متن", callback_data="msg_action_edit_text")],
         [InlineKeyboardButton("🔗 ویرایش دکمه‌ها", callback_data="msg_action_edit_buttons")],
         [InlineKeyboardButton("🗑 حذف پیام", callback_data="msg_delete_current")],
         [InlineKeyboardButton("\U0001F519 بازگشت", callback_data=f"admin_messages_menu_page_{context.user_data.get('msg_page', 0)}")],
     ]
+<<<<<<< HEAD
     
     if message_sender == 'edit':
         try:
@@ -250,11 +314,21 @@ async def admin_messages_select(update: Update, context: ContextTypes.DEFAULT_TY
         except Exception:
             pass
     
+=======
+    try:
+        await _safe_edit_text(query.message, f"پیام: `{message_name}`\n\nپیش‌نمایش:\n{preview}", reply_markup=InlineKeyboardMarkup(keyboard), parse_mode=ParseMode.MARKDOWN)
+    except Exception:
+        try:
+            await query.message.reply_text(f"پیام: `{message_name}`\n\nپیش‌نمایش:\n{preview}", reply_markup=InlineKeyboardMarkup(keyboard), parse_mode=ParseMode.MARKDOWN)
+        except Exception:
+            pass
+>>>>>>> origin/master
     return ADMIN_MESSAGES_SELECT
 
 
 async def admin_messages_edit_text_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     query = update.callback_query
+<<<<<<< HEAD
     await query.answer()
     message_name = context.user_data['editing_message_name']
     if _is_admin_message(message_name):
@@ -267,12 +341,21 @@ async def admin_messages_edit_text_start(update: Update, context: ContextTypes.D
         try:
             msg = await query.message.reply_text(f"✏️ **ویرایش متن پیام `{message_name}`**\n\nمتن جدید را ارسال کنید:", parse_mode=ParseMode.MARKDOWN)
             context.user_data['prompt_message_id'] = msg.message_id
+=======
+    message_name = context.user_data['editing_message_name']
+    try:
+        await _safe_edit_text(query.message, f"لطفا متن جدید برای پیام `{message_name}` را ارسال کنید.", parse_mode=ParseMode.MARKDOWN)
+    except Exception:
+        try:
+            await query.message.reply_text(f"لطفا متن جدید برای پیام `{message_name}` را ارسال کنید.", parse_mode=ParseMode.MARKDOWN)
+>>>>>>> origin/master
         except Exception:
             pass
     return ADMIN_MESSAGES_EDIT_TEXT
 
 
 async def admin_messages_edit_text_save(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+<<<<<<< HEAD
     # Clean up messages
     try:
         prompt_msg_id = context.user_data.pop('prompt_message_id', None)
@@ -309,6 +392,18 @@ async def admin_messages_edit_text_save(update: Update, context: ContextTypes.DE
         parse_mode=ParseMode.MARKDOWN
     )
     return ADMIN_MESSAGES_SELECT
+=======
+    message_name = context.user_data.get('editing_message_name')
+    if not message_name:
+        await update.message.reply_text("ابتدا یک پیام را انتخاب کنید.")
+        return ADMIN_MESSAGES_MENU
+    execute_db("UPDATE messages SET text = ? WHERE message_name = ?", (update.message.text, message_name))
+    await update.message.reply_text("✅ متن پیام بروزرسانی شد.")
+    # Back to select view
+    fake_query = type('obj', (object,), {'data': f"msg_select_{message_name}", 'message': update.message, 'answer': (lambda *args, **kwargs: None)})
+    fake_update = type('obj', (object,), {'callback_query': fake_query})
+    return await admin_messages_select(fake_update, context)
+>>>>>>> origin/master
 
 
 async def admin_messages_delete(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
@@ -317,9 +412,12 @@ async def admin_messages_delete(update: Update, context: ContextTypes.DEFAULT_TY
     message_name = context.user_data.get('editing_message_name')
     if not message_name:
         return await admin_messages_menu(update, context)
+<<<<<<< HEAD
     if _is_admin_message(message_name):
         await query.answer("این پیام سیستمی است و قابل حذف نیست.", show_alert=True)
         return await admin_messages_menu(update, context)
+=======
+>>>>>>> origin/master
     execute_db("DELETE FROM messages WHERE message_name = ?", (message_name,))
     await _safe_edit_text(query.message, "✅ پیام حذف شد.")
     # Go back to list
@@ -328,14 +426,21 @@ async def admin_messages_delete(update: Update, context: ContextTypes.DEFAULT_TY
 
 async def admin_buttons_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     query = update.callback_query
+<<<<<<< HEAD
+=======
+    await query.answer()
+>>>>>>> origin/master
     message_name = context.user_data.get('editing_message_name')
     if not message_name:
         await query.answer("لطفاً ابتدا یک پیام را انتخاب کنید.", show_alert=True)
         return await admin_messages_menu(update, context)
+<<<<<<< HEAD
     if _is_admin_message(message_name):
         await query.answer("این پیام سیستمی است و دکمه‌های آن قابل ویرایش نیست.", show_alert=True)
         return await admin_messages_menu(update, context)
     await query.answer()
+=======
+>>>>>>> origin/master
 
     # Ensure default buttons exist for start_main so they show up for editing
     if message_name == 'start_main':
@@ -435,12 +540,19 @@ async def admin_button_delete(update: Update, context: ContextTypes.DEFAULT_TYPE
 
 async def admin_button_edit_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     query = update.callback_query
+<<<<<<< HEAD
+=======
+    await query.answer()
+>>>>>>> origin/master
     button_id = int(query.data.replace("btn_edit_", ""))
     b = query_db("SELECT id, text, target, is_url, row, col, menu_name FROM buttons WHERE id = ?", (button_id,), one=True)
     if not b:
         await query.answer("دکمه یافت نشد", show_alert=True)
         return await admin_buttons_menu(update, context)
+<<<<<<< HEAD
     await query.answer()
+=======
+>>>>>>> origin/master
     context.user_data['editing_button_id'] = button_id
     context.user_data['editing_button_menu'] = b['menu_name']
     text = (
@@ -508,6 +620,10 @@ async def admin_button_edit_ask_value(update: Update, context: ContextTypes.DEFA
 
 async def admin_button_edit_set_is_url(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     query = update.callback_query
+<<<<<<< HEAD
+=======
+    await query.answer()
+>>>>>>> origin/master
     try:
         _, _, _, bid, val = query.data.split('_')
         button_id = int(bid)

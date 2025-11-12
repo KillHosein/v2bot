@@ -5,33 +5,48 @@ from telegram.ext import ContextTypes, ConversationHandler
 from ..db import query_db, execute_db
 from ..states import ADMIN_CARDS_MENU, ADMIN_CARDS_AWAIT_NUMBER, ADMIN_CARDS_AWAIT_HOLDER
 from ..helpers.tg import safe_edit_text as _safe_edit_text
+<<<<<<< HEAD
 from ..config import logger
 
 
 async def admin_cards_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     logger.info(f"[CARDS_MENU] Called - update.callback_query={update.callback_query is not None}, update.message={update.message is not None}")
+=======
+
+
+async def admin_cards_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+>>>>>>> origin/master
     message_sender = None
     query = update.callback_query
     if query:
         await query.answer()
         message_sender = 'edit'
+<<<<<<< HEAD
         logger.info(f"[CARDS_MENU] Using edit mode - query.data={query.data}")
     elif update.message:
         message_sender = 'reply'
         logger.info(f"[CARDS_MENU] Using reply mode - message_id={update.message.message_id}")
     if not message_sender:
         logger.warning("[CARDS_MENU] No message_sender detected, returning ADMIN_CARDS_MENU")
+=======
+    elif update.message:
+        message_sender = 'reply'
+    if not message_sender:
+>>>>>>> origin/master
         return ADMIN_CARDS_MENU
 
     cards = query_db("SELECT id, card_number, holder_name FROM cards")
     keyboard = []
     text = "\U0001F4B3 **مدیریت کارت‌های بانکی**\n\n"
+<<<<<<< HEAD
     
     # Display success message if exists
     success_msg = context.user_data.pop('success_message', None)
     if success_msg:
         text += f"{success_msg}\n\n"
     
+=======
+>>>>>>> origin/master
     if cards:
         text += "لیست کارت‌های فعلی:"
         for card in cards:
@@ -43,11 +58,16 @@ async def admin_cards_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -
     else:
         text += "هیچ کارتی ثبت نشده است."
     keyboard.append([InlineKeyboardButton("\u2795 افزودن کارت جدید", callback_data="card_add_start")])
+<<<<<<< HEAD
     keyboard.append([InlineKeyboardButton("\U0001F519 بازگشت", callback_data="admin_main")])
+=======
+    keyboard.append([InlineKeyboardButton("\U0001F519 بازگشت به تنظیمات", callback_data="admin_settings_manage")])
+>>>>>>> origin/master
 
     if message_sender == 'edit':
         try:
             await _safe_edit_text(query.message, text, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode=ParseMode.MARKDOWN)
+<<<<<<< HEAD
             logger.info(f"[CARDS_MENU] Edited message successfully - message_id={query.message.message_id}")
         except Exception as e:
             logger.error(f"[CARDS_MENU] Edit failed: {e}, trying reply")
@@ -64,6 +84,18 @@ async def admin_cards_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -
             logger.error(f"[CARDS_MENU] Send failed: {e}")
     
     logger.info(f"[CARDS_MENU] Returning state ADMIN_CARDS_MENU")
+=======
+        except Exception:
+            try:
+                await query.message.reply_text(text, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode=ParseMode.MARKDOWN)
+            except Exception:
+                pass
+    else:
+        try:
+            await update.message.reply_text(text, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode=ParseMode.MARKDOWN)
+        except Exception:
+            pass
+>>>>>>> origin/master
     return ADMIN_CARDS_MENU
 
 
@@ -77,6 +109,7 @@ async def admin_card_delete(update: Update, context: ContextTypes.DEFAULT_TYPE) 
 
 async def admin_card_add_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     query = update.callback_query
+<<<<<<< HEAD
     await query.answer()
     context.user_data['new_card'] = {}
     text = "➕ **افزودن کارت جدید**\n\nلطفا شماره کارت ۱۶ رقمی را وارد کنید:"
@@ -88,12 +121,21 @@ async def admin_card_add_start(update: Update, context: ContextTypes.DEFAULT_TYP
         try:
             msg = await query.message.reply_text(text, parse_mode=ParseMode.MARKDOWN)
             context.user_data['prompt_message_id'] = msg.message_id
+=======
+    context.user_data['new_card'] = {}
+    try:
+        await _safe_edit_text(query.message, "لطفا **شماره کارت** ۱۶ رقمی را وارد کنید:")
+    except Exception:
+        try:
+            await query.message.reply_text("لطفا **شماره کارت** ۱۶ رقمی را وارد کنید:")
+>>>>>>> origin/master
         except Exception:
             pass
     return ADMIN_CARDS_AWAIT_NUMBER
 
 
 async def admin_card_add_receive_number(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+<<<<<<< HEAD
     logger.info(f"[CARDS_RECEIVE_NUMBER] User input: {update.message.text[:20]}... - message_id={update.message.message_id}")
     # Clean up messages
     try:
@@ -108,12 +150,15 @@ async def admin_card_add_receive_number(update: Update, context: ContextTypes.DE
     except Exception as e:
         logger.error(f"[CARDS_RECEIVE_NUMBER] Cleanup failed: {e}")
     
+=======
+>>>>>>> origin/master
     # If editing number
     editing_id = context.user_data.get('editing_card_id')
     editing_field = context.user_data.get('editing_card_field')
     if editing_id and editing_field == 'number':
         new_number = update.message.text.strip()
         execute_db("UPDATE cards SET card_number = ? WHERE id = ?", (new_number, editing_id))
+<<<<<<< HEAD
         # Clear editing state
         context.user_data.pop('editing_card_id', None)
         context.user_data.pop('editing_card_field', None)
@@ -142,10 +187,21 @@ async def admin_card_add_receive_number(update: Update, context: ContextTypes.DE
     context.user_data['new_card']['number'] = update.message.text.strip()
     msg = await context.bot.send_message(chat_id=update.effective_chat.id, text="✅ شماره کارت ثبت شد.\n\nحالا **نام و نام خانوادگی** صاحب کارت را وارد کنید:", parse_mode=ParseMode.MARKDOWN)
     context.user_data['prompt_message_id'] = msg.message_id
+=======
+        await update.message.reply_text("شماره کارت بروزرسانی شد.")
+        context.user_data.pop('editing_card_id', None)
+        context.user_data.pop('editing_card_field', None)
+        return await admin_cards_menu(update, context)
+    # Else creation flow
+    context.user_data['new_card'] = context.user_data.get('new_card') or {}
+    context.user_data['new_card']['number'] = update.message.text
+    await update.message.reply_text("لطفا **نام و نام خانوادگی** صاحب کارت را وارد کنید:")
+>>>>>>> origin/master
     return ADMIN_CARDS_AWAIT_HOLDER
 
 
 async def admin_card_add_save(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+<<<<<<< HEAD
     # Clean up messages
     try:
         # Delete prompt message if exists
@@ -157,12 +213,15 @@ async def admin_card_add_save(update: Update, context: ContextTypes.DEFAULT_TYPE
     except Exception:
         pass
     
+=======
+>>>>>>> origin/master
     # If editing holder name
     editing_id = context.user_data.get('editing_card_id')
     editing_field = context.user_data.get('editing_card_field')
     if editing_id and editing_field == 'holder':
         holder_name = (update.message.text or '').strip()
         execute_db("UPDATE cards SET holder_name = ? WHERE id = ?", (holder_name, editing_id))
+<<<<<<< HEAD
         # Clear editing state
         context.user_data.pop('editing_card_id', None)
         context.user_data.pop('editing_card_field', None)
@@ -208,6 +267,19 @@ async def admin_card_add_save(update: Update, context: ContextTypes.DEFAULT_TYPE
     keyboard.append([InlineKeyboardButton("\U0001F519 بازگشت", callback_data="admin_main")])
     await context.bot.send_message(chat_id=update.effective_chat.id, text=text, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode=ParseMode.MARKDOWN)
     return ADMIN_CARDS_MENU
+=======
+        await update.message.reply_text("نام دارنده بروزرسانی شد.")
+        context.user_data.pop('editing_card_id', None)
+        context.user_data.pop('editing_card_field', None)
+        return await admin_cards_menu(update, context)
+    # Else creation flow
+    card_number = context.user_data['new_card']['number']
+    holder_name = update.message.text
+    execute_db("INSERT INTO cards (card_number, holder_name) VALUES (?, ?)", (card_number, holder_name))
+    await update.message.reply_text("\u2705 کارت جدید با موفقیت ثبت شد.")
+    context.user_data.clear()
+    return await admin_cards_menu(update, context)
+>>>>>>> origin/master
 
 
 async def admin_card_edit_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
@@ -227,7 +299,11 @@ async def admin_card_edit_start(update: Update, context: ContextTypes.DEFAULT_TY
     )
     kb = [
         [InlineKeyboardButton("شماره کارت", callback_data="card_edit_field_number"), InlineKeyboardButton("نام دارنده", callback_data="card_edit_field_holder")],
+<<<<<<< HEAD
         [InlineKeyboardButton("\U0001F519 بازگشت", callback_data="admin_main")],
+=======
+        [InlineKeyboardButton("\U0001F519 بازگشت", callback_data="admin_cards_menu")],
+>>>>>>> origin/master
     ]
     try:
         await _safe_edit_text(query.message, text, reply_markup=InlineKeyboardMarkup(kb))
@@ -241,10 +317,15 @@ async def admin_card_edit_start(update: Update, context: ContextTypes.DEFAULT_TY
 
 async def admin_card_edit_ask_value(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     query = update.callback_query
+<<<<<<< HEAD
+=======
+    await query.answer()
+>>>>>>> origin/master
     field = query.data.split('_')[-1]  # number|holder
     if 'editing_card_id' not in context.user_data:
         await query.answer("جلسه ویرایش منقضی شده است.", show_alert=True)
         return ADMIN_CARDS_MENU
+<<<<<<< HEAD
     await query.answer()
     context.user_data['editing_card_field'] = field
     if field == 'number':
@@ -256,10 +337,20 @@ async def admin_card_edit_ask_value(update: Update, context: ContextTypes.DEFAUL
             try:
                 msg = await query.message.reply_text(text, parse_mode=ParseMode.MARKDOWN)
                 context.user_data['prompt_message_id'] = msg.message_id
+=======
+    context.user_data['editing_card_field'] = field
+    if field == 'number':
+        try:
+            await _safe_edit_text(query.message, "شماره کارت جدید (۱۶ رقمی) را وارد کنید:")
+        except Exception:
+            try:
+                await query.message.reply_text("شماره کارت جدید (۱۶ رقمی) را وارد کنید:")
+>>>>>>> origin/master
             except Exception:
                 pass
         return ADMIN_CARDS_AWAIT_NUMBER
     else:
+<<<<<<< HEAD
         text = "✏️ **ویرایش نام دارنده**\n\nنام و نام خانوادگی جدید صاحب کارت را وارد کنید:"
         try:
             await _safe_edit_text(query.message, text, parse_mode=ParseMode.MARKDOWN)
@@ -268,6 +359,13 @@ async def admin_card_edit_ask_value(update: Update, context: ContextTypes.DEFAUL
             try:
                 msg = await query.message.reply_text(text, parse_mode=ParseMode.MARKDOWN)
                 context.user_data['prompt_message_id'] = msg.message_id
+=======
+        try:
+            await _safe_edit_text(query.message, "نام و نام خانوادگی جدید صاحب کارت را وارد کنید:")
+        except Exception:
+            try:
+                await query.message.reply_text("نام و نام خانوادگی جدید صاحب کارت را وارد کنید:")
+>>>>>>> origin/master
             except Exception:
                 pass
         return ADMIN_CARDS_AWAIT_HOLDER

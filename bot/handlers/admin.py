@@ -393,7 +393,11 @@ async def admin_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
                 update.callback_query,
                 text,
                 reply_markup=InlineKeyboardMarkup(keyboard),
+<<<<<<< HEAD
                 parse_mode=ParseMode.HTML,
+=======
+                parse_mode=ParseMode.MARKDOWN,
+>>>>>>> origin/master
                 answer_callback=True
             )
         except Exception as e:
@@ -404,7 +408,11 @@ async def admin_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
         await update.message.reply_text(
             text,
             reply_markup=InlineKeyboardMarkup(keyboard),
+<<<<<<< HEAD
             parse_mode=ParseMode.HTML
+=======
+            parse_mode=ParseMode.MARKDOWN
+>>>>>>> origin/master
         )
     
     return ADMIN_MAIN_MENU
@@ -413,6 +421,13 @@ async def admin_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
 async def admin_toggle_bot_active(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Toggle bot active/inactive status"""
     query = update.callback_query
+<<<<<<< HEAD
+=======
+    try:
+        await query.answer()
+    except Exception:
+        pass
+>>>>>>> origin/master
     
     try:
         cur = query_db("SELECT value FROM settings WHERE key='bot_active'", one=True)
@@ -421,6 +436,7 @@ async def admin_toggle_bot_active(update: Update, context: ContextTypes.DEFAULT_
         execute_db("INSERT OR REPLACE INTO settings (key, value) VALUES ('bot_active', ?)", (new_val,))
         status = "روشن" if new_val == '1' else "خاموش"
         logger.info(f"Bot status toggled to: {status} (value={new_val})")
+<<<<<<< HEAD
         
         # Answer callback query with status confirmation
         await query.answer(f"✅ ربات {status} شد", show_alert=False)
@@ -431,6 +447,10 @@ async def admin_toggle_bot_active(update: Update, context: ContextTypes.DEFAULT_
         except Exception:
             pass
         return ADMIN_MAIN_MENU
+=======
+    except Exception as e:
+        logger.error(f"Error toggling bot_active: {e}")
+>>>>>>> origin/master
     
     # Refresh admin panel with updated button - manually rebuild to ensure fresh data
     from ..helpers.admin_menu import get_admin_dashboard_text, get_main_menu_keyboard
@@ -444,11 +464,29 @@ async def admin_toggle_bot_active(update: Update, context: ContextTypes.DEFAULT_
             reply_markup=InlineKeyboardMarkup(keyboard),
             parse_mode=ParseMode.MARKDOWN
         )
+<<<<<<< HEAD
     except BadRequest as e:
         # If message is not modified, that's okay - button state already correct
         if "message is not modified" not in str(e).lower():
             logger.error(f"Error updating admin panel after toggle: {e}")
             # If edit fails for other reasons, send new message
+=======
+    except Exception as e:
+        logger.error(f"Error updating admin panel after toggle: {e}")
+        # If edit fails, try deleting and sending new message
+        try:
+            await query.message.delete()
+        except Exception:
+            pass
+        try:
+            await query.message.reply_text(
+                text,
+                reply_markup=InlineKeyboardMarkup(keyboard),
+                parse_mode=ParseMode.MARKDOWN
+            )
+        except Exception:
+            # Last resort: send to chat directly
+>>>>>>> origin/master
             try:
                 await context.bot.send_message(
                     chat_id=query.message.chat_id,
@@ -456,10 +494,15 @@ async def admin_toggle_bot_active(update: Update, context: ContextTypes.DEFAULT_
                     reply_markup=InlineKeyboardMarkup(keyboard),
                     parse_mode=ParseMode.MARKDOWN
                 )
+<<<<<<< HEAD
             except Exception as send_err:
                 logger.error(f"Failed to send new message after toggle: {send_err}")
     except Exception as e:
         logger.error(f"Unexpected error updating admin panel after toggle: {e}")
+=======
+            except Exception:
+                pass
+>>>>>>> origin/master
     
     return ADMIN_MAIN_MENU
 

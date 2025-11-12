@@ -43,6 +43,7 @@ def get_main_menu_keyboard():
     except Exception:
         bot_on = True
     
+<<<<<<< HEAD
     toggle_label = "🟢 ربات فعال" if bot_on else "🔴 ربات غیرفعال"
     
     # دریافت تعداد موارد نیازمند توجه
@@ -110,6 +111,51 @@ def get_main_menu_keyboard():
             InlineKeyboardButton("📦 بکاپ پیشرفته", callback_data="backup_start")
         ],
         [
+=======
+    toggle_label = "🟢 ربات روشن (خاموش کردن)" if bot_on else "🔴 ربات خاموش (روشن کردن)"
+    
+    return [
+        [
+            InlineKeyboardButton(toggle_label, callback_data="admin_toggle_bot_active")
+        ],
+        [
+            InlineKeyboardButton("👥 کاربران", callback_data="admin_user_management"),
+            InlineKeyboardButton("📦 سفارشات", callback_data="admin_orders_manage")
+        ],
+        [
+            InlineKeyboardButton("🌐 پنل‌ها", callback_data="admin_panels_menu"),
+            InlineKeyboardButton("📝 پلن‌ها", callback_data="admin_plan_manage")
+        ],
+        [
+            InlineKeyboardButton("⚙️ تنظیمات", callback_data="admin_settings_manage"),
+            InlineKeyboardButton("📊 آمار", callback_data="admin_stats")
+        ],
+        [
+            InlineKeyboardButton("💳 پرداخت‌ها", callback_data="admin_payments_menu"),
+            InlineKeyboardButton("🎁 کد تخفیف", callback_data="admin_discount_menu")
+        ],
+        [
+            InlineKeyboardButton("📝 مدیریت پیام‌ها", callback_data="admin_messages_menu"),
+            InlineKeyboardButton("💬 تیکت‌ها", callback_data="admin_tickets_menu")
+        ],
+        [
+            InlineKeyboardButton("📤 ارسال همگانی", callback_data="admin_broadcast_menu"),
+            InlineKeyboardButton("📧 پیام به کاربر", callback_data="admin_send_by_id_start")
+        ],
+        [
+            InlineKeyboardButton("🛠️ وضعیت سیستم", callback_data="admin_system_health"),
+            InlineKeyboardButton("🔔 ارسال یادآوری‌ها", callback_data="run_alerts_now")
+        ],
+        [
+            InlineKeyboardButton("💾 دریافت سریع بکاپ", callback_data="admin_quick_backup"),
+            InlineKeyboardButton("📦 بکاپ پیشرفته", callback_data="backup_start")
+        ],
+        [
+            InlineKeyboardButton("📥 بازیابی از بکاپ", callback_data="backup_restore_start"),
+            InlineKeyboardButton("👑 افزودن ادمین", callback_data="admin_admins_menu")
+        ],
+        [
+>>>>>>> origin/master
             InlineKeyboardButton("🕐 کرون جاب‌ها", callback_data="admin_cron_menu"),
             InlineKeyboardButton("📚 آموزش‌ها", callback_data="admin_tutorials_menu")
         ]
@@ -129,6 +175,7 @@ async def get_admin_dashboard_text():
     """Generate admin dashboard text with stats"""
     stats = await get_admin_stats()
     
+<<<<<<< HEAD
     # ایموجی‌های وضعیت
     pending_emoji = "🔴" if stats['pending_orders'] > 0 else "🟢"
     ticket_emoji = "🔴" if stats['open_tickets'] > 0 else "🟢"
@@ -144,6 +191,16 @@ async def get_admin_dashboard_text():
         f"{ticket_emoji} <b>تیکت‌های باز:</b> {stats['open_tickets']:,}\n"
         "━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
         "💡 <i>برای مدیریت، یکی از گزینه‌های زیر را انتخاب کنید:</i>"
+=======
+    return (
+        "👨‍💻 *پنل مدیریت*\n\n"
+        "📊 *آمار لحظه‌ای:*\n"
+        f"👥 کاربران کل: {stats['total_users']:,}\n"
+        f"🔄 سرویس‌های فعال: {stats['active_services']:,}\n"
+        f"💰 درآمد امروز: {stats['today_income']:,} تومان\n"
+        f"⏳ سفارشات در انتظار: {stats['pending_orders']:,}\n"
+        f"📩 تیکت‌های باز: {stats['open_tickets']:,}"
+>>>>>>> origin/master
     )
 
 async def get_user_management_keyboard(page=0, limit=10):

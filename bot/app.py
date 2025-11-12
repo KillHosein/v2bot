@@ -120,6 +120,7 @@ from .handlers.user import (
     check_service_status, card_to_card_info,
     reseller_menu, reseller_pay_start,
     reseller_pay_card, reseller_pay_crypto, reseller_pay_gateway, reseller_verify_gateway,
+<<<<<<< HEAD
     reseller_upload_start_card, reseller_upload_start_crypto, reseller_upload_router,
     usage_stats_handler, user_settings_handler, notifications_settings_handler, wallet_topup_main_handler
 )
@@ -147,6 +148,10 @@ from .handlers.mobile_cloud_integration import (
 )
 # Enhanced Error Handling
 from .error_handler_enhanced import setup_error_handling
+=======
+    reseller_upload_start_card, reseller_upload_start_crypto, reseller_upload_router
+)
+>>>>>>> origin/master
 from .handlers.purchase import (
     start_purchase_flow as start_purchase_flow,
     show_plan_confirmation as show_plan_confirmation,
@@ -290,6 +295,7 @@ from .handlers.admin_stats_broadcast import (
 )
 from .handlers.admin_system import admin_system_health, admin_clear_notifications
 
+<<<<<<< HEAD
 # Advanced Features v3.0 - New Handlers
 from .handlers.user_wallet import (
     wallet_menu as wallet_menu_v3,
@@ -348,6 +354,8 @@ from .handlers.app_guide import (
     show_windows_guide
 )
 
+=======
+>>>>>>> origin/master
 async def debug_text_logger(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     try:
         uid = update.effective_user.id if update.effective_user else None
@@ -405,6 +413,7 @@ def build_application() -> Application:
             logger.info(f"Auto-backup disabled or invalid (enabled={ab_enabled}, hours={ab_hours})")
 
     application.add_handler(TypeHandler(Update, force_join_checker), group=-1)
+<<<<<<< HEAD
     # Early debug logger    # Suppress per_message ConversationHandler warnings (expected behavior for our bot)
     warnings.filterwarnings('ignore', message='.*per_message.*', category=PTBUserWarning)
     
@@ -421,6 +430,10 @@ def build_application() -> Application:
             await update.callback_query.answer()
         return ADMIN_MESSAGES_MENU
     
+=======
+    # Early debug logger for text messages
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, debug_text_logger), group=-1)
+>>>>>>> origin/master
     # Route master text handler AFTER conversations so stateful flows (e.g., add panel URL/user/pass) capture inputs first
     application.add_handler(MessageHandler(filters.ALL & ~filters.COMMAND, master_message_handler), group=2)
 
@@ -450,9 +463,12 @@ def build_application() -> Application:
                 CallbackQueryHandler(admin_clear_notifications, pattern='^admin_clear_notifications$'),
                 CallbackQueryHandler(admin_wallet_tx_menu, pattern='^admin_wallet_tx_menu$'),
                 CallbackQueryHandler(admin_orders_menu, pattern='^admin_orders_menu$'),
+<<<<<<< HEAD
                 # Advanced Features v2.0
                 CallbackQueryHandler(admin_advanced_stats, pattern='^admin_advanced_stats$'),
                 CallbackQueryHandler(admin_monitoring_menu, pattern='^admin_monitoring_menu$'),
+=======
+>>>>>>> origin/master
             ],
             ADMIN_USERS_MENU: [
                 CallbackQueryHandler(admin_users_page, pattern=r'^admin_users_page_\d+$'),
@@ -490,9 +506,14 @@ def build_application() -> Application:
             ADMIN_MESSAGES_MENU: [
                 CallbackQueryHandler(admin_messages_select, pattern=r'^msg_select_.+'),
                 CallbackQueryHandler(msg_add_start, pattern=r'^msg_add_start$'),
+<<<<<<< HEAD
                 CallbackQueryHandler(admin_messages_menu, pattern=r'^admin_messages_menu_page_\d+$'),
                 # Noop handler to consume duplicate callback when transitioning from ADMIN_MAIN_MENU
                 CallbackQueryHandler(noop_consume_callback, pattern=r'^admin_messages_menu$'),
+=======
+                CallbackQueryHandler(admin_messages_menu, pattern=r'^admin_messages_menu$'),
+                CallbackQueryHandler(admin_messages_menu, pattern=r'^admin_messages_menu_page_\d+$'),
+>>>>>>> origin/master
                 CallbackQueryHandler(admin_command, pattern='^admin_main$'),
             ],
             ADMIN_MESSAGES_SELECT: [
@@ -653,8 +674,12 @@ def build_application() -> Application:
                  CallbackQueryHandler(admin_card_delete, pattern=r'^card_delete_'),
                  CallbackQueryHandler(admin_card_edit_start, pattern=r'^card_edit_\d+$'),
                  CallbackQueryHandler(admin_card_edit_ask_value, pattern=r'^card_edit_field_(number|holder)$'),
+<<<<<<< HEAD
                  CallbackQueryHandler(admin_settings_manage, pattern='^(admin_settings_manage|back_to_settings)$'),
                  CallbackQueryHandler(admin_command, pattern='^admin_main$'),
+=======
+                 CallbackQueryHandler(admin_settings_manage, pattern='^admin_settings_manage$'),
+>>>>>>> origin/master
              ],
             ADMIN_CARDS_AWAIT_NUMBER: [MessageHandler(filters.TEXT & ~filters.COMMAND, admin_card_add_receive_number)],
             ADMIN_CARDS_AWAIT_HOLDER: [MessageHandler(filters.TEXT & ~filters.COMMAND, admin_card_add_save)],
@@ -685,8 +710,12 @@ def build_application() -> Application:
         fallbacks=[
             CommandHandler('cancel', cancel_admin_conversation),
             CallbackQueryHandler(exit_admin_panel, pattern='^admin_exit$'),
+<<<<<<< HEAD
             # Removed admin_command from fallbacks - it was causing double execution
             # If user clicks admin_main, it should be handled by state handlers, not fallback
+=======
+            CallbackQueryHandler(admin_command, pattern='^admin_main$'),
+>>>>>>> origin/master
         ],
         allow_reentry=True,
         per_message=False,
@@ -740,6 +769,7 @@ def build_application() -> Application:
         per_message=False,
     )
 
+<<<<<<< HEAD
     # Wallet topup conversation handler
     wallet_conv = ConversationHandler(
         entry_points=[
@@ -800,10 +830,36 @@ def build_application() -> Application:
     #                         ADMIN CORE HANDLERS  
     # ═══════════════════════════════════════════════════════════════════
     # Order approval and management
+=======
+    application.add_handler(admin_conv, group=1)
+    application.add_handler(purchase_conv, group=1)
+    application.add_handler(renewal_conv, group=1)
+
+    application.add_handler(CommandHandler('start', start_command), group=3)
+    
+    # Version check command
+    async def version_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+        try:
+            import os
+            version_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'VERSION.txt')
+            if os.path.exists(version_file):
+                with open(version_file, 'r', encoding='utf-8') as f:
+                    version_info = f.read()
+                await update.message.reply_text(f"📦 **نسخه ربات:**\n\n{version_info}", parse_mode=ParseMode.MARKDOWN)
+            else:
+                await update.message.reply_text("📦 نسخه: نامشخص")
+        except Exception as e:
+            await update.message.reply_text(f"خطا در خواندن نسخه: {str(e)}")
+    
+    application.add_handler(CommandHandler('version', version_command), group=3)
+
+    # Admin approval callbacks
+>>>>>>> origin/master
     application.add_handler(CallbackQueryHandler(admin_ask_panel_for_approval, pattern=r'^approve_auto_'), group=3)
     application.add_handler(CallbackQueryHandler(admin_approve_on_panel, pattern=r'^approve_on_panel_'), group=3)
     application.add_handler(CallbackQueryHandler(admin_review_order_reject, pattern=r'^reject_order_'), group=3)
     application.add_handler(CallbackQueryHandler(admin_manual_send_start, pattern=r'^approve_manual_'), group=3)
+<<<<<<< HEAD
     application.add_handler(CallbackQueryHandler(admin_approve_renewal, pattern=r'^approve_renewal_'), group=3)
     
     # Admin navigation 
@@ -880,10 +936,29 @@ def build_application() -> Application:
     # ═══════════════════════════════════════════════════════════════════
     #                       USER SERVICE ACTIONS
     # ═══════════════════════════════════════════════════════════════════
+=======
+    # User service actions
+    application.add_handler(CallbackQueryHandler(view_service_qr, pattern=r'^view_service_qr_\d+$'), group=2)
+    application.add_handler(CallbackQueryHandler(refresh_service_link, pattern=r'^refresh_service_link_\d+$'), group=2)
+    application.add_handler(CallbackQueryHandler(revoke_key, pattern=r'^revoke_key_\d+$'), group=2)
+    application.add_handler(CallbackQueryHandler(delete_service_start, pattern=r'^delete_service_\d+$'), group=2)
+    application.add_handler(CallbackQueryHandler(delete_service_confirm, pattern=r'^delete_service_(yes|no)_\d+$'), group=2)
+    application.add_handler(CallbackQueryHandler(admin_approve_renewal, pattern=r'^approve_renewal_'), group=3)
+    application.add_handler(CallbackQueryHandler(get_free_config_handler, pattern=r'^get_free_config$'), group=3)
+    # Noop handler for display-only buttons
+    async def noop_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+        await update.callback_query.answer()
+    application.add_handler(CallbackQueryHandler(noop_handler, pattern=r'^noop$'), group=3)
+    application.add_handler(CallbackQueryHandler(my_services_handler, pattern=r'^my_services(_page_\d+)?$'), group=3)
+    application.add_handler(CallbackQueryHandler(wallet_menu, pattern=r'^wallet_menu$'), group=3)
+    application.add_handler(CallbackQueryHandler(support_menu, pattern=r'^support_menu$'), group=3)
+    application.add_handler(CallbackQueryHandler(show_specific_service_details, pattern=r'^view_service_\d+$'), group=3)
+>>>>>>> origin/master
     application.add_handler(CallbackQueryHandler(check_service_status, pattern=r'^check_service_status_\d+$'), group=3)
     application.add_handler(CallbackQueryHandler(refresh_service_link, pattern=r'^refresh_service_link_\d+$'), group=3)
     application.add_handler(CallbackQueryHandler(view_service_qr, pattern=r'^view_service_qr_\d+$'), group=3)
     application.add_handler(CallbackQueryHandler(revoke_key, pattern=r'^revoke_key_'), group=3)
+<<<<<<< HEAD
     
     # ═══════════════════════════════════════════════════════════════════
     #                          WALLET SYSTEM
@@ -1004,6 +1079,296 @@ def build_application() -> Application:
     error_handler = setup_error_handling()
     application.add_error_handler(error_handler)
     
+=======
+    # Fallback: allow username prompt button to work even if state dropped
+    application.add_handler(CallbackQueryHandler(set_cust_username_start, pattern=r'^set_cust_username_start$'), group=3)
+    application.add_handler(CallbackQueryHandler(start_command, pattern='^start_main$'), group=3)
+    # Cancel flow handlers - work from anywhere
+    application.add_handler(CallbackQueryHandler(cancel_flow, pattern='^cancel_flow$'), group=3)
+    application.add_handler(CallbackQueryHandler(cancel_admin_flow, pattern='^cancel_admin_flow$'), group=3)
+    # Ensure Admin Stats button works globally even if conversation state dropped
+    application.add_handler(CallbackQueryHandler(admin_command, pattern='^admin_main$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_stats_menu, pattern='^admin_stats$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_stats_refresh, pattern='^stats_refresh$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_xui_choose_inbound, pattern=r'^xui_inbound_'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_wallets_menu, pattern='^admin_wallets_menu$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_settings_manage, pattern='^admin_settings_manage$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_toggle_bot_active, pattern='^admin_toggle_bot_active$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_admins_menu, pattern='^admin_admins_menu$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_plan_manage, pattern='^admin_plan_manage$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_plan_add_start, pattern='^plan_add$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_plan_delete, pattern=r'^plan_delete_\d+$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_plan_edit_start, pattern=r'^plan_edit_\d+$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_panels_menu, pattern='^admin_panels_menu$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_panel_delete, pattern=r'^panel_delete_\d+$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_panel_add_start, pattern='^panel_add_start$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_panel_toggle_enabled, pattern=r'^panel_toggle_\d+$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_panel_health_check, pattern=r'^panel_health_\d+$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_panel_inbounds_menu, pattern=r'^panel_inbounds_\d+$'), group=3)
+    # Admin menu buttons (orders, users, payments)
+    application.add_handler(CallbackQueryHandler(admin_orders_manage, pattern='^admin_orders_manage$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_orders_manage, pattern='^admin_orders_menu$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_orders_pending, pattern='^admin_orders_pending$'), group=3)
+    application.add_handler(CallbackQueryHandler(lambda u, c: admin_orders_menu(u, c, int(u.callback_query.data.split('_')[-1])), pattern=r'^admin_orders_page_\d+$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_user_management, pattern='^admin_user_management$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_payments_menu, pattern='^admin_payments_menu$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_system_health, pattern='^admin_system_health$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_clear_notifications, pattern='^admin_clear_notifications$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_quick_backup, pattern='^admin_quick_backup$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_discount_menu, pattern='^admin_discount_menu$'), group=3)
+    # admin_messages_menu is handled by ConversationHandler, no need for global handler
+    application.add_handler(CallbackQueryHandler(admin_tickets_menu, pattern='^admin_tickets_menu$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_run_alerts_now, pattern='^run_alerts_now$'), group=3)
+    # Reseller approvals (global)
+    application.add_handler(CallbackQueryHandler(admin_reseller_approve, pattern=r'^reseller_approve_\d+$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_reseller_reject, pattern=r'^reseller_reject_\d+$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_reseller_menu, pattern='^admin_reseller_menu$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_reseller_delete_start, pattern=r'^admin_reseller_delete_start$'), group=3)
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, admin_reseller_delete_receive), group=-2)
+    # Reseller user flows
+    application.add_handler(CallbackQueryHandler(reseller_menu, pattern=r'^reseller_menu$'), group=3)
+    application.add_handler(CallbackQueryHandler(reseller_pay_start, pattern=r'^reseller_pay_start$'), group=3)
+    application.add_handler(CallbackQueryHandler(reseller_pay_card, pattern=r'^reseller_pay_card$'), group=3)
+    application.add_handler(CallbackQueryHandler(reseller_pay_crypto, pattern=r'^reseller_pay_crypto$'), group=3)
+    application.add_handler(CallbackQueryHandler(reseller_pay_gateway, pattern=r'^reseller_pay_gateway$'), group=3)
+    application.add_handler(CallbackQueryHandler(reseller_verify_gateway, pattern=r'^reseller_verify_gateway$'), group=3)
+    application.add_handler(CallbackQueryHandler(reseller_upload_start_card, pattern=r'^reseller_upload_start_card$'), group=3)
+    application.add_handler(CallbackQueryHandler(reseller_upload_start_crypto, pattern=r'^reseller_upload_start_crypto$'), group=3)
+
+    # Route critical admin callbacks globally so buttons work from any state
+    # application.add_handler(CallbackQueryHandler(admin_global_router, pattern=r'^admin_'), group=0)
+    application.add_handler(CommandHandler('addadmin', admin_add_command), group=0)
+    application.add_handler(CommandHandler('deladmin', admin_del_command), group=0)
+    application.add_handler(CommandHandler('setms', admin_setms_command), group=0)
+
+    # Global settings callbacks so they work from any screen
+    application.add_handler(CallbackQueryHandler(admin_settings_manage, pattern='^admin_settings_manage$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_settings_ask, pattern=r'^set_(trial_days|payment_text)$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_toggle_trial_status, pattern=r'^set_trial_status_(0|1)$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_set_usd_rate_start, pattern='^set_usd_rate_start$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_toggle_usd_mode, pattern=r'^toggle_usd_mode_(manual|api)$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_toggle_pay_card, pattern=r'^toggle_pay_card_(0|1)$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_toggle_pay_crypto, pattern=r'^toggle_pay_crypto_(0|1)$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_toggle_pay_gateway, pattern=r'^toggle_pay_gateway_(0|1)$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_toggle_gateway_type, pattern=r'^toggle_gateway_type_(zarinpal|aghapay)$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_toggle_signup_bonus, pattern=r'^toggle_signup_bonus_(0|1)$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_set_signup_bonus_amount_start, pattern='^set_signup_bonus_amount$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_set_trial_inbound_start, pattern='^set_trial_inbound_start$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_set_trial_inbound_choose, pattern=r'^set_trial_inbound_\d+$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_set_ref_percent_start, pattern='^set_ref_percent_start$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_set_config_footer_start, pattern='^set_config_footer_start$'), group=3)
+    # Alerts & Auto-backup (global)
+    application.add_handler(CallbackQueryHandler(admin_toggle_user_quota, pattern=r'^toggle_user_quota_(0|1)$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_toggle_talert, pattern=r'^toggle_talert_(0|1)$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_set_talert_gb_start, pattern='^set_talert_gb_start$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_toggle_time_alert, pattern=r'^toggle_time_alert_(0|1)$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_set_time_alert_days_start, pattern='^set_time_alert_days_start$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_toggle_auto_backup, pattern=r'^toggle_auto_backup_(0|1)$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_set_auto_backup_hours_start, pattern='^set_auto_backup_hours_start$'), group=3)
+
+    # Wallet manual adjust (global)
+    application.add_handler(CallbackQueryHandler(admin_wallet_adjust_start, pattern=r'^wallet_adjust_start_(credit|debit)$'), group=3)
+
+    # Join/purchase logs settings (global)
+    application.add_handler(CallbackQueryHandler(admin_toggle_join_logs, pattern=r'^toggle_join_logs_(0|1)$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_set_join_logs_chat_start, pattern=r'^set_join_logs_chat$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_toggle_purchase_logs, pattern=r'^toggle_purchase_logs_(0|1)$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_set_purchase_logs_chat_start, pattern=r'^set_purchase_logs_chat$'), group=3)
+
+    # Text handlers for settings flows (awaiting_admin flags)
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, admin_set_ref_percent_save), group=-2)
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, admin_set_config_footer_save), group=-2)
+    application.add_handler(CallbackQueryHandler(admin_set_payment_text_start, pattern='^set_payment_text$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_set_usd_rate_start_global, pattern='^set_usd_rate_start$'), group=3)
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, admin_settings_save_payment_text), group=-2)
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, admin_set_usd_rate_save), group=-2)
+    # Text handler to capture chat IDs for logging settings
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, admin_settings_save_log_chat), group=-2)
+
+    # Tutorials (admin) handlers
+    application.add_handler(CallbackQueryHandler(admin_tutorial_add_start, pattern='^tutorial_add_start$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_tutorial_delete, pattern=r'^tutorial_delete_\d+$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_tutorial_view, pattern=r'^tutorial_view_\d+$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_tutorials_menu, pattern='^admin_tutorials_menu$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_tutorial_finish, pattern='^tutorial_finish$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_tutorial_media_page, pattern=r'^tutorial_media_page_(prev|next)$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_tutorial_edit_title_start, pattern='^tutorial_edit_title$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_tutorial_media_delete, pattern=r'^tmedia_del_\d+$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_tutorial_media_move, pattern=r'^tmedia_(up|down)_\d+$'), group=3)
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, admin_tutorial_receive_title), group=-3)
+    application.add_handler(MessageHandler(filters.ALL & ~filters.COMMAND, admin_tutorial_receive_media), group=-3)
+
+
+    async def check_join_and_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+        # Verify membership before proceeding
+        from .config import CHANNEL_ID as _CID, CHANNEL_USERNAME as _CUN, logger as _logger
+        try:
+            from .config import CHANNEL_CHAT as _CHAT
+        except Exception:
+            _CHAT = None
+        chat_id = _CHAT if _CHAT is not None else (_CID or _CUN)
+        is_member = False
+        try:
+            member = await context.bot.get_chat_member(chat_id=chat_id, user_id=update.effective_user.id)
+            if getattr(member, 'status', None) in ['member', 'administrator', 'creator']:
+                is_member = True
+        except Exception as e:
+            # If cannot verify, treat as not joined to avoid bypass
+            try:
+                _logger.warning(f"check_join_and_start: membership check failed for {update.effective_user.id}: {e}")
+            except Exception:
+                pass
+            is_member = False
+
+        if not is_member:
+            # Rebuild join gate UI
+            join_url = None
+            channel_hint = ""
+            try:
+                chat_obj = await context.bot.get_chat(chat_id=chat_id)
+                uname = getattr(chat_obj, 'username', None)
+                inv = getattr(chat_obj, 'invite_link', None)
+                if uname:
+                    handle = f"@{str(uname).replace('@','')}"
+                    join_url = f"https://t.me/{str(uname).replace('@','')}"
+                    channel_hint = f"\n\nکانال: {handle}"
+                elif inv:
+                    join_url = inv
+                    channel_hint = "\n\nلینک دعوت کانال در دکمه زیر موجود است."
+            except Exception:
+                if (_CUN or '').strip():
+                    handle = (_CUN or '').strip()
+                    if not handle.startswith('@'):
+                        handle = f"@{handle}"
+                    join_url = f"https://t.me/{handle.replace('@','')}"
+                    channel_hint = f"\n\nکانال: {handle}"
+                elif _CID:
+                    channel_hint = f"\n\nشناسه کانال: `{_CID}`"
+
+            from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+            from telegram.constants import ParseMode
+            kb = []
+            if join_url:
+                kb.append([InlineKeyboardButton("\U0001F195 عضویت در کانال", url=join_url)])
+            kb.append([InlineKeyboardButton("\u2705 عضو شدم", callback_data='check_join')])
+            text = (
+                f"\u26A0\uFE0F **قفل عضویت**\n\nبرای استفاده از ربات، ابتدا در کانال ما عضو شوید و سپس دکمه «عضو شدم» را بزنید." + channel_hint
+            )
+            try:
+                if update.callback_query and update.callback_query.message:
+                    await update.callback_query.message.edit_text(text, reply_markup=InlineKeyboardMarkup(kb), parse_mode=ParseMode.MARKDOWN)
+                    await update.callback_query.answer("ابتدا عضو کانال شوید و دوباره تلاش کنید.", show_alert=True)
+                else:
+                    await context.bot.send_message(chat_id=update.effective_chat.id, text=text, reply_markup=InlineKeyboardMarkup(kb), parse_mode=ParseMode.MARKDOWN)
+            except Exception:
+                pass
+            return
+
+        await register_new_user(update.effective_user, update, referrer_hint=context.user_data.get('referrer_id'))
+        await start_command(update, context)
+
+    application.add_handler(CallbackQueryHandler(check_join_and_start, pattern='^check_join$'), group=3)
+
+    application.add_handler(CallbackQueryHandler(dynamic_button_handler), group=4)
+
+    # User main menu callbacks (global)
+    application.add_handler(CallbackQueryHandler(wallet_menu, pattern=r'^wallet_menu$'), group=3)
+    application.add_handler(CallbackQueryHandler(support_menu, pattern=r'^support_menu$'), group=3)
+    application.add_handler(CallbackQueryHandler(tutorials_menu, pattern=r'^tutorials_menu$'), group=3)
+    application.add_handler(CallbackQueryHandler(tutorial_show, pattern=r'^tutorial_show_\d+$'), group=3)
+    application.add_handler(CallbackQueryHandler(referral_menu, pattern=r'^referral_menu$'), group=3)
+    application.add_handler(CallbackQueryHandler(reseller_menu, pattern=r'^reseller_menu$'), group=3)
+    application.add_handler(CallbackQueryHandler(card_to_card_info, pattern=r'^card_to_card_info$'), group=3)
+
+    # User wallet flows and support/tutorials (global callbacks)
+    application.add_handler(CallbackQueryHandler(wallet_verify_gateway, pattern=r'^wallet_verify_gateway$'), group=3)
+
+    # Unified upload router handles both wallet and reseller (run early to avoid other catch-alls)
+    application.add_handler(MessageHandler(filters.PHOTO | filters.VOICE | filters.VIDEO | filters.AUDIO | filters.Document.ALL | filters.TEXT, composite_upload_router), group=0)
+
+    # Reseller flows
+    application.add_handler(CallbackQueryHandler(reseller_pay_start, pattern=r'^reseller_pay_start$'), group=3)
+    application.add_handler(CallbackQueryHandler(reseller_pay_card, pattern=r'^reseller_pay_card$'), group=3)
+    application.add_handler(CallbackQueryHandler(reseller_pay_crypto, pattern=r'^reseller_pay_crypto$'), group=3)
+    application.add_handler(CallbackQueryHandler(reseller_pay_gateway, pattern=r'^reseller_pay_gateway$'), group=3)
+    application.add_handler(CallbackQueryHandler(reseller_verify_gateway, pattern=r'^reseller_verify_gateway$'), group=3)
+    application.add_handler(CallbackQueryHandler(reseller_upload_start_card, pattern=r'^reseller_upload_start_card$'), group=3)
+    application.add_handler(CallbackQueryHandler(reseller_upload_start_crypto, pattern=r'^reseller_upload_start_crypto$'), group=3)
+    # Already covered by composite router
+
+    # Admin tickets (global)
+    application.add_handler(CallbackQueryHandler(admin_tickets_menu, pattern=r'^admin_tickets_menu$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_ticket_view, pattern=r'^ticket_view_\d+$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_ticket_delete, pattern=r'^ticket_delete_\d+$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_ticket_reply_start, pattern=r'^ticket_reply_\d+$'), group=3)
+    application.add_handler(MessageHandler(filters.ALL & ~filters.COMMAND, admin_ticket_receive_reply), group=-3)
+
+    # Admin wallet tx (global)
+    application.add_handler(CallbackQueryHandler(admin_wallet_tx_menu, pattern=r'^admin_wallet_tx_menu$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_wallet_tx_view, pattern=r'^wallet_tx_view_\d+$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_wallet_tx_approve, pattern=r'^wallet_tx_approve_\d+$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_wallet_tx_reject, pattern=r'^wallet_tx_reject_\d+$'), group=3)
+    # Place before other generic text handlers to ensure it captures admin adjust flow
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, admin_wallet_adjust_text_router), group=-4)
+
+    admin_reply_conv = ConversationHandler(
+        entry_points=[CallbackQueryHandler(admin_ticket_reply_start, pattern=r'^ticket_reply_\d+$')],
+        states={
+            ADMIN_AWAIT_TICKET_REPLY: [MessageHandler(filters.ALL & ~filters.COMMAND, admin_ticket_receive_reply)],
+        },
+        fallbacks=[CallbackQueryHandler(admin_tickets_menu, pattern='^admin_tickets_menu$')],
+        allow_reentry=True,
+        per_message=False,
+    )
+    application.add_handler(admin_reply_conv, group=1)
+
+    wallet_conv = ConversationHandler(
+        entry_points=[
+            CallbackQueryHandler(wallet_topup_gateway_start, pattern=r'^wallet_topup_gateway$'),
+            CallbackQueryHandler(wallet_topup_card_start, pattern=r'^wallet_topup_card$'),
+            CallbackQueryHandler(wallet_topup_crypto_start, pattern=r'^wallet_topup_crypto$'),
+        ],
+        states={
+            WALLET_AWAIT_AMOUNT_GATEWAY: [
+                CallbackQueryHandler(wallet_select_amount, pattern=r'^wallet_amt_gateway_\d+$'),
+                CallbackQueryHandler(wallet_topup_custom_amount_start, pattern=r'^wallet_amt_gateway_custom$')
+            ],
+            WALLET_AWAIT_AMOUNT_CARD: [
+                CallbackQueryHandler(wallet_select_amount, pattern=r'^wallet_amt_card_\d+$'),
+                CallbackQueryHandler(wallet_topup_custom_amount_start, pattern=r'^wallet_amt_card_custom$')
+            ],
+            WALLET_AWAIT_AMOUNT_CRYPTO: [
+                CallbackQueryHandler(wallet_select_amount, pattern=r'^wallet_amt_crypto_\d+$'),
+                CallbackQueryHandler(wallet_topup_custom_amount_start, pattern=r'^wallet_amt_crypto_custom$')
+            ],
+            WALLET_AWAIT_CUSTOM_AMOUNT_GATEWAY: [MessageHandler(filters.TEXT & ~filters.COMMAND, wallet_topup_custom_amount_receive)],
+            WALLET_AWAIT_CUSTOM_AMOUNT_CARD: [MessageHandler(filters.TEXT & ~filters.COMMAND, wallet_topup_custom_amount_receive)],
+            WALLET_AWAIT_CUSTOM_AMOUNT_CRYPTO: [MessageHandler(filters.TEXT & ~filters.COMMAND, wallet_topup_custom_amount_receive)],
+            WALLET_AWAIT_CARD_SCREENSHOT: [
+                CallbackQueryHandler(wallet_upload_start_card, pattern=r'^wallet_upload_start_card$'),
+                CallbackQueryHandler(wallet_upload_start_crypto, pattern=r'^wallet_upload_start_crypto$'),
+                MessageHandler(filters.ALL & ~filters.COMMAND, composite_upload_router)
+            ],
+        },
+        fallbacks=[CallbackQueryHandler(wallet_menu, pattern='^wallet_menu$')],
+        allow_reentry=True,
+        per_message=False,
+    )
+    application.add_handler(wallet_conv, group=1)
+
+    support_conv = ConversationHandler(
+        entry_points=[CallbackQueryHandler(ticket_create_start, pattern=r'^ticket_create_start$')],
+        states={
+            SUPPORT_AWAIT_TICKET: [MessageHandler(filters.ALL & ~filters.COMMAND, ticket_receive_message)],
+        },
+        fallbacks=[],
+        allow_reentry=True,
+        per_message=False,
+    )
+
+    application.add_handler(support_conv, group=1)
+
+>>>>>>> origin/master
     return application
 
 
@@ -1012,6 +1377,7 @@ def run(token: str | None = None):
         from .config import BOT_TOKEN as _TB
         token = _TB
 
+<<<<<<< HEAD
     # فعال کردن سیستم Override خودکار پیام‌ها
     try:
         from .message_override import patch_telegram_methods
@@ -1023,6 +1389,8 @@ def run(token: str | None = None):
         from .config import logger
         logger.warning(f"⚠️ Message Override System failed to start: {e}")
 
+=======
+>>>>>>> origin/master
     use_webhook = (os.getenv('USE_WEBHOOK') or '').lower() in ('1', 'true', 'yes')
 
     # Proactively clear old webhook to avoid event-loop race and drop stale updates

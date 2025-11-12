@@ -4,7 +4,10 @@ from telegram.constants import ParseMode
 import re
 
 from ..db import query_db, execute_db
+<<<<<<< HEAD
 from ..helpers.back_buttons import BackButtons
+=======
+>>>>>>> origin/master
 from ..states import (
     ADMIN_PANELS_MENU,
     ADMIN_PANEL_AWAIT_NAME,
@@ -49,11 +52,19 @@ async def admin_panels_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) 
             ])
             keyboard.append([
                 InlineKeyboardButton(("\u26A0\uFE0F غیرفعال کردن" if int(p.get('enabled') or 1)==1 else "\u2705 فعال کردن"), callback_data=f"panel_toggle_{p['id']}"),
+<<<<<<< HEAD
                 InlineKeyboardButton("\U0001F50D وضعیت سلامت", callback_data=f"panel_health_{p['id']}"),
                 BackButtons.to_admin_main()
             ])
 
     keyboard.insert(0, [InlineKeyboardButton("\u2795 افزودن پنل جدید", callback_data="panel_add_start")])
+=======
+                InlineKeyboardButton("\U0001F50D وضعیت سلامت", callback_data=f"panel_health_{p['id']}")
+            ])
+
+    keyboard.insert(0, [InlineKeyboardButton("\u2795 افزودن پنل جدید", callback_data="panel_add_start")])
+    keyboard.append([InlineKeyboardButton("\U0001F519 بازگشت", callback_data="admin_main")])
+>>>>>>> origin/master
 
     sender = query.message if query else update.message
     if query:

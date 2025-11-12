@@ -103,6 +103,7 @@ async def safe_edit_text(message, text, reply_markup=None, parse_mode=None):
             except Exception:
                 pass
         raise
+<<<<<<< HEAD
     except TelegramError as e:
         # Best-effort: if edit fails, try sending a new message
         try:
@@ -115,6 +116,15 @@ async def safe_edit_text(message, text, reply_markup=None, parse_mode=None):
         except Exception as e2:
             logger.error(f"Failed to send new message after edit failure: {e2}")
             return None
+=======
+    except TelegramError:
+        # Best-effort: ignore other transient editing errors
+        try:
+            logger.error("TG API <- editMessageText TelegramError (non-400)")
+        except Exception:
+            pass
+        return None
+>>>>>>> origin/master
 
 
 async def safe_edit_caption(message, caption, reply_markup=None, parse_mode=None):

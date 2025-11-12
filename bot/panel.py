@@ -573,8 +573,16 @@ class XuiAPI(BasePanelAPI):
                 return True
         
         # Try form login first (more compatible across versions)
+<<<<<<< HEAD
         # Note: Removed unnecessary GET /login request to avoid double login counting
         try:
+=======
+        try:
+            try:
+                self.session.get(f"{self.base_url}/login", timeout=8)
+            except requests.RequestException:
+                pass
+>>>>>>> origin/master
             form_headers = {
                 'Accept': 'text/html,application/json',
                 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
@@ -590,11 +598,18 @@ class XuiAPI(BasePanelAPI):
             if resp.status_code in (200, 204, 302, 303):
                 self._logged_in = True
                 self._login_time = _time.time()
+<<<<<<< HEAD
                 logger.info(f"Successfully logged in to X-UI panel {self.panel_id} via form POST")
                 return True
         except requests.RequestException as e:
             logger.debug(f"X-UI form login failed, trying JSON: {e}")
         
+=======
+                logger.info(f"Successfully logged in to X-UI panel {self.panel_id}")
+                return True
+        except requests.RequestException:
+            pass
+>>>>>>> origin/master
         # Fallback to JSON login
         try:
             resp = self.session.post(
@@ -606,10 +621,17 @@ class XuiAPI(BasePanelAPI):
             if resp.status_code in (200, 204, 302, 303):
                 self._logged_in = True
                 self._login_time = _time.time()
+<<<<<<< HEAD
                 logger.info(f"Successfully logged in to X-UI panel {self.panel_id} via JSON POST")
                 return True
         except requests.RequestException as e:
             logger.error(f"X-UI login error (both form and JSON failed): {e}")
+=======
+                logger.info(f"Successfully logged in to X-UI panel {self.panel_id}")
+                return True
+        except requests.RequestException as e:
+            logger.error(f"X-UI login error: {e}")
+>>>>>>> origin/master
         return False
 
     def _fetch_client_traffics(self, inbound_id: int):

@@ -16,7 +16,11 @@ from telegram.constants import ParseMode
 from telegram.error import TelegramError, BadRequest
 from telegram.ext import ContextTypes, ConversationHandler, CallbackQueryHandler, MessageHandler, filters
 
+<<<<<<< HEAD
 from ..db import query_db, execute_db, get_message_text
+=======
+from ..db import query_db, execute_db
+>>>>>>> origin/master
 from ..utils import register_new_user
 from ..helpers.flow import set_flow, clear_flow
 from ..helpers.keyboards import build_start_menu_keyboard
@@ -442,6 +446,7 @@ async def my_services_handler(update: Update, context: ContextTypes.DEFAULT_TYPE
         InlineKeyboardButton("🏠 منوی اصلی", callback_data='start_main')
     ])
     
+<<<<<<< HEAD
     # ایموجی های وضعیت رنگی
     active_emoji = "🟢" if active_count > 0 else "⚪"
     pending_emoji = "🟡" if pending_count > 0 else "⚪"
@@ -463,6 +468,20 @@ async def my_services_handler(update: Update, context: ContextTypes.DEFAULT_TYPE
     
     text += "💡 <i>برای مشاهده جزئیات هر سرویس، روی آن کلیک کنید.</i>"
     
+=======
+    text = (
+        f"📱 <b>سرویس‌های من</b>\n\n"
+        f"━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        f"📊 <b>خلاصه آمار شما:</b>\n\n"
+        f"   ✅ فعال: <b>{active_count}</b> سرویس\n"
+        f"   ⏳ در انتظار: <b>{pending_count}</b> سرویس\n"
+        f"   ❌ منقضی: <b>{expired_count}</b> سرویس\n"
+        f"   📦 مجموع: <b>{len(orders)}</b> سرویس\n\n"
+        f"━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        f"💡 <i>برای مشاهده جزئیات، روی هر سرویس کلیک کنید.</i>"
+    )
+    
+>>>>>>> origin/master
     # Try to edit, if fails (e.g., message has no text), send new message
     try:
         await query.message.edit_text(text, parse_mode=ParseMode.HTML, reply_markup=InlineKeyboardMarkup(keyboard))
@@ -1337,6 +1356,7 @@ async def wallet_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
     keyboard = [
         [InlineKeyboardButton("💳 کارت به کارت", callback_data='wallet_topup_card')],
+<<<<<<< HEAD
         [
             InlineKeyboardButton("🌐 درگاه پرداخت", callback_data='wallet_topup_gateway'),
             InlineKeyboardButton("₿ رمزارز", callback_data='wallet_topup_crypto')
@@ -1345,6 +1365,9 @@ async def wallet_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
             InlineKeyboardButton("📊 تراکنش‌ها", callback_data='wallet_transactions'),
             InlineKeyboardButton("📈 تاریخچه", callback_data='wallet_history')
         ],
+=======
+        # Crypto and gateway payment methods removed - only card available for wallet topup
+>>>>>>> origin/master
         [
             InlineKeyboardButton("📱 سرویس‌ها", callback_data='my_services'),
             InlineKeyboardButton("💬 پشتیبانی", callback_data='support_menu')
@@ -1354,6 +1377,7 @@ async def wallet_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await query.message.edit_text(text, parse_mode=ParseMode.HTML, reply_markup=InlineKeyboardMarkup(keyboard))
 
 
+<<<<<<< HEAD
 async def wallet_topup_main_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Handle wallet topup main button from navigation"""
     query = update.callback_query
@@ -1393,6 +1417,8 @@ async def wallet_topup_main_handler(update: Update, context: ContextTypes.DEFAUL
     await query.message.edit_text(text, parse_mode=ParseMode.HTML, reply_markup=InlineKeyboardMarkup(keyboard))
 
 
+=======
+>>>>>>> origin/master
 def _amount_keyboard(method: str) -> InlineKeyboardMarkup:
     amounts = [50000, 100000, 200000, 500000, 1000000]
     keyboard = []
@@ -1674,9 +1700,25 @@ async def support_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
     
+<<<<<<< HEAD
     text = get_message_text(
         'support_menu',
         "💬 <b>پشتیبانی و راهنمایی</b>\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n👋 سلام! چگونه می‌توانیم کمکتان کنیم؟\n\n📝 <b>ثبت تیکت پشتیبانی:</b>\n   • پیام یا سوال خود را ارسال کنید\n   • پاسخ سریع کارشناسان را دریافت کنید\n\n📚 <b>مرکز آموزش:</b>\n   • راهنمای گام به گام\n   • ویدیوهای آموزشی\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n⏰ <b>ساعات پاسخگویی:</b> همه روزه 9 صبح - 12 شب\n\n💡 <i>پیش از ثبت تیکت، لطفاً آموزش‌ها را بررسی کنید.</i>"
+=======
+    text = (
+        "💬 <b>پشتیبانی و راهنمایی</b>\n\n"
+        "━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        "👋 سلام! چگونه می‌توانیم کمکتان کنیم؟\n\n"
+        "📝 <b>ثبت تیکت پشتیبانی:</b>\n"
+        "   • پیام یا سوال خود را ارسال کنید\n"
+        "   • پاسخ سریع کارشناسان را دریافت کنید\n\n"
+        "📚 <b>مرکز آموزش:</b>\n"
+        "   • راهنمای گام به گام\n"
+        "   • ویدیوهای آموزشی\n\n"
+        "━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        "⏰ <b>ساعات پاسخگویی:</b> همه روزه 9 صبح - 12 شب\n\n"
+        "💡 <i>پیش از ثبت تیکت، لطفاً آموزش‌ها را بررسی کنید.</i>"
+>>>>>>> origin/master
     )
     
     kb = [
@@ -1696,6 +1738,7 @@ async def support_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def ticket_create_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
+<<<<<<< HEAD
     text = get_message_text(
         'support_ticket_create',
         "📝 <b>ثبت تیکت جدید</b>\n\n━━━━━━━━━━━━━━━━━━━━━━━━\n👋 لطفاً پیام، سوال یا مشکل خود را ارسال کنید.\n\n✅ هر نوع پیامی (متن، عکس، فایل) پذیرفته می‌شود.\n━━━━━━━━━━━━━━━━━━━━━━━━"
@@ -1704,6 +1747,15 @@ async def ticket_create_start(update: Update, context: ContextTypes.DEFAULT_TYPE
         text,
         parse_mode=ParseMode.HTML,
         reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔙 بازگشت", callback_data='support_menu')]])
+=======
+    await query.message.edit_text(
+        "📝 <b>ثبت تیکت جدید</b>\n\n"
+        "━━━━━━━━━━━━━━━━━━━━━━━━\n"
+        "👋 لطفاً پیام، سوال یا مشکل خود را ارسال کنید.\n\n"
+        "✅ هر نوع پیامی (متن، عکس، فایل) پذیرفته می‌شود.\n"
+        "⏱ پاسخ شما در کمترین زمان ارسال خواهد شد.",
+        parse_mode=ParseMode.HTML
+>>>>>>> origin/master
     )
     return SUPPORT_AWAIT_TICKET
 
@@ -2538,6 +2590,7 @@ async def card_to_card_info(update: Update, context: ContextTypes.DEFAULT_TYPE):
         text,
         parse_mode=ParseMode.HTML,
         reply_markup=InlineKeyboardMarkup(keyboard)
+<<<<<<< HEAD
     )
 
 
@@ -2661,4 +2714,6 @@ async def notifications_settings_handler(update: Update, context: ContextTypes.D
         text,
         parse_mode=ParseMode.HTML,
         reply_markup=InlineKeyboardMarkup(keyboard)
+=======
+>>>>>>> origin/master
     )

@@ -6,7 +6,11 @@ from ..db import query_db, execute_db
 from ..states import SETTINGS_MENU, SETTINGS_AWAIT_TRIAL_DAYS, SETTINGS_AWAIT_PAYMENT_TEXT, SETTINGS_AWAIT_USD_RATE, SETTINGS_AWAIT_GATEWAY_API, SETTINGS_AWAIT_SIGNUP_BONUS, SETTINGS_AWAIT_TRAFFIC_ALERT_VALUE
 from ..helpers.tg import notify_admins, append_footer_buttons as _footer, answer_safely as _ans, safe_edit_text as _safe_edit_text
 from ..config import ADMIN_ID, logger
+<<<<<<< HEAD
 from ..helpers.back_buttons import BackButtons
+=======
+
+>>>>>>> origin/master
 
 def _md_escape(text: str) -> str:
     if not text:
@@ -132,7 +136,11 @@ async def admin_settings_manage(update: Update, context: ContextTypes.DEFAULT_TY
         [InlineKeyboardButton(("لاگ خرید: غیرفعال" if purch_logs_on else "لاگ خرید: فعال"), callback_data=f"toggle_purchase_logs_{0 if purch_logs_on else 1}"), InlineKeyboardButton("گروه/چت لاگ خرید", callback_data="set_purchase_logs_chat")],
         [InlineKeyboardButton("ارسال تست لاگ ورود", callback_data="test_join_log"), InlineKeyboardButton("ارسال تست لاگ خرید", callback_data="test_purchase_log")],
         # Back
+<<<<<<< HEAD
         [BackButtons.to_admin_main()],
+=======
+        [InlineKeyboardButton("\U0001F519 بازگشت", callback_data="admin_main")],
+>>>>>>> origin/master
     ]
     try:
         await _safe_edit_text(query.message, text, parse_mode=ParseMode.MARKDOWN, reply_markup=InlineKeyboardMarkup(keyboard))

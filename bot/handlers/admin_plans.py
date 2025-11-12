@@ -3,7 +3,10 @@ from telegram.constants import ParseMode
 from telegram.ext import ContextTypes
 
 from ..db import query_db, execute_db
+<<<<<<< HEAD
 from ..helpers.back_buttons import BackButtons
+=======
+>>>>>>> origin/master
 from ..states import (
     ADMIN_PLAN_MENU,
     ADMIN_PLAN_AWAIT_NAME,
@@ -39,7 +42,11 @@ async def admin_plan_manage(update: Update, context: ContextTypes.DEFAULT_TYPE) 
             InlineKeyboardButton("\u274C حذف", callback_data=f"plan_delete_{p['id']}")
         ])
     keyboard.append([InlineKeyboardButton("\u2795 افزودن پلن جدید", callback_data="plan_add")])
+<<<<<<< HEAD
     keyboard.append([BackButtons.to_admin_main()])
+=======
+    keyboard.append([InlineKeyboardButton("\U0001F519 بازگشت", callback_data="admin_main")])
+>>>>>>> origin/master
     text = "مدیریت پلن‌های فروش:"
 
     if message_sender == 'edit':
