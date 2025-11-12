@@ -1,0 +1,202 @@
+
+    # ═══════════════════════════════════════════════════════════════════
+    #                       ORGANIZED HANDLER REGISTRATION
+    # ═══════════════════════════════════════════════════════════════════
+    
+    # ═══════════════════════════════════════════════════════════════════
+    #                            COMMANDS
+    # ═══════════════════════════════════════════════════════════════════
+    application.add_handler(CallbackQueryHandler(start_command, pattern='^start_main$'), group=3)
+
+    # ═══════════════════════════════════════════════════════════════════
+    #                         ADMIN CORE HANDLERS  
+    # ═══════════════════════════════════════════════════════════════════
+    application.add_handler(CallbackQueryHandler(admin_ask_panel_for_approval, pattern=r'^approve_auto_'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_approve_on_panel, pattern=r'^approve_on_panel_'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_review_order_reject, pattern=r'^reject_order_'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_manual_send_start, pattern=r'^approve_manual_'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_approve_renewal, pattern=r'^approve_renewal_'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_stats_menu, pattern='^admin_stats$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_stats_refresh, pattern='^stats_refresh$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_xui_choose_inbound, pattern=r'^xui_inbound_'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_reseller_approve, pattern=r'^reseller_approve_\d+$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_reseller_reject, pattern=r'^reseller_reject_\d+$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_toggle_usd_mode, pattern=r'^toggle_usd_mode_(manual|api)$')
+    application.add_handler(CallbackQueryHandler(admin_wallet_tx_menu_v3, pattern=r'^admin_wallet_tx_menu$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_wallet_tx_pending, pattern=r'^admin_wallet_tx_pending$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_wallet_tx_approve_v3, pattern=r'^wallet_tx_approve_'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_wallet_tx_reject_v3, pattern=r'^wallet_tx_reject_'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_wallet_tx_view, pattern=r'^wallet_tx_view_\d+$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_wallet_tx_approve, pattern=r'^wallet_tx_approve_\d+$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_wallet_tx_reject, pattern=r'^wallet_tx_reject_\d+$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_advanced_stats, pattern=r'^admin_advanced_stats$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_cache_stats, pattern=r'^admin_cache_stats$'), group=3)
+
+    # ═══════════════════════════════════════════════════════════════════
+    #                       ADMIN ADVANCED FEATURES
+    # ═══════════════════════════════════════════════════════════════════
+    application.add_handler(CallbackQueryHandler(admin_chart_users, pattern=r'^admin_chart_users$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_chart_revenue, pattern=r'^admin_chart_revenue$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_clear_cache, pattern=r'^admin_clear_cache$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_monitoring_menu, pattern=r'^admin_monitoring_menu$'), group=3)
+
+    # ═══════════════════════════════════════════════════════════════════
+    #                         USER CORE HANDLERS
+    # ═══════════════════════════════════════════════════════════════════
+    application.add_handler(CallbackQueryHandler(my_services_handler, pattern=r'^my_services(_page_\d+)?$')
+    application.add_handler(CallbackQueryHandler(support_menu, pattern=r'^support_menu$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_tutorials_menu, pattern='^admin_tutorials_menu$'), group=3)
+    application.add_handler(CallbackQueryHandler(tutorials_menu, pattern=r'^tutorials_menu$'), group=3)
+
+    # ═══════════════════════════════════════════════════════════════════
+    #                        USER SERVICE ACTIONS
+    # ═══════════════════════════════════════════════════════════════════
+    application.add_handler(CallbackQueryHandler(view_service_qr, pattern=r'^view_service_qr_\d+$'), group=2)
+    application.add_handler(CallbackQueryHandler(refresh_service_link, pattern=r'^refresh_service_link_\d+$'), group=2)
+    application.add_handler(CallbackQueryHandler(delete_service_start, pattern=r'^delete_service_\d+$'), group=2)
+    application.add_handler(CallbackQueryHandler(delete_service_confirm, pattern=r'^delete_service_(yes|no)_\d+$')
+    application.add_handler(CallbackQueryHandler(show_specific_service_details, pattern=r'^view_service_\d+$'), group=3)
+
+    # ═══════════════════════════════════════════════════════════════════
+    #                          WALLET SYSTEM
+    # ═══════════════════════════════════════════════════════════════════
+    application.add_handler(CallbackQueryHandler(wallet_menu, pattern=r'^wallet_menu$'), group=3)
+    application.add_handler(CallbackQueryHandler(wallet_transactions_handler, pattern=r'^wallet_transactions$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_wallets_menu, pattern='^admin_wallets_menu$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_wallet_adjust_start, pattern=r'^wallet_adjust_start_(credit|debit)$')
+    application.add_handler(CallbackQueryHandler(wallet_charge_menu, pattern=r'^wallet_charge_menu$'), group=3)
+    application.add_handler(CallbackQueryHandler(wallet_topup_card_v3, pattern=r'^wallet_topup_card$'), group=3)
+    application.add_handler(CallbackQueryHandler(wallet_select_amount, pattern=r'^wallet_amt_'), group=3)
+    application.add_handler(CallbackQueryHandler(wallet_upload_receipt_start, pattern=r'^wallet_upload_receipt$'), group=3)
+    application.add_handler(CallbackQueryHandler(wallet_history, pattern=r'^wallet_history$'), group=3)
+    application.add_handler(CallbackQueryHandler(wallet_verify_gateway, pattern=r'^wallet_verify_gateway$'), group=3)
+
+    # ═══════════════════════════════════════════════════════════════════
+    #                       SETTINGS & PREFERENCES
+    # ═══════════════════════════════════════════════════════════════════
+    application.add_handler(CallbackQueryHandler(user_settings_handler, pattern=r'^user_settings$'), group=3)
+    application.add_handler(CallbackQueryHandler(notifications_settings_handler, pattern=r'^notifications_settings$'), group=3)
+    application.add_handler(CallbackQueryHandler(language_menu_handler, pattern=r'^language_menu$'), group=3)
+    application.add_handler(CallbackQueryHandler(set_language_fa_handler, pattern=r'^set_language_fa$'), group=3)
+    application.add_handler(CallbackQueryHandler(set_language_en_handler, pattern=r'^set_language_en$'), group=3)
+    application.add_handler(CallbackQueryHandler(set_language_ru_handler, pattern=r'^set_language_ru$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_settings_manage, pattern='^admin_settings_manage$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_clear_notifications, pattern='^admin_clear_notifications$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_settings_ask, pattern=r'^set_(trial_days|payment_text)$')
+
+    # ═══════════════════════════════════════════════════════════════════
+    #                      STUB & FUTURE FEATURES
+    # ═══════════════════════════════════════════════════════════════════
+    application.add_handler(CallbackQueryHandler(loyalty_rewards_handler, pattern=r'^loyalty_rewards$'), group=3)
+    application.add_handler(CallbackQueryHandler(app_guide_windows_handler, pattern=r'^app_guide_windows$'), group=3)
+    application.add_handler(CallbackQueryHandler(loyalty_redeem_handler, pattern=r'^loyalty_redeem$'), group=3)
+    application.add_handler(CallbackQueryHandler(app_guide_macos_handler, pattern=r'^app_guide_macos$'), group=3)
+    application.add_handler(CallbackQueryHandler(loyalty_history_handler, pattern=r'^loyalty_history$'), group=3)
+    application.add_handler(CallbackQueryHandler(show_loyalty_menu, pattern=r'^loyalty_menu$'), group=3)
+    application.add_handler(CallbackQueryHandler(show_app_guide_menu, pattern=r'^app_guide_menu$'), group=3)
+    application.add_handler(CallbackQueryHandler(show_android_guide, pattern=r'^app_guide_android$'), group=3)
+    application.add_handler(CallbackQueryHandler(show_ios_guide, pattern=r'^app_guide_ios$'), group=3)
+
+    # ═══════════════════════════════════════════════════════════════════
+    #                       UTILITIES & FALLBACKS
+    # ═══════════════════════════════════════════════════════════════════
+    application.add_handler(CallbackQueryHandler(revoke_key, pattern=r'^revoke_key_\d+$'), group=2)
+    application.add_handler(CallbackQueryHandler(get_free_config_handler, pattern=r'^get_free_config$'), group=3)
+    application.add_handler(CallbackQueryHandler(noop_handler, pattern=r'^noop'), group=3)
+    application.add_handler(CallbackQueryHandler(usage_stats_handler, pattern=r'^usage_stats$'), group=3)
+    application.add_handler(CallbackQueryHandler(show_referral_handler, pattern=r'^show_referral$'), group=3)
+    application.add_handler(CallbackQueryHandler(start_purchase_handler, pattern=r'^start_purchase$'), group=3)
+    application.add_handler(CallbackQueryHandler(start_purchase_with_points_handler, pattern=r'^start_purchase_with_points$'), group=3)
+    application.add_handler(CallbackQueryHandler(user_services_handler, pattern=r'^user_services$'), group=3)
+    application.add_handler(CallbackQueryHandler(gateway_verify_purchase_handler, pattern=r'^gateway_verify_purchase$'), group=3)
+    application.add_handler(CallbackQueryHandler(purchase_history_handler, pattern=r'^purchase_history$'), group=3)
+    application.add_handler(CallbackQueryHandler(cancel_handler, pattern=r'^cancel$'), group=3)
+    application.add_handler(CallbackQueryHandler(check_service_status, pattern=r'^check_service_status_\d+$'), group=3)
+    application.add_handler(CallbackQueryHandler(revoke_key, pattern=r'^revoke_key_'), group=3)
+    application.add_handler(CallbackQueryHandler(set_cust_username_start, pattern=r'^set_cust_username_start$'), group=3)
+    application.add_handler(CallbackQueryHandler(cancel_flow, pattern='^cancel_flow$'), group=3)
+    application.add_handler(CallbackQueryHandler(cancel_admin_flow, pattern='^cancel_admin_flow$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_admins_menu, pattern='^admin_admins_menu$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_plan_manage, pattern='^admin_plan_manage$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_plan_add_start, pattern='^plan_add$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_plan_delete, pattern=r'^plan_delete_\d+$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_plan_edit_start, pattern=r'^plan_edit_\d+$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_panels_menu, pattern='^admin_panels_menu$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_panel_delete, pattern=r'^panel_delete_\d+$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_panel_add_start, pattern='^panel_add_start$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_panel_toggle_enabled, pattern=r'^panel_toggle_\d+$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_panel_health_check, pattern=r'^panel_health_\d+$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_panel_inbounds_menu, pattern=r'^panel_inbounds_\d+$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_orders_manage, pattern='^admin_orders_manage$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_orders_manage, pattern='^admin_orders_menu$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_orders_pending, pattern='^admin_orders_pending$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_user_management, pattern='^admin_user_management$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_payments_menu, pattern='^admin_payments_menu$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_system_health, pattern='^admin_system_health$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_quick_backup, pattern='^admin_quick_backup$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_discount_menu, pattern='^admin_discount_menu$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_tickets_menu, pattern='^admin_tickets_menu$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_run_alerts_now, pattern='^run_alerts_now$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_reseller_menu, pattern='^admin_reseller_menu$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_reseller_delete_start, pattern=r'^admin_reseller_delete_start$'), group=3)
+    application.add_handler(CallbackQueryHandler(reseller_menu, pattern=r'^reseller_menu$'), group=3)
+    application.add_handler(CallbackQueryHandler(reseller_pay_start, pattern=r'^reseller_pay_start$'), group=3)
+    application.add_handler(CallbackQueryHandler(reseller_pay_card, pattern=r'^reseller_pay_card$'), group=3)
+    application.add_handler(CallbackQueryHandler(reseller_pay_crypto, pattern=r'^reseller_pay_crypto$'), group=3)
+    application.add_handler(CallbackQueryHandler(reseller_pay_gateway, pattern=r'^reseller_pay_gateway$'), group=3)
+    application.add_handler(CallbackQueryHandler(reseller_verify_gateway, pattern=r'^reseller_verify_gateway$'), group=3)
+    application.add_handler(CallbackQueryHandler(reseller_upload_start_card, pattern=r'^reseller_upload_start_card$'), group=3)
+    application.add_handler(CallbackQueryHandler(reseller_upload_start_crypto, pattern=r'^reseller_upload_start_crypto$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_global_router, pattern=r'^admin_'), group=0)
+    application.add_handler(CallbackQueryHandler(admin_toggle_trial_status, pattern=r'^set_trial_status_(0|1)$')
+    application.add_handler(CallbackQueryHandler(admin_set_usd_rate_start, pattern='^set_usd_rate_start$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_toggle_pay_card, pattern=r'^toggle_pay_card_(0|1)$')
+    application.add_handler(CallbackQueryHandler(admin_toggle_pay_crypto, pattern=r'^toggle_pay_crypto_(0|1)$')
+    application.add_handler(CallbackQueryHandler(admin_toggle_pay_gateway, pattern=r'^toggle_pay_gateway_(0|1)$')
+    application.add_handler(CallbackQueryHandler(admin_toggle_gateway_type, pattern=r'^toggle_gateway_type_(zarinpal|aghapay)$')
+    application.add_handler(CallbackQueryHandler(admin_toggle_signup_bonus, pattern=r'^toggle_signup_bonus_(0|1)$')
+    application.add_handler(CallbackQueryHandler(admin_set_signup_bonus_amount_start, pattern='^set_signup_bonus_amount$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_set_trial_inbound_start, pattern='^set_trial_inbound_start$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_set_trial_inbound_choose, pattern=r'^set_trial_inbound_\d+$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_set_ref_percent_start, pattern='^set_ref_percent_start$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_set_config_footer_start, pattern='^set_config_footer_start$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_toggle_user_quota, pattern=r'^toggle_user_quota_(0|1)$')
+    application.add_handler(CallbackQueryHandler(admin_toggle_talert, pattern=r'^toggle_talert_(0|1)$')
+    application.add_handler(CallbackQueryHandler(admin_set_talert_gb_start, pattern='^set_talert_gb_start$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_toggle_time_alert, pattern=r'^toggle_time_alert_(0|1)$')
+    application.add_handler(CallbackQueryHandler(admin_set_time_alert_days_start, pattern='^set_time_alert_days_start$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_toggle_auto_backup, pattern=r'^toggle_auto_backup_(0|1)$')
+    application.add_handler(CallbackQueryHandler(admin_set_auto_backup_hours_start, pattern='^set_auto_backup_hours_start$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_toggle_join_logs, pattern=r'^toggle_join_logs_(0|1)$')
+    application.add_handler(CallbackQueryHandler(admin_set_join_logs_chat_start, pattern=r'^set_join_logs_chat$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_toggle_purchase_logs, pattern=r'^toggle_purchase_logs_(0|1)$')
+    application.add_handler(CallbackQueryHandler(admin_set_purchase_logs_chat_start, pattern=r'^set_purchase_logs_chat$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_set_payment_text_start, pattern='^set_payment_text$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_tutorial_add_start, pattern='^tutorial_add_start$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_tutorial_delete, pattern=r'^tutorial_delete_\d+$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_tutorial_view, pattern=r'^tutorial_view_\d+$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_tutorial_finish, pattern='^tutorial_finish$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_tutorial_media_page, pattern=r'^tutorial_media_page_(prev|next)$')
+    application.add_handler(CallbackQueryHandler(admin_tutorial_edit_title_start, pattern='^tutorial_edit_title$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_tutorial_media_delete, pattern=r'^tmedia_del_\d+$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_tutorial_media_move, pattern=r'^tmedia_(up|down)_\d+$')
+    application.add_handler(CallbackQueryHandler(check_join_and_start, pattern='^check_join$'), group=3)
+    application.add_handler(CallbackQueryHandler(tutorial_show, pattern=r'^tutorial_show_\d+$'), group=3)
+    application.add_handler(CallbackQueryHandler(referral_menu, pattern=r'^referral_menu$'), group=3)
+    application.add_handler(CallbackQueryHandler(card_to_card_info, pattern=r'^card_to_card_info$'), group=3)
+    application.add_handler(CallbackQueryHandler(show_user_dashboard, pattern=r'^dashboard$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_ticket_view, pattern=r'^ticket_view_\d+$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_ticket_delete, pattern=r'^ticket_delete_\d+$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_ticket_reply_start, pattern=r'^ticket_reply_\d+$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_cohort_analysis, pattern=r'^admin_cohort_analysis$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_traffic_sources, pattern=r'^admin_traffic_sources$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_revenue_prediction, pattern=r'^admin_revenue_prediction$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_perf_details, pattern=r'^admin_perf_details$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_error_logs, pattern=r'^admin_error_logs$'), group=3)
+    application.add_handler(CallbackQueryHandler(admin_check_panels, pattern=r'^admin_check_panels$'), group=3)
+
+    # ═══════════════════════════════════════════════════════════════════
+    #                         DYNAMIC HANDLER
+    # ═══════════════════════════════════════════════════════════════════
+    # Catch-all dynamic button handler (lowest priority)
+    application.add_handler(CallbackQueryHandler(dynamic_button_handler), group=4)
