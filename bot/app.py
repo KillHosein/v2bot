@@ -145,6 +145,8 @@ from .handlers.mobile_cloud_integration import (
     mobile_app_management, cloud_infrastructure_dashboard, advanced_api_gateway,
     devops_automation_center, qr_code_generator
 )
+# Enhanced Error Handling
+from .error_handler_enhanced import setup_error_handling
 from .handlers.purchase import (
     start_purchase_flow as start_purchase_flow,
     show_plan_confirmation as show_plan_confirmation,
@@ -994,6 +996,13 @@ def build_application() -> Application:
     # ═══════════════════════════════════════════════════════════════════
     # Catch-all dynamic button handler (lowest priority)
     application.add_handler(CallbackQueryHandler(dynamic_button_handler), group=4)
+    
+    # ═══════════════════════════════════════════════════════════════════
+    #                         ERROR HANDLING
+    # ═══════════════════════════════════════════════════════════════════
+    # Setup enhanced error handling for production
+    error_handler = setup_error_handling()
+    application.add_error_handler(error_handler)
     
     return application
 

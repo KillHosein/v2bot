@@ -271,18 +271,36 @@ async def wallet_receive_custom_amount(update: Update, context: ContextTypes.DEF
 
 async def show_card_payment_info(query, context: ContextTypes.DEFAULT_TYPE, amount: int):
     """نمایش اطلاعات پرداخت کارتی"""
-    # دریافت کارت‌های بانکی
-    cards = query_db("SELECT card_number, holder_name, bank_name FROM cards") or []
+    # دریافت کارت‌های بانکی با fallback برای ستون‌های مفقود
+    try:
+        cards = query_db("SELECT card_number, holder_name, bank_name FROM cards") or []
+    except Exception as e:
+        # Fallback اگر ستون bank_name وجود نداشت
+        if "no such column: bank_name" in str(e):
+            cards = query_db("SELECT card_number, holder_name FROM cards") or []
+            # اضافه کردن bank_name پیش‌فرض
+            cards = [{'card_number': card['card_number'], 'holder_name': card['holder_name'], 'bank_name': 'بانک'} for card in cards]
+        else:
+            cards = []
     
     if not cards:
         text = "❌ در حال حاضر امکان پرداخت کارت به کارت وجود ندارد.\n\nلطفاً با پشتیبانی تماس بگیرید."
         keyboard = [[BackButtons.custom("🔙 بازگشت", "wallet_menu")]]
         
-        await query.message.edit_text(
-            text,
-            parse_mode=ParseMode.HTML,
-            reply_markup=InlineKeyboardMarkup(keyboard)
-        )
+        try:
+            await query.message.edit_text(
+                text,
+                parse_mode=ParseMode.HTML,
+                reply_markup=InlineKeyboardMarkup(keyboard)
+            )
+        except Exception as edit_error:
+            # اگر edit نشد، پیام جدید ارسال کن
+            if "Message is not modified" in str(edit_error):
+                await query.message.reply_text(
+                    text,
+                    parse_mode=ParseMode.HTML,
+                    reply_markup=InlineKeyboardMarkup(keyboard)
+                )
         return ConversationHandler.END
     
     # ساخت متن اطلاعات کارت
@@ -323,11 +341,20 @@ async def show_card_payment_info(query, context: ContextTypes.DEFAULT_TYPE, amou
         [BackButtons.custom("🔙 انصراف", "wallet_menu")]
     ]
     
-    await query.message.edit_text(
-        text,
-        parse_mode=ParseMode.HTML,
-        reply_markup=InlineKeyboardMarkup(keyboard)
-    )
+    try:
+        await query.message.edit_text(
+            text,
+            parse_mode=ParseMode.HTML,
+            reply_markup=InlineKeyboardMarkup(keyboard)
+        )
+    except Exception as edit_error:
+        # اگر edit نشد، پیام جدید ارسال کن
+        if "Message is not modified" in str(edit_error):
+            await query.message.reply_text(
+                text,
+                parse_mode=ParseMode.HTML,
+                reply_markup=InlineKeyboardMarkup(keyboard)
+            )
     
     return ConversationHandler.END
 
